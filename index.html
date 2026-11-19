@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>校园 AI 创作平台 · MVP</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="toast" class="toast" role="status"></div>
+  <main class="shell">
+    <section id="loginView" class="login-wrap">
+      <div class="brand-mark">AI</div>
+      <p class="eyebrow">HUST CAMPUS AI</p>
+      <h1>让每个灵感，都能变成作品</h1>
+      <p class="muted intro">面向华中科技大学学生的 AI 软件创作空间</p>
+      <div class="login-card">
+        <div class="tabs" role="tablist"><button class="tab active" data-mode="email">校园邮箱</button><button class="tab" data-mode="student">学号</button></div>
+        <label id="identityLabel" for="identity">校园邮箱</label>
+        <input id="identity" autocomplete="username" placeholder="例如 2024001001@mail.hust.edu.cn" />
+        <p class="hint" id="identityHint">原型演示可输入任意校园邮箱</p>
+        <button id="loginBtn" class="primary full">模拟登录并领取额度</button>
+        <p class="legal">原型使用模拟身份认证。正式版将接入 HUST 官方 SSO/CAS，不在平台保存校园密码。</p>
+      </div>
+      <button id="resetFromLogin" class="text-btn">重置演示数据</button>
+    </section>
+
+    <section id="appView" class="app hidden">
+      <header class="topbar"><div class="wordmark"><span class="brand-mark small">AI</span><span>校园 AI 创作平台</span></div><div class="user-menu"><span id="userIdentity"></span><button id="logoutBtn" class="ghost">退出登录</button></div></header>
+      <div class="content"><div class="welcome"><div><p class="eyebrow">WORKSPACE</p><h2>你好，开始你的 AI 创作吧</h2><p class="muted">先从一个小作品开始，把想法变成现实。</p></div><button class="primary" id="createBtn">＋ 开始创作</button></div>
+        <div class="stats"><article class="stat-card accent"><span>可用 Token</span><strong id="balance">0</strong><small>本期可使用额度</small></article><article class="stat-card"><span>累计消耗</span><strong id="spent">0</strong><small>从领取以来的使用量</small></article><article class="stat-card"><span>使用天数</span><strong id="days">1</strong><small>持续探索中</small></article></div>
+        <div class="grid"><section class="panel"><div class="panel-head"><div><h3>Token 使用记录</h3><p class="muted">每一笔额度变动都清晰可见</p></div><button id="rechargeBtn" class="outline">充值额度</button></div><div id="ledger" class="ledger"></div></section><aside class="panel side"><h3>快速开始</h3><p class="muted">用 AI 辅助完成你的第一个软件作品。</p><button class="quick" id="demoUseBtn"><span>✦</span><div><b>模拟消耗 Token</b><small>体验额度扣除与流水记录</small></div><i>→</i></button><button class="quick"><span>◈</span><div><b>探索热门作品</b><small>看看同学们正在创造什么</small></div><i>→</i></button><div class="notice"><b>额度使用小贴士</b><p>Token 可用于 AI 对话、代码生成和智能体运行。额度用完后可充值继续创作。</p></div></aside></div>
+        <button id="resetBtn" class="text-btn reset">重置演示数据</button>
+      </div>
+    </section>
+  </main>
+  <div id="modal" class="modal hidden"><div class="modal-box"><button class="close" id="closeModal">×</button><h3 id="modalTitle">充值额度</h3><p class="muted" id="modalText">充值功能将在正式版开放，原型阶段仅展示入口。</p><button class="primary full" id="modalAction">知道了</button></div></div>
+  <script src="app.js"></script>
+</body></html>
