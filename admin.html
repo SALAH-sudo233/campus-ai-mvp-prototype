@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中转站管理后台 · MVP</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .admin-content{max-width:1000px;margin:auto;padding:40px 24px}
+    .admin-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:24px}
+    .admin-head h2{margin:0;font-size:26px;letter-spacing:-.5px}
+    .searchbar{display:flex;gap:10px;margin-bottom:18px}
+    .searchbar input{flex:1}
+    table.accounts{width:100%;border-collapse:collapse;font-size:13px}
+    table.accounts th,table.accounts td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line)}
+    table.accounts th{color:var(--muted);font-weight:650;font-size:12px}
+    table.accounts code{font-size:12px;color:var(--muted)}
+    .badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:650}
+    .badge.active{background:#e6f6ee;color:var(--green)}
+    .badge.none,.badge.revoked{background:#fdecec;color:#e05c62}
+    .danger{border:1px solid #f0c3c6;color:#e05c62;background:#fff;border-radius:8px;padding:6px 11px;cursor:pointer}
+    .danger:hover{background:#fdecec}
+    .empty{color:var(--muted);text-align:center;padding:30px}
+  </style>
+</head>
+<body>
+  <div id="toast" class="toast" role="status"></div>
+  <main class="shell">
+    <section id="adminLogin" class="login-wrap">
+      <div class="brand-mark">KEY</div>
+      <p class="eyebrow">RELAY ADMIN</p>
+      <h1>中转站管理后台</h1>
+      <p class="muted intro">查看实名台账、搜索学生、吊销密钥</p>
+      <div class="login-card">
+        <label for="adminPassword">管理员口令</label>
+        <input id="adminPassword" type="password" autocomplete="current-password" placeholder="由 ADMIN_PASSWORD 环境变量设置" />
+        <p class="hint">未设置 ADMIN_PASSWORD 时管理功能关闭。口令只校验服务端环境变量，不落库。</p>
+        <button id="adminLoginBtn" class="primary full">登录</button>
+      </div>
+    </section>
+
+    <section id="adminView" class="hidden">
+      <header class="topbar"><div class="wordmark"><span class="brand-mark small">KEY</span><span>中转站管理后台</span></div><div class="user-menu"><button id="adminLogoutBtn" class="ghost">退出</button></div></header>
+      <div class="admin-content">
+        <div class="admin-head"><div><p class="eyebrow">ACCOUNTS</p><h2>学生实名台账</h2><p class="muted">台账按设计存实名，一行对应一个账户</p></div></div>
+        <div class="searchbar"><input id="searchInput" placeholder="按学号 / 邮箱 / 姓名搜索" /><button id="searchBtn" class="primary">搜索</button><button id="refreshBtn" class="outline">刷新</button></div>
+        <div class="panel"><table class="accounts"><thead><tr><th>学生编号</th><th>身份类型</th><th>登录身份</th><th>姓名</th><th>密钥掩码</th><th>密钥状态</th><th>操作</th></tr></thead><tbody id="accountRows"></tbody></table><div id="emptyHint" class="empty hidden">暂无台账记录</div></div>
+      </div>
+    </section>
+  </main>
+  <script src="admin.js"></script>
+</body>
+</html>
