@@ -123,7 +123,7 @@ python3 -m unittest discover -s tests -v
 | `org_service.py` | 组织、成员、审计和批量操作 |
 | `components.js` | 作品卡、指标卡、趋势图、热力格、组织树、导入预览 |
 | `docs/components.md` | 组件输入、输出和事件契约 |
-| `docs/adr/drafts/` | 组织、导入、引导三份 ADR 草稿 |
+| `docs/adr/` | 架构与规范决策记录（ADR 0001-0007） |
 
 ## 部署片段
 
