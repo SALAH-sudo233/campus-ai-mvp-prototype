@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS channels (
 CREATE TABLE IF NOT EXISTS relay_keys (
   id TEXT PRIMARY KEY,
   owner_ref TEXT NOT NULL,
+  user_id TEXT,
   key_hash TEXT NOT NULL UNIQUE,
   key_hint TEXT NOT NULL,
   channel_id TEXT NOT NULL REFERENCES channels(id),
@@ -37,6 +38,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS one_active_key_per_owner
   ON relay_keys (owner_ref) WHERE status = 'active';
 CREATE TABLE IF NOT EXISTS relay_accounts (
   owner_ref TEXT PRIMARY KEY,
+  user_id TEXT,
+  org_id TEXT,
   mode TEXT NOT NULL,
   identity TEXT NOT NULL,
   name TEXT,
@@ -67,6 +70,15 @@ def init(path):
     conn = connect(path)
     try:
         conn.executescript(SCHEMA)
+        key_columns = {row[1] for row in conn.execute("PRAGMA table_info(relay_keys)").fetchall()}
+        if "user_id" not in key_columns:
+            conn.execute("ALTER TABLE relay_keys ADD COLUMN user_id TEXT")
+        account_columns = {row[1] for row in conn.execute("PRAGMA table_info(relay_accounts)").fetchall()}
+        for name in ("user_id", "org_id"):
+            if name not in account_columns:
+                conn.execute("ALTER TABLE relay_accounts ADD COLUMN %s TEXT" % name)
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_relay_keys_user ON relay_keys(user_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_relay_accounts_org ON relay_accounts(org_id)")
         for channel_id, label in MOCK_CHANNELS:
             conn.execute("INSERT OR IGNORE INTO channels (id, label, status) VALUES (?, ?, 'active')",
                          (channel_id, label))
@@ -121,14 +133,17 @@ def _insert_key(conn, owner_ref, request_id):
     return {"key_id": key_id, "hint": hint_of(plain), "plaintext": plain, "replayed": False, "status": "active"}
 
 
-def upsert_account(path, owner_ref, mode, identity, name):
+def upsert_account(path, owner_ref, mode, identity, name, user_id=None, org_id=None):
     """写入或更新中转站台账。按第 4 题决定，台账存实名，不做匿名化。"""
     conn = connect(path)
     try:
         conn.execute(
-            "INSERT INTO relay_accounts (owner_ref, mode, identity, name, updated_at) VALUES (?, ?, ?, ?, ?) "
-            "ON CONFLICT(owner_ref) DO UPDATE SET mode = ?, identity = ?, name = ?, updated_at = ?",
-            (owner_ref, mode, identity, name, time.time(), mode, identity, name, time.time()))
+            "INSERT INTO relay_accounts (owner_ref, user_id, org_id, mode, identity, name, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(owner_ref) DO UPDATE SET user_id = COALESCE(excluded.user_id, relay_accounts.user_id), "
+            "org_id = COALESCE(excluded.org_id, relay_accounts.org_id), mode = excluded.mode, "
+            "identity = excluded.identity, name = excluded.name, updated_at = excluded.updated_at",
+            (owner_ref, user_id, org_id, mode, identity, name, time.time()))
     finally:
         conn.close()
 
@@ -202,24 +217,31 @@ def active_hint(path, owner_ref):
         conn.close()
     return row["key_hint"] if row else None
 
-def list_accounts(path, query=None):
+def list_accounts(path, query=None, org_id=None):
     """管理页用：列出台账，可按学号/邮箱/姓名模糊搜索，带当前密钥状态。"""
     conn = connect(path)
     try:
-        sql = ("SELECT a.owner_ref, a.mode, a.identity, a.name, a.updated_at, "
+        sql = ("SELECT a.owner_ref, a.user_id, a.org_id, a.mode, a.identity, a.name, a.updated_at, "
                "k.id AS key_id, k.key_hint, k.status AS key_status, k.created_at AS key_created_at "
                "FROM relay_accounts a LEFT JOIN relay_keys k "
                "ON k.owner_ref = a.owner_ref AND k.status = 'active' ")
-        params = ()
+        params = []
+        where = []
         if query:
-            sql += "WHERE a.identity LIKE ? OR a.name LIKE ? "
             like = "%" + query + "%"
-            params = (like, like)
+            where.append("(a.identity LIKE ? OR a.name LIKE ?)")
+            params.extend([like, like])
+        if org_id:
+            where.append("a.org_id = ?")
+            params.append(org_id)
+        if where:
+            sql += "WHERE " + " AND ".join(where) + " "
         sql += "ORDER BY a.updated_at DESC"
-        rows = conn.execute(sql, params).fetchall()
+        rows = conn.execute(sql, tuple(params)).fetchall()
     finally:
         conn.close()
-    return [{"owner_ref": r["owner_ref"], "mode": r["mode"], "identity": r["identity"], "name": r["name"],
+    return [{"owner_ref": r["owner_ref"], "user_id": r["user_id"], "org_id": r["org_id"],
+             "mode": r["mode"], "identity": r["identity"], "name": r["name"],
              "key_id": r["key_id"], "key_hint": r["key_hint"], "key_status": r["key_status"] or "none"}
             for r in rows]
 
