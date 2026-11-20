@@ -111,25 +111,34 @@ def tree(conn, org_id):
 
 
 def update_member(conn, org_id, user_id, changes, actor_id, actor_role):
+    """更新准入状态或角色。返回 (成员视图, 是否需要吊销该用户密钥)。"""
     row = conn.execute("SELECT * FROM org_memberships WHERE org_id = ? AND user_id = ?", (org_id, user_id)).fetchone()
     if not row:
-        return None
+        return None, False
     status = changes.get("admissionStatus")
     role = changes.get("role")
     if status is not None and status not in ("active", "disabled", "pending_review"):
         raise ValueError("准入状态只能是 active、disabled 或 pending_review")
     if role is not None and role not in ("org_admin", "org_member"):
         raise ValueError("组织内角色只能是 org_admin 或 org_member")
+    if status == "disabled" and actor_id and actor_id == user_id:
+        raise ValueError("不能停用自己的账号，请让其他管理员操作")
+    revoke_keys = False
     if status is not None:
         conn.execute("UPDATE org_memberships SET admission_status = ? WHERE org_id = ? AND user_id = ?",
                      (status, org_id, user_id))
         audit(conn, actor_id, actor_role, org_id, "member.status_changed", "membership", user_id,
               metadata={"from": row["admission_status"], "to": status})
+        if status == "disabled":
+            # 停用即失效：同一事务删除该用户全部会话（含按 owner_ref 关联的旧会话）。
+            conn.execute("DELETE FROM sessions WHERE user_id = ? OR owner_ref IN "
+                         "(SELECT owner_ref FROM students WHERE user_id = ?)", (user_id, user_id))
+            revoke_keys = True
     if role is not None:
         conn.execute("UPDATE org_memberships SET role = ? WHERE org_id = ? AND user_id = ?", (role, org_id, user_id))
         audit(conn, actor_id, actor_role, org_id, "member.role_changed", "membership", user_id,
               metadata={"from": row["role"], "to": role})
-    return member(conn, org_id, user_id)
+    return member(conn, org_id, user_id), revoke_keys
 
 
 def bulk_grant(conn, org_id, user_ids, amount, request_id, actor_id, actor_role):

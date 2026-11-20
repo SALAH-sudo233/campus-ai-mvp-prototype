@@ -147,6 +147,9 @@ def _principal_for(conn, user_id, org_id=None):
     if not user or user["disabled_at"]:
         return None
     membership = _membership(conn, user_id, org_id)
+    # 停用成员的旧会话立即失效，视同未认证。pending_review 不在此列，能力边界待拍板。
+    if membership and authz.admission_blocked(membership["admission_status"]):
+        return None
     platform = conn.execute("SELECT 1 FROM platform_admins WHERE user_id = ?", (user_id,)).fetchone() is not None
     if platform:
         role = authz.PLATFORM_ADMIN
@@ -511,6 +514,15 @@ def _merge_key_hints(conn, rows):
     return rows
 
 
+def _revoke_user_keys(conn, user_id):
+    """吊销该用户全部账户（owner_ref）的当前有效密钥，复用中转站吊销逻辑。"""
+    refs = [row["owner_ref"] for row in conn.execute(
+        "SELECT owner_ref FROM students WHERE user_id = ?", (user_id,)).fetchall()]
+    for ref in refs:
+        relay.revoke_by_owner(RELAY_DB, ref)
+    return refs
+
+
 def org_members(org_id, query=None):
     conn = db()
     try:
@@ -567,6 +579,24 @@ def _batch_result(conn, batch):
             "expiresAt": batch["expires_at"], "committedAt": batch["committed_at"]}
 
 
+def _cleanup_expired_imports(conn, now):
+    """一次删净过期批次及其明细；清理失败只回滚清理本身，不影响本次预览。"""
+    try:
+        conn.execute("SAVEPOINT import_cleanup")
+        conn.execute("DELETE FROM import_rows WHERE batch_id IN ("
+                     "SELECT id FROM import_batches WHERE expires_at < ? OR status = 'expired')",
+                     (now - 86400,))
+        conn.execute("DELETE FROM import_batches WHERE expires_at < ? OR status = 'expired'",
+                     (now - 86400,))
+        conn.execute("RELEASE import_cleanup")
+    except sqlite3.Error:
+        try:
+            conn.execute("ROLLBACK TO import_cleanup")
+            conn.execute("RELEASE import_cleanup")
+        except sqlite3.Error:
+            pass
+
+
 def import_preview(principal, org_id, data, schema_version=1):
     authz.require(principal, "members", "import", org_id=org_id)
     rows = importer.parse(data)
@@ -592,9 +622,7 @@ def import_preview(principal, org_id, data, schema_version=1):
                          (batch_id, row["row_no"], row.get("row_key"),
                           json.dumps(row.get("fields") or {}, ensure_ascii=False), row["result"],
                           row.get("reason_code"), row.get("message")))
-        conn.execute("DELETE FROM import_rows WHERE batch_id IN (SELECT id FROM import_batches WHERE expires_at < ? "
-                     "OR status = 'expired' ORDER BY created_at LIMIT 200)", (now - 86400,))
-        conn.execute("DELETE FROM import_batches WHERE expires_at < ? OR status = 'expired'", (now - 86400,))
+        _cleanup_expired_imports(conn, now)
         org_service.audit(conn, principal.get("user_id"), principal["role"], org_id, "import.preview",
                           "import_batch", batch_id, metadata={"rows": len(rows), **counts})
         conn.execute("COMMIT")
@@ -791,6 +819,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             raise authz.AuthzError(403, "无权访问该资源")
         return org_id
 
+    def _require_org(self, org_id):
+        """组织必须真实存在；不存在统一返回 404，而不是 500 或全 0 的假成功。"""
+        conn = db()
+        try:
+            if not _org_exists(conn, org_id):
+                raise authz.AuthzError(404, "未找到该组织")
+        finally:
+            conn.close()
+        return org_id
+
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
@@ -803,9 +841,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                                         "onboarding": onboarding.public_config()})
             if path == "/api/me":
                 principal = self._require_user()
+                authz.require(principal, "profile", "read_self", owner_user_id=principal["user_id"])
                 return self._send(*do_me(principal["owner_ref"]))
             if path == "/api/onboarding":
                 principal = self._require_user()
+                authz.require(principal, "onboarding", "read", owner_user_id=principal["user_id"])
                 conn = db()
                 try:
                     return self._send(200, {"config": onboarding.public_config(),
@@ -837,13 +877,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     row = works_service.get(conn, match.group(1))
                     if not row:
                         return self._send(404, {"error": "未找到作品"})
-                    if principal["role"] == authz.PLATFORM_ADMIN:
-                        pass
-                    elif row["owner_user_id"] == principal["user_id"]:
-                        pass
-                    elif row["status"] == "published" and row["org_id"] == principal.get("org_id"):
-                        pass
-                    else:
+                    if not authz.work_readable(principal, row["org_id"], row["owner_user_id"],
+                                               row["status"] == "published"):
                         return self._send(403, {"error": "无权访问该资源"})
                     return self._send(200, works_service._card(row))
                 finally:
@@ -860,6 +895,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if match:
                 principal = self._require_admin()
                 org_id = self._org_allowed(principal, match.group(1))
+                self._require_org(org_id)
                 authz.require(principal, "works", "review", org_id=org_id)
                 status = query.get("status", [None])[0]
                 conn = db()
@@ -891,6 +927,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     conn.close()
             if path == "/api/admin/accounts":
                 principal = self._require_admin()
+                authz.require(principal, "accounts", "list", org_id=principal.get("org_id"))
                 q = query.get("q", [None])[0]
                 org_filter = None if principal["role"] == authz.PLATFORM_ADMIN else principal.get("org_id")
                 return self._send(200, {"accounts": relay.list_accounts(RELAY_DB, q, org_filter)})
@@ -898,6 +935,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if match:
                 principal = self._require_admin()
                 org_id = self._org_allowed(principal, match.group(1))
+                self._require_org(org_id)
                 action = match.group(2)
                 if action == "tree":
                     authz.require(principal, "organizations", "read", org_id=org_id)
@@ -954,6 +992,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if match:
                 principal = self._require_admin()
                 org_id = self._org_allowed(principal, match.group(1))
+                self._require_org(org_id)
                 authz.require(principal, "members", "import", org_id=org_id)
                 conn = db()
                 try:
@@ -974,6 +1013,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if match:
                 principal = self._require_admin()
                 org_id = self._org_allowed(principal, match.group(1))
+                self._require_org(org_id)
                 authz.require(principal, "members", "read", org_id=org_id)
                 conn = db()
                 try:
@@ -1008,17 +1048,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return self._send(404, {"error": "未知接口"})
             principal = self._require_admin()
             org_id = self._org_allowed(principal, match.group(1))
+            self._require_org(org_id)
             authz.require(principal, "members", "update_status", org_id=org_id)
             if data.get("role") is not None:
                 authz.require(principal, "members", "update_role", org_id=org_id)
             conn = db()
             try:
                 conn.execute("BEGIN IMMEDIATE")
-                item = org_service.update_member(conn, org_id, match.group(2), data,
-                                                  principal.get("user_id"), principal["role"])
-                conn.execute("COMMIT")
+                item, revoke_keys = org_service.update_member(conn, org_id, match.group(2), data,
+                                                              principal.get("user_id"), principal["role"])
                 if not item:
+                    conn.execute("ROLLBACK")
                     return self._send(403, {"error": "无权访问该资源"})
+                if revoke_keys:
+                    _revoke_user_keys(conn, match.group(2))
+                    org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
+                                      "member.key_revoked", "member", match.group(2),
+                                      metadata={"reason": "admission_disabled"})
+                conn.execute("COMMIT")
                 return self._send(200, item)
             except BaseException:
                 if conn.in_transaction:
@@ -1028,6 +1075,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 conn.close()
         except (authz.AuthzError, ValueError) as exc:
             return self._error(exc)
+        except relay.RelayUnavailable as exc:
+            return self._send(503, {"error": str(exc)})
+        except sqlite3.Error:
+            return self._send(503, {"error": "写入失败，请稍后重试"})
 
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
@@ -1060,6 +1111,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if match:
                 principal = self._require_admin()
                 org_id = self._org_allowed(principal, match.group(1))
+                self._require_org(org_id)
                 authz.require(principal, "members", "import", org_id=org_id)
                 raw = self._raw(MAX_IMPORT_BODY)
                 return self._send(*import_preview(principal, org_id, raw))
@@ -1067,6 +1119,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if match:
                 principal = self._require_admin()
                 org_id = self._org_allowed(principal, match.group(1))
+                self._require_org(org_id)
                 data = self._body()
                 return self._send(*import_commit(principal, org_id, match.group(2),
                                                  str(data.get("requestId") or secrets.token_hex(8))[:64]))
@@ -1074,6 +1127,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if match:
                 principal = self._require_admin()
                 org_id = self._org_allowed(principal, match.group(1))
+                self._require_org(org_id)
                 authz.require(principal, "members", "bulk", org_id=org_id)
                 data = self._body()
                 user_ids = data.get("userIds") or []
@@ -1098,10 +1152,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     elif action == "revoke":
                         results = []
                         for user_id in user_ids:
-                            refs = [r["owner_ref"] for r in conn.execute(
-                                "SELECT owner_ref FROM students WHERE user_id = ?", (user_id,)).fetchall()]
-                            for ref in refs:
-                                relay.revoke_by_owner(RELAY_DB, ref)
+                            refs = _revoke_user_keys(conn, user_id)
                             results.append({"userId": user_id, "status": "revoked", "keys": len(refs)})
                         org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
                                           "member.bulk_revoke", "organization", org_id, rid,
@@ -1121,17 +1172,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if match:
                 principal = self._require_admin()
                 org_id = self._org_allowed(principal, match.group(1))
+                self._require_org(org_id)
                 authz.require(principal, "members", "revoke_key", org_id=org_id)
                 conn = db()
                 try:
                     if org_service.users_outside_org(conn, org_id, [match.group(2)]):
                         return self._send(403, {"error": "无权访问该资源"})
-                    refs = [r["owner_ref"] for r in conn.execute(
-                        "SELECT owner_ref FROM students WHERE user_id = ?", (match.group(2),)).fetchall()]
+                    refs = _revoke_user_keys(conn, match.group(2))
                     if not refs:
                         return self._send(403, {"error": "无权访问该资源"})
-                    for ref in refs:
-                        relay.revoke_by_owner(RELAY_DB, ref)
                     conn.execute("BEGIN IMMEDIATE")
                     org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
                                       "member.key_revoked", "member", match.group(2))
@@ -1147,6 +1196,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if match:
                 principal = self._require_admin()
                 org_id = self._org_allowed(principal, match.group(1))
+                self._require_org(org_id)
                 data = self._body()
                 conn = db()
                 try:
@@ -1234,9 +1284,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if path in ("/api/key/rotate", "/api/consume", "/api/logout"):
                 principal = self._require_user()
                 if path == "/api/key/rotate":
+                    authz.require(principal, "keys", "rotate_self", owner_user_id=principal["user_id"])
                     return self._send(*do_rotate(principal["owner_ref"], rid))
                 if path == "/api/consume":
+                    authz.require(principal, "usage", "consume_self", owner_user_id=principal["user_id"])
                     return self._send(*do_consume(principal["owner_ref"], data.get("amount"), rid))
+                authz.require(principal, "sessions", "revoke_self", owner_user_id=principal["user_id"])
                 conn = db()
                 try:
                     conn.execute("DELETE FROM sessions WHERE token_hash = ?",
@@ -1254,8 +1307,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 conn = db()
                 try:
                     row = conn.execute("SELECT org_id FROM students WHERE owner_ref = ?", (owner_ref,)).fetchone()
-                    if not row or (principal["role"] != authz.PLATFORM_ADMIN and row["org_id"] != principal.get("org_id")):
+                    if not row:
                         return self._send(403, {"error": "无权访问该资源"})
+                    authz.require(principal, "accounts", "revoke_key", org_id=row["org_id"])
                     relay.revoke_by_owner(RELAY_DB, owner_ref)
                     conn.execute("BEGIN IMMEDIATE")
                     org_service.audit(conn, principal.get("user_id"), principal["role"], row["org_id"],

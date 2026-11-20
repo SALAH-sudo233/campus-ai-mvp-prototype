@@ -5,6 +5,10 @@ ORG_ADMIN = "org_admin"
 ORG_MEMBER = "org_member"
 ROLES = (PLATFORM_ADMIN, ORG_ADMIN, ORG_MEMBER)
 
+# 准入状态闸：disabled 视同未认证。pending_review 的能力边界待产品拍板，
+# 当前保持原有行为，不在这里拦。
+BLOCKED_ADMISSION = ("disabled",)
+
 
 class AuthzError(Exception):
     def __init__(self, status=403, message="无权执行此操作"):
@@ -34,6 +38,14 @@ _RULES = {
         ("works", "feature"): "all",
         ("works", "unpublish"): "all",
         ("audit", "read"): "all",
+        ("profile", "read_self"): "self",
+        ("onboarding", "read"): "self",
+        ("keys", "rotate_self"): "self",
+        ("usage", "consume_self"): "self",
+        ("sessions", "revoke_self"): "self",
+        ("accounts", "list"): "all",
+        ("accounts", "revoke_key"): "all",
+        ("works", "read_any"): "all",
     },
     ORG_ADMIN: {
         ("organizations", "read"): "org",
@@ -50,6 +62,13 @@ _RULES = {
         ("works", "feature"): "org",
         ("works", "unpublish"): "org",
         ("audit", "read"): "org",
+        ("profile", "read_self"): "self",
+        ("onboarding", "read"): "self",
+        ("keys", "rotate_self"): "self",
+        ("usage", "consume_self"): "self",
+        ("sessions", "revoke_self"): "self",
+        ("accounts", "list"): "org",
+        ("accounts", "revoke_key"): "org",
     },
     ORG_MEMBER: {
         ("organizations", "read"): "org",
@@ -62,12 +81,19 @@ _RULES = {
         ("onboarding", "write"): "self",
         ("keys", "read_self"): "self",
         ("keys", "rotate_self"): "self",
+        ("profile", "read_self"): "self",
+        ("usage", "consume_self"): "self",
+        ("sessions", "revoke_self"): "self",
     },
 }
 
 
 def scope_for(role, resource, action):
     return _RULES.get(role, {}).get((resource, action))
+
+
+def admission_blocked(status):
+    return status in BLOCKED_ADMISSION
 
 
 def principal_role(principal):
@@ -98,6 +124,15 @@ def require(principal, resource, action, org_id=None, owner_user_id=None):
         # 跨组织与不存在的资源使用同一个状态和文案，避免泄露资源是否存在。
         raise AuthzError(403, "无权访问该资源")
     return True
+
+
+def work_readable(principal, org_id, owner_user_id, published):
+    """作品详情读取口径：本人任意状态、同组织已发布作品、平台管理员全部。"""
+    if allowed(principal, "works", "read_own", owner_user_id=owner_user_id):
+        return True
+    if published and allowed(principal, "works", "read_gallery", org_id=org_id):
+        return True
+    return allowed(principal, "works", "read_any")
 
 
 def matrix_rows():
