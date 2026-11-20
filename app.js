@@ -1,4 +1,4 @@
-const API = '';
+const API = new URL('.', document.currentScript.src).pathname.replace(/\/$/, '');
 const STORE_KEY = 'hust-campus-ai-demo-token-v2';
 let token = localStorage.getItem(STORE_KEY) || '';
 let backendOk = null;

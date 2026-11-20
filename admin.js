@@ -1,4 +1,5 @@
 const ADMIN_STORE_KEY = 'hust-campus-ai-admin-token-v1';
+const API = new URL('.', document.currentScript.src).pathname.replace(/\/$/, '');
 let adminToken = sessionStorage.getItem(ADMIN_STORE_KEY) || '';
 
 const $ = id => document.getElementById(id);
@@ -7,7 +8,7 @@ function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('sho
 async function adminApi(path, options){
   const headers = {'Content-Type':'application/json'};
   if (adminToken) headers['Authorization'] = 'Bearer ' + adminToken;
-  const resp = await fetch(path, Object.assign({}, options, {headers}));
+  const resp = await fetch(API + path, Object.assign({}, options, {headers}));
   let data = {};
   try { data = await resp.json(); } catch (e) { data = {}; }
   if (!resp.ok) throw Object.assign(new Error(data.error || '请求失败'), {status: resp.status});
