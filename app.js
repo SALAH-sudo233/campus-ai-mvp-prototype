@@ -3,7 +3,9 @@ const STORE_KEY = 'hust-campus-ai-demo-token-v2';
 let token = localStorage.getItem(STORE_KEY) || '';
 let backendOk = null;
 let mode = 'email';
+let role = 'student';
 let revealedKey = '';
+const ADMIN_STORE_KEY = 'hust-campus-ai-admin-token-v1';
 
 const $ = id => document.getElementById(id);
 function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2400)}
@@ -82,14 +84,28 @@ async function boot(){
   }
 }
 
-document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => {
-  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+document.querySelectorAll('.tab[data-mode]').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.tab[data-mode]').forEach(x => x.classList.remove('active'));
   btn.classList.add('active');
   mode = btn.dataset.mode;
   $('identityLabel').textContent = mode === 'email' ? '校园邮箱' : '学号';
   $('identity').placeholder = mode === 'email' ? '例如 2024001001@mail.hust.edu.cn' : '例如 2024001001';
-  $('identityHint').textContent = mode === 'email' ? '原型演示可输入任意校园邮箱' : '原型演示可输入任意学号';
+  $('identityHint').textContent = mode === 'email' ? '仅限名册内的学生，邮箱前缀为学号' : '仅限名册内的学生，请输入学号';
 }));
+
+function setRole(next){
+  role = next;
+  const admin = next === 'admin';
+  document.querySelectorAll('.tab[data-role]').forEach(x => x.classList.toggle('active', x.dataset.role === next));
+  $('studentFields').classList.toggle('hidden', admin);
+  $('adminFields').classList.toggle('hidden', !admin);
+  $('registerBtn').classList.toggle('hidden', admin);
+  document.querySelector('.auth-actions').classList.toggle('single', admin);
+  $('password').placeholder = admin ? '管理员密码' : '至少 8 位，首次登录请先注册';
+  $('passwordHint').textContent = admin ? '管理员账号由运营方配置，登录后进入中转站管理后台。' : '注册设置密码，登录用同一密码。原型密码只存服务端哈希。';
+  $('password').value = '';
+}
+document.querySelectorAll('.tab[data-role]').forEach(btn => btn.addEventListener('click', () => setRole(btn.dataset.role)));
 
 function readForm(){
   const identity = $('identity').value.trim();
@@ -115,7 +131,23 @@ async function handleAuth(path, successMsg){
   }
 }
 
-$('loginBtn').onclick = () => handleAuth('/api/login', '登录成功');
+async function handleAdminLogin(){
+  const username = $('adminUser').value.trim();
+  const password = $('password').value;
+  if (!username || !password) { toast('请输入管理员账号和密码'); return; }
+  const ok = await checkBackend();
+  if (!ok) { toast('后端未启动或不可达'); return; }
+  try {
+    const data = await api('/api/admin/login', {method: 'POST', body: JSON.stringify({username, password})});
+    sessionStorage.setItem(ADMIN_STORE_KEY, data.token);
+    $('password').value = '';
+    location.href = API + '/admin';
+  } catch (e) {
+    toast(e.message || '登录失败');
+  }
+}
+
+$('loginBtn').onclick = () => role === 'admin' ? handleAdminLogin() : handleAuth('/api/login', '登录成功');
 $('registerBtn').onclick = () => handleAuth('/api/register', '注册成功，已领取 100,000 Token');
 
 $('logoutBtn').onclick = async () => {

@@ -2,6 +2,7 @@
 
 .auth-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
 .auth-actions .full{margin-top:6px}
+.auth-actions.single{grid-template-columns:1fr}
 .outline.full{width:100%;padding:12px 18px;color:var(--blue);border-color:var(--blue);font-weight:700}
 .outline.full:hover{background:#f4f6ff}
 #password{margin-bottom:0}

@@ -47,3 +47,9 @@ def name_for(mode, identity):
     if student_id is None:
         return None
     return ROSTER.get(student_id)
+
+
+def is_enrolled(mode, identity):
+    """登录身份是否在名册内。原型用这份名册模拟学校已认证的学生信息。"""
+    student_id = student_id_of(mode, identity)
+    return student_id is not None and student_id in ROSTER

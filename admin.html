@@ -32,9 +32,11 @@
       <h1>中转站管理后台</h1>
       <p class="muted intro">查看实名台账、搜索学生、吊销密钥</p>
       <div class="login-card">
+        <label for="adminUsername">管理员账号</label>
+        <input id="adminUsername" autocomplete="username" placeholder="管理员账号" />
         <label for="adminPassword">管理员口令</label>
-        <input id="adminPassword" type="password" autocomplete="current-password" placeholder="由 ADMIN_PASSWORD 环境变量设置" />
-        <p class="hint">未设置 ADMIN_PASSWORD 时管理功能关闭。口令只校验服务端环境变量，不落库。</p>
+        <input id="adminPassword" type="password" autocomplete="current-password" placeholder="管理员密码" />
+        <p class="hint">账号与密码由 ADMIN_USERNAME、ADMIN_PASSWORD 环境变量设置，未设置时管理功能关闭，不落库。</p>
         <button id="adminLoginBtn" class="primary full">登录</button>
       </div>
     </section>

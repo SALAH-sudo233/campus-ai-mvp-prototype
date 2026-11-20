@@ -95,10 +95,11 @@ async function revoke(account){
 }
 
 async function login(){
+  const username = $('adminUsername').value.trim();
   const password = $('adminPassword').value;
-  if (!password) { toast('请输入管理员口令'); return; }
+  if (!username || !password) { toast('请输入管理员账号和密码'); return; }
   try {
-    const data = await adminApi('/api/admin/login', {method: 'POST', body: JSON.stringify({password})});
+    const data = await adminApi('/api/admin/login', {method: 'POST', body: JSON.stringify({username, password})});
     adminToken = data.token;
     sessionStorage.setItem(ADMIN_STORE_KEY, adminToken);
     $('adminPassword').value = '';

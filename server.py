@@ -35,7 +35,9 @@ LOCK_SECONDS = 60
 SESSION_SECONDS = 8 * 3600
 SCRYPT = {"n": 2 ** 14, "r": 8, "p": 1, "dklen": 32}
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME")
 ADMIN_SESSION_SECONDS = 2 * 3600
+STATIC_FILES = {"/", "/index.html", "/admin", "/admin.html", "/app.js", "/admin.js", "/styles.css"}
 LOCK = threading.Lock()
 
 SCHEMA = """
@@ -187,6 +189,8 @@ def do_register(mode, identity, password, request_id):
     problem = check_identity(mode, identity) or check_password(password)
     if problem:
         return 400, {"error": problem}
+    if not roster.is_enrolled(mode, identity):
+        return 403, {"error": "该身份不在学生名册内，无法注册"}
     owner_ref = owner_ref_of(mode, identity)
     salt = secrets.token_bytes(16)
     pw_hash = hash_password(password, salt)
@@ -348,11 +352,13 @@ def is_admin_token(token):
     return row is not None and row["expires_at"] >= time.time()
 
 
-def do_admin_login(password):
-    if not ADMIN_PASSWORD:
+def do_admin_login(username, password):
+    if not ADMIN_PASSWORD or not ADMIN_USERNAME:
         return 404, {"error": "管理功能未启用"}
-    if not isinstance(password, str) or not hmac.compare_digest(password, ADMIN_PASSWORD):
-        return 401, {"error": "管理员口令错误"}
+    name_ok = isinstance(username, str) and hmac.compare_digest(username, ADMIN_USERNAME)
+    pass_ok = isinstance(password, str) and hmac.compare_digest(password, ADMIN_PASSWORD)
+    if not (name_ok and pass_ok):
+        return 401, {"error": "管理员账号或密码错误"}
     conn = db()
     try:
         token = new_admin_session(conn)
@@ -436,6 +442,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self._send(*do_admin_accounts(query))
         if path.startswith("/api/"):
             return self._send(404, {"error": "未知接口"})
+        if path not in STATIC_FILES:
+            return self._send(404, {"error": "未找到"})
         if path == "/admin":
             self.path = "/admin.html"
         return super().do_GET()
@@ -465,7 +473,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 conn.close()
             return self._send(200, {"ok": True})
         if path == "/api/admin/login":
-            return self._send(*do_admin_login(data.get("password")))
+            return self._send(*do_admin_login(data.get("username"), data.get("password")))
         if path == "/api/admin/revoke":
             if not self._admin():
                 return self._send(401, {"error": "请先登录管理后台"})
