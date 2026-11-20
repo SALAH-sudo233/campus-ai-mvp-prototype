@@ -29,23 +29,13 @@ GitHub Pages 上的公开页面是纯静态的，跑不了后端。登录、注�
 
 ## 一键启动
 
-原型跑在 yb-dev 上，只监听 `127.0.0.1`。在服务器上启动：
+原型已部署在中转站服务器上，入口是 `https://campusgo.aihuanxi.ai/app/`，和中转站共用域名。
 
-```bash
-cd hust-campus-ai-prototype
-ADMIN_USERNAME=换成账号 ADMIN_PASSWORD=换成密码 DEMO_ALLOW_RESET=1 python3 server.py
-```
+- 学生端：`https://campusgo.aihuanxi.ai/app/`
+- 中转站管理后台：`https://campusgo.aihuanxi.ai/app/`，在首页切到“管理员”登录。账号和密码只存在目标机的 `/etc/campus-prototype/env`，不进仓库。
+- 健康检查：`https://campusgo.aihuanxi.ai/app/api/health`，返回 `{"ok": true}`。
 
-- 学生端：`http://127.0.0.1:8080`
-- 中转站管理后台：`http://127.0.0.1:8080/admin`，也可以在首页切到“管理员”登录。账号和密码来自 `ADMIN_USERNAME`、`ADMIN_PASSWORD`，任一项未设置时管理后台关闭。
-
-在本机（Mac）访问服务器上的原型，用 SSH 端口转发把远端 8080 映射到本地：
-
-```bash
-ssh -N -L 8080:127.0.0.1:8080 你的用户名@yb-dev
-```
-
-转发开着时，本机浏览器打开 `http://127.0.0.1:8080` 和 `http://127.0.0.1:8080/admin` 即可。
+本地开发仍用 `python3 server.py`，后端只监听 `127.0.0.1:8080`，不直接暴露。
 
 ## 中转站管理后台
 
@@ -85,6 +75,22 @@ ssh -N -L 8080:127.0.0.1:8080 你的用户名@yb-dev
 | 其他 /app/api/* | 60 次/分钟，突发 20 次 |
 
 **管理员密码不进仓库。** 部署后在目标机编辑 `/etc/campus-prototype/env`，再执行 `systemctl restart campus-prototype`。
+
+### 线上位置和运维
+
+| 项 | 值 |
+|---|---|
+| 服务器 | 火山云上海，公网 `14.103.80.52`，和中转站 New-API 同机 |
+| 对外入口 | `https://campusgo.aihuanxi.ai/app/` |
+| 服务 | `campus-prototype.service`，用户 `campus-proto`，监听 `127.0.0.1:8080` |
+| 代码目录 | `/opt/campus-prototype` |
+| 配置 | `/etc/campus-prototype/env`，权限 0640，属主 root:campus-proto |
+| 数据 | `/var/lib/campus-prototype/demo-backend.sqlite`、`demo-relay.sqlite` |
+| nginx 片段 | `/etc/nginx/conf.d/campus-http.conf`、`/etc/nginx/campus-locations.conf`、`/etc/nginx/campus-proxy-common.conf` |
+
+更新代码：把仓库同步到目标机后执行 `bash deploy/deploy.sh`。脚本不覆盖已有的 `/etc/campus-prototype/env`，也不改 nginx。
+
+改 nginx 前先备份站点文件，`nginx -t` 通过后用 `systemctl reload nginx`，不要 restart。看日志用 `journalctl -u campus-prototype`。
 
 ## 已包含
 
