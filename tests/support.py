@@ -11,6 +11,7 @@ import urllib.error
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TEST_AUTH_VALUE = "test-" + secrets.token_urlsafe(16)
 def free_port():
     sock = socket.socket()
     sock.bind(("127.0.0.1", 0))
@@ -26,7 +27,7 @@ class DemoServer:
         self.base = "http://127.0.0.1:%d" % self.port
         self.proc = None
         self.admin_user = "test-admin"
-        self.admin_secret = "test-" + secrets.token_urlsafe(24)
+        self.admin_value = "test-" + secrets.token_urlsafe(24)
 
     @property
     def db_path(self):
@@ -42,7 +43,7 @@ class DemoServer:
             "DEMO_DB": self.db_path,
             "DEMO_RELAY_DB": self.relay_path,
             "ADMIN_USERNAME": self.admin_user,
-            "ADMIN_PASSWORD": self.admin_secret,
+            "ADMIN_PASSWORD": self.admin_value,
             "DEMO_ALLOW_RESET": "1",
             "HOST": "127.0.0.1",
             "PORT": str(self.port),
@@ -112,12 +113,13 @@ class DemoServer:
         return self.request("PATCH", path, body=body, token=token)
 
     def admin_token(self):
-        code, data = self.post("/api/admin/login", {"username": self.admin_user, "password": self.admin_secret})
+        code, data = self.post("/api/admin/login", {"username": self.admin_user, "password": self.admin_value})
         assert code == 200, data
         return data["token"]
 
 
-def register(server, identity, password="student-pass-123", mode="student", org_id=None, request_id=None):
+def register(server, identity, password=None, mode="student", org_id=None, request_id=None):
+    password = password or TEST_AUTH_VALUE
     body = {"mode": mode, "identity": identity, "password": password,
             "requestId": request_id or "reg-" + identity}
     if org_id:
@@ -125,7 +127,8 @@ def register(server, identity, password="student-pass-123", mode="student", org_
     return server.post("/api/register", body)
 
 
-def login(server, identity, password="student-pass-123", mode="student", org_id=None):
+def login(server, identity, password=None, mode="student", org_id=None):
+    password = password or TEST_AUTH_VALUE
     body = {"mode": mode, "identity": identity, "password": password, "requestId": "login-" + identity}
     if org_id:
         body["orgId"] = org_id
