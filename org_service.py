@@ -112,7 +112,7 @@ def tree(conn, org_id):
 
 
 def update_member(conn, org_id, user_id, changes, actor_id, actor_role):
-    """更新准入状态或角色。返回 (成员视图, 是否需要吊销该用户密钥)。"""
+    """更新准入状态或角色。返回 (成员视图, 是否需要吊销该用户在本组织的密钥)。"""
     row = conn.execute("SELECT * FROM org_memberships WHERE org_id = ? AND user_id = ?", (org_id, user_id)).fetchone()
     if not row:
         return None, False
@@ -126,6 +126,8 @@ def update_member(conn, org_id, user_id, changes, actor_id, actor_role):
         raise ValueError("不能停用自己的账号，请让其他管理员操作")
     revoke_keys = False
     if status is not None:
+        # 只有状态真的变了才算一次有效变更；重复提交同一状态不重复吊销、不重复记吊销审计。
+        changed = row["admission_status"] != status
         conn.execute("UPDATE org_memberships SET admission_status = ? WHERE org_id = ? AND user_id = ?",
                      (status, org_id, user_id))
         audit(conn, actor_id, actor_role, org_id, "member.status_changed", "membership", user_id,
@@ -135,6 +137,9 @@ def update_member(conn, org_id, user_id, changes, actor_id, actor_role):
             conn.execute("DELETE FROM sessions WHERE org_id = ? AND (user_id = ? OR owner_ref IN "
                          "(SELECT owner_ref FROM students WHERE user_id = ? AND org_id = ?))",
                          (org_id, user_id, user_id, org_id))
+            revoke_keys = True
+        elif status == "pending_review" and changed:
+            # 待复核即失效：吊销该用户在本组织账户下的密钥，其他组织的归属不受影响。
             revoke_keys = True
     if role is not None:
         conn.execute("UPDATE org_memberships SET role = ? WHERE org_id = ? AND user_id = ?", (role, org_id, user_id))
