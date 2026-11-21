@@ -5,9 +5,17 @@ ORG_ADMIN = "org_admin"
 ORG_MEMBER = "org_member"
 ROLES = (PLATFORM_ADMIN, ORG_ADMIN, ORG_MEMBER)
 
-# 准入状态闸：disabled 视同未认证。pending_review 的能力边界待产品拍板，
-# 当前保持原有行为，不在这里拦。
+# 准入状态闸：disabled 视同未认证；pending_review 只保留登录、个人信息（含余额流水）、
+# 引导和登出，其余动作一律 403。准入判断和角色判断在同一个矩阵模块内完成。
 BLOCKED_ADMISSION = ("disabled",)
+PENDING_REVIEW_ALLOWED = frozenset({
+    ("profile", "read_self"),
+    ("usage", "read_self"),
+    ("onboarding", "read"),
+    ("onboarding", "write"),
+    ("sessions", "revoke_self"),
+})
+PENDING_REVIEW_MESSAGE = "账户待复核，复核通过后开放"
 
 
 class AuthzError(Exception):
@@ -96,18 +104,22 @@ def admission_blocked(status):
     return status in BLOCKED_ADMISSION
 
 
+def admission_restricted(principal):
+    """待复核只约束非平台主体的成员动作；平台管理员会话不挂在组织准入状态上。"""
+    if not principal or principal.get("kind") == "platform":
+        return False
+    return principal.get("admission_status") == "pending_review"
+
+
+def admission_allows(principal, resource, action):
+    return not admission_restricted(principal) or (resource, action) in PENDING_REVIEW_ALLOWED
+
+
 def principal_role(principal):
     return (principal or {}).get("role")
 
 
-def allowed(principal, resource, action, org_id=None, owner_user_id=None):
-    """判断是否授权。org_id 是目标资源所属组织，owner_user_id 是资源所有者。"""
-    if not principal:
-        return False
-    role = principal_role(principal)
-    scope = scope_for(role, resource, action)
-    if scope is None:
-        return False
+def _scope_allows(principal, scope, org_id, owner_user_id):
     if scope == "all":
         return True
     if scope == "org":
@@ -117,12 +129,25 @@ def allowed(principal, resource, action, org_id=None, owner_user_id=None):
     return False
 
 
+def allowed(principal, resource, action, org_id=None, owner_user_id=None):
+    """判断是否授权。org_id 是目标资源所属组织，owner_user_id 是资源所有者。"""
+    if not principal:
+        return False
+    if not admission_allows(principal, resource, action):
+        return False
+    scope = scope_for(principal_role(principal), resource, action)
+    return scope is not None and _scope_allows(principal, scope, org_id, owner_user_id)
+
+
 def require(principal, resource, action, org_id=None, owner_user_id=None):
     if not principal:
         raise AuthzError(401, "请先登录")
-    if not allowed(principal, resource, action, org_id=org_id, owner_user_id=owner_user_id):
+    scope = scope_for(principal_role(principal), resource, action)
+    if scope is None or not _scope_allows(principal, scope, org_id, owner_user_id):
         # 跨组织与不存在的资源使用同一个状态和文案，避免泄露资源是否存在。
         raise AuthzError(403, "无权访问该资源")
+    if not admission_allows(principal, resource, action):
+        raise AuthzError(403, PENDING_REVIEW_MESSAGE)
     return True
 
 

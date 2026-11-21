@@ -147,7 +147,7 @@ def _principal_for(conn, user_id, org_id=None):
     if not user or user["disabled_at"]:
         return None
     membership = _membership(conn, user_id, org_id)
-    # 停用成员的旧会话立即失效，视同未认证。pending_review 不在此列，能力边界待拍板。
+    # 停用成员的旧会话立即失效，视同未认证；pending_review 仍可登录，能力由 authz 矩阵限制。
     if membership and authz.admission_blocked(membership["admission_status"]):
         return None
     platform = conn.execute("SELECT 1 FROM platform_admins WHERE user_id = ?", (user_id,)).fetchone() is not None
@@ -514,10 +514,10 @@ def _merge_key_hints(conn, rows):
     return rows
 
 
-def _revoke_user_keys(conn, user_id):
-    """吊销该用户全部账户（owner_ref）的当前有效密钥，复用中转站吊销逻辑。"""
+def _revoke_user_keys(conn, user_id, org_id):
+    """只吊销该用户在本组织成员关系下的账户（owner_ref）密钥，不碰其他组织的账户。"""
     refs = [row["owner_ref"] for row in conn.execute(
-        "SELECT owner_ref FROM students WHERE user_id = ?", (user_id,)).fetchall()]
+        "SELECT owner_ref FROM students WHERE user_id = ? AND org_id = ?", (user_id, org_id)).fetchall()]
     for ref in refs:
         relay.revoke_by_owner(RELAY_DB, ref)
     return refs
@@ -558,6 +558,12 @@ def _preview_conflicts(conn, org_id, rows):
                 if other and other["external_ref"] != fields["external_ref"]:
                     row.update({"result": "conflict", "reason_code": "identity_conflict",
                                 "message": "该身份已在组织内，但外部编号不同"})
+                    break
+                if not other and conn.execute("SELECT 1 FROM org_memberships WHERE user_id = ?",
+                                              (identity["user_id"],)).fetchone():
+                    # 跨组织身份一律判冲突，不自动并入；原因不暴露对方组织名和对方账户信息。
+                    row.update({"result": "conflict", "reason_code": "identity_conflict",
+                                "message": "该身份已属于其他组织"})
                     break
 
 
@@ -649,9 +655,13 @@ def _write_import_row(conn, org_id, fields, now):
             if row:
                 user_id = row["user_id"]
                 break
-    if user_id and conn.execute("SELECT 1 FROM org_memberships WHERE org_id = ? AND user_id = ?",
-                                (org_id, user_id)).fetchone():
-        return "conflict", "identity_conflict"
+    if user_id:
+        if conn.execute("SELECT 1 FROM org_memberships WHERE org_id = ? AND user_id = ?",
+                        (org_id, user_id)).fetchone():
+            return "conflict", "identity_conflict"
+        # 预览后确认前身份被其他组织占用的竞态同样判冲突：不写成员、不复用其他组织的账户。
+        if conn.execute("SELECT 1 FROM org_memberships WHERE user_id = ?", (user_id,)).fetchone():
+            return "conflict", "identity_conflict"
     if not user_id:
         user_id = "u_" + secrets.token_hex(12)
         conn.execute("INSERT INTO users (id, display_name, created_at) VALUES (?, ?, ?)",
@@ -1061,7 +1071,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     conn.execute("ROLLBACK")
                     return self._send(403, {"error": "无权访问该资源"})
                 if revoke_keys:
-                    _revoke_user_keys(conn, match.group(2))
+                    _revoke_user_keys(conn, match.group(2), org_id)
                     org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
                                       "member.key_revoked", "member", match.group(2),
                                       metadata={"reason": "admission_disabled"})
@@ -1152,7 +1162,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     elif action == "revoke":
                         results = []
                         for user_id in user_ids:
-                            refs = _revoke_user_keys(conn, user_id)
+                            refs = _revoke_user_keys(conn, user_id, org_id)
                             results.append({"userId": user_id, "status": "revoked", "keys": len(refs)})
                         org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
                                           "member.bulk_revoke", "organization", org_id, rid,
@@ -1178,7 +1188,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 try:
                     if org_service.users_outside_org(conn, org_id, [match.group(2)]):
                         return self._send(403, {"error": "无权访问该资源"})
-                    refs = _revoke_user_keys(conn, match.group(2))
+                    refs = _revoke_user_keys(conn, match.group(2), org_id)
                     if not refs:
                         return self._send(403, {"error": "无权访问该资源"})
                     conn.execute("BEGIN IMMEDIATE")

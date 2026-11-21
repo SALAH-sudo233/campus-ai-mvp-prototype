@@ -13,8 +13,8 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual(code, 201, org)
             org_id = org["id"]
             body = (HEADER +
-                    "e2e-teacher,2024001198,2024001198@mail.hust.edu.cn,示例教师,教师,active\n"
-                    "e2e-student,2024001199,2024001199@mail.hust.edu.cn,示例学生,学生,active\n").encode("utf-8")
+                    "e2e-teacher,2024999710,2024999710@example.edu.cn,示例教师,教师,active\n"
+                    "e2e-student,2024999711,2024999711@example.edu.cn,示例学生,学生,active\n").encode("utf-8")
             code, preview = server.request("POST", "/api/orgs/%s/imports/preview" % org_id, raw=body, token=admin)
             self.assertEqual(code, 200, preview)
             code, committed = server.post("/api/orgs/%s/imports/%s/commit" % (org_id, preview["batchId"]),
@@ -22,11 +22,11 @@ class EndToEndTests(unittest.TestCase):
             self.assertEqual(code, 200, committed)
             self.assertEqual(committed["counts"]["accepted"], 2)
 
-            code, student = register(server, "2024001199", org_id=org_id)
+            code, student = register(server, "2024999711", org_id=org_id)
             self.assertEqual(code, 201, student)
             code, consumed = server.post("/api/consume", {"amount": 5000, "requestId": "e2e-consume"}, student["token"])
             self.assertEqual(code, 200, consumed)
-            code, teacher = register(server, "2024001198", org_id=org_id)
+            code, teacher = register(server, "2024999710", org_id=org_id)
             self.assertEqual(code, 201, teacher)
             self.assertEqual(teacher["role"], "org_admin")
 

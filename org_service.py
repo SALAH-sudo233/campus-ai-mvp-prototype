@@ -53,7 +53,7 @@ def members(conn, org_id, query=None):
         "COALESCE(m.name, u.display_name, '') AS display_name, u.disabled_at, "
         "COALESCE(SUM(s.balance), 0) AS balance, COALESCE(SUM(s.spent), 0) AS spent "
         "FROM org_memberships m JOIN users u ON u.id = m.user_id "
-        "LEFT JOIN students s ON s.user_id = m.user_id "
+        "LEFT JOIN students s ON s.user_id = m.user_id AND s.org_id = m.org_id "
         "WHERE m.org_id = ? ")
     params = [org_id]
     if query:
@@ -65,7 +65,8 @@ def members(conn, org_id, query=None):
     result = []
     for row in rows:
         owner_refs = [r["owner_ref"] for r in conn.execute(
-            "SELECT owner_ref FROM students WHERE user_id = ? ORDER BY created_at", (row["user_id"],)).fetchall()]
+            "SELECT owner_ref FROM students WHERE user_id = ? AND org_id = ? ORDER BY created_at",
+            (row["user_id"], org_id)).fetchall()]
         result.append({
             "userId": row["user_id"], "role": row["role"], "admissionStatus": row["admission_status"],
             "externalRef": row["external_ref"], "studentId": row["student_id"] or "",
@@ -130,9 +131,10 @@ def update_member(conn, org_id, user_id, changes, actor_id, actor_role):
         audit(conn, actor_id, actor_role, org_id, "member.status_changed", "membership", user_id,
               metadata={"from": row["admission_status"], "to": status})
         if status == "disabled":
-            # 停用即失效：同一事务删除该用户全部会话（含按 owner_ref 关联的旧会话）。
-            conn.execute("DELETE FROM sessions WHERE user_id = ? OR owner_ref IN "
-                         "(SELECT owner_ref FROM students WHERE user_id = ?)", (user_id, user_id))
+            # 停用即失效：只清该用户在本组织的会话，其他组织的归属不受影响。
+            conn.execute("DELETE FROM sessions WHERE org_id = ? AND (user_id = ? OR owner_ref IN "
+                         "(SELECT owner_ref FROM students WHERE user_id = ? AND org_id = ?))",
+                         (org_id, user_id, user_id, org_id))
             revoke_keys = True
     if role is not None:
         conn.execute("UPDATE org_memberships SET role = ? WHERE org_id = ? AND user_id = ?", (role, org_id, user_id))
@@ -149,7 +151,8 @@ def bulk_grant(conn, org_id, user_ids, amount, request_id, actor_id, actor_role)
         if not membership:
             results.append({"userId": user_id, "status": "forbidden"})
             continue
-        accounts = conn.execute("SELECT owner_ref FROM students WHERE user_id = ?", (user_id,)).fetchall()
+        accounts = conn.execute("SELECT owner_ref FROM students WHERE user_id = ? AND org_id = ?",
+                                (user_id, org_id)).fetchall()
         if not accounts:
             results.append({"userId": user_id, "status": "skipped", "reason": "no_account"})
             continue

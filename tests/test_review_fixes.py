@@ -74,20 +74,66 @@ class DisabledMemberTests(unittest.TestCase):
             self.assertEqual(server.get("/api/me", teacher["token"])[0], 200)
             self.assertEqual(member_for(server, admin, "2024001023")["admissionStatus"], "active")
 
-    def test_pending_review_behavior_is_untouched(self):
-        """待复核成员的能力边界尚未拍板，本次只拦 disabled；这条用例锁住现状，避免顺手改权限。"""
+    def test_pending_review_can_login_and_read_self_only(self):
+        """用户已拍板：待复核只保留登录、个人信息（含余额流水）、引导和登出，其余成员动作 403。"""
         with DemoServer() as server:
             admin = server.admin_token()
             code, student = register(server, "2024001022")
             self.assertEqual(code, 201, student)
+            code, work = server.post("/api/works", {"title": "待复核前作品", "summary": "复核前提交。",
+                                                     "category": "学习"}, student["token"])
+            self.assertEqual(code, 201, work)
             user = member_for(server, admin, "2024001022")
             code, updated = server.patch("/api/orgs/%s/members/%s" % (PILOT, user["userId"]),
                                          {"admissionStatus": "pending_review"}, admin)
             self.assertEqual(code, 200, updated)
-            self.assertEqual(server.get("/api/me", student["token"])[0], 200)
-            self.assertEqual(server.get("/api/me", student["token"])[1]["admissionStatus"], "pending_review")
-            self.assertEqual(server.post("/api/consume", {"amount": 10, "requestId": "pending-consume"},
-                                         student["token"])[0], 200)
+            self.assertEqual(updated["admissionStatus"], "pending_review")
+
+            code, relogin = server.post("/api/login", {"mode": "student", "identity": "2024001022",
+                                                       "password": TEST_AUTH_VALUE,
+                                                       "requestId": "login-pending"})
+            self.assertEqual(code, 200, relogin)
+            self.assertEqual(relogin["admissionStatus"], "pending_review")
+            pending = relogin["token"]
+            code, me = server.get("/api/me", pending)
+            self.assertEqual(code, 200, me)
+            self.assertEqual(me["admissionStatus"], "pending_review")
+            self.assertEqual(me["balance"], 100000)
+            self.assertTrue(me["ledger"], me)
+            self.assertEqual(server.get("/api/onboarding", pending)[0], 200)
+            code, progress = server.post("/api/onboarding", {"action": "start", "stepId": "team-basics"},
+                                         pending)
+            self.assertEqual(code, 200, progress)
+
+            denied = [
+                ("/api/consume", {"amount": 10, "requestId": "pending-consume"}),
+                ("/api/key/rotate", {"requestId": "pending-rotate"}),
+                ("/api/works", {"title": "待复核作品", "summary": "不应写入。", "category": "学习"}),
+                ("/api/works/%s/withdraw" % work["workId"], {}),
+            ]
+            for path, body in denied:
+                code, data = server.post(path, body, pending)
+                self.assertEqual(code, 403, (path, data))
+                self.assertEqual(data.get("error"), authz.PENDING_REVIEW_MESSAGE, (path, data))
+            for path in ("/api/works", "/api/works/mine", "/api/works/%s" % work["workId"]):
+                self.assertEqual(server.get(path, pending)[0], 403, path)
+            self.assertEqual(server.post("/api/logout", {}, pending)[0], 200)
+
+            code, _ = server.patch("/api/orgs/%s/members/%s" % (PILOT, user["userId"]),
+                                   {"admissionStatus": "active"}, admin)
+            self.assertEqual(code, 200)
+            code, active = server.post("/api/login", {"mode": "student", "identity": "2024001022",
+                                                       "password": TEST_AUTH_VALUE,
+                                                       "requestId": "login-pending-active"})
+            self.assertEqual(code, 200, active)
+            token = active["token"]
+            self.assertEqual(server.post("/api/consume", {"amount": 10, "requestId": "active-consume"}, token)[0], 200)
+            self.assertEqual(server.post("/api/key/rotate", {"requestId": "active-rotate"}, token)[0], 200)
+            self.assertEqual(server.get("/api/works", token)[0], 200)
+            code, again = server.post("/api/works", {"title": "复核后作品", "summary": "复核通过后提交。",
+                                                     "category": "学习"}, token)
+            self.assertEqual(code, 201, again)
+            self.assertEqual(server.post("/api/works/%s/withdraw" % work["workId"], {}, token)[0], 200)
 
 
 class ImportCleanupTests(unittest.TestCase):

@@ -12,6 +12,10 @@ let guideConfig = null;
 let guideProgress = null;
 let guideLocal = { filtered: false, favorites: new Set(), title: '', destination: '' };
 let autoOpened = false;
+let pendingReview = false;
+
+const ADMISSION_LABELS = { active: '已准入', disabled: '已停用', pending_review: '待复核' };
+const PENDING_HINT = '账户待复核，复核通过后开放';
 
 function toast(message) {
   const node = $('toast');
@@ -73,6 +77,7 @@ function ledgerNode(rows) {
 
 function renderAccount(next) {
   view = next;
+  pendingReview = next.admissionStatus === 'pending_review';
   $('loginView').classList.add('hidden');
   $('appView').classList.remove('hidden');
   $('userIdentity').textContent = next.identity;
@@ -93,7 +98,7 @@ function renderAccount(next) {
   if (next.org) {
     org.appendChild(el('h4', { text: next.org.name }));
     org.appendChild(UI.RoleBadge({ role: next.role }, next.labels));
-    org.appendChild(el('p', { className: 'muted', text: '准入状态：' + (next.admissionStatus || '未知') }));
+    org.appendChild(el('p', { className: 'muted', text: '准入状态：' + (ADMISSION_LABELS[next.admissionStatus] || '未知') }));
   }
   $('teacherLink').classList.toggle('hidden', next.role !== 'org_admin');
   $('adminEntry').href = next.role === 'org_admin' ? 'teacher.html' : 'admin.html';
@@ -103,10 +108,24 @@ function renderAccount(next) {
   $('guideBanner').classList.toggle('hidden', !showBanner);
   if (onboarding.status === 'in_progress') $('guideBannerBtn').textContent = '继续指南';
   if (onboarding.autoOpenPending && !autoOpened) { autoOpened = true; openGuide(); }
+  applyAdmission();
+}
+
+function applyAdmission() {
+  $('pendingBanner').classList.toggle('hidden', !pendingReview);
+  const blocked = [$('demoUseBtn'), $('rotateKeyBtn'), $('createBtn'), $('submitWorkBtn'),
+    $('submitWorkConfirm'), $('galleryQuick'), ...document.querySelectorAll('.navbtn[data-page="gallery"]')];
+  for (const node of blocked) {
+    node.disabled = pendingReview;
+    node.classList.toggle('is-disabled', pendingReview);
+    node.title = pendingReview ? PENDING_HINT : '';
+  }
+  if (pendingReview) $('submitPanel').classList.add('hidden');
 }
 
 function showLogin() {
   view = null;
+  pendingReview = false;
   $('appView').classList.add('hidden');
   $('loginView').classList.remove('hidden');
   $('onboarding').classList.add('hidden');
@@ -178,6 +197,7 @@ $('demoUseBtn').onclick = async () => {
 };
 
 function setPage(page) {
+  if (pendingReview && page === 'gallery') { toast(PENDING_HINT); return; }
   document.querySelectorAll('.page').forEach(node => node.classList.toggle('active', node.id === 'page-' + page));
   document.querySelectorAll('.navbtn[data-page]').forEach(node => node.classList.toggle('active', node.dataset.page === page));
   if (page === 'gallery') loadWorks();
@@ -207,7 +227,7 @@ function workCards(items, options) {
 }
 
 async function loadWorks() {
-  if (!token) return;
+  if (!token || pendingReview) return;
   try {
     const [gallery, mine] = await Promise.all([api('/api/works'), api('/api/works/mine')]);
     $('galleryWorks').replaceChildren(...workCards(gallery.items, {
