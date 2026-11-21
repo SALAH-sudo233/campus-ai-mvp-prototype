@@ -4,6 +4,8 @@ import hashlib
 import io
 import re
 
+from identity import normalize_identity
+
 MAX_BYTES = 10 * 1024 * 1024
 MAX_ROWS = 10000
 MAX_FIELD = 256
@@ -138,7 +140,7 @@ def parse(data):
             continue
         fields["role"] = role
         fields["status"] = status
-        fields["email"] = fields["email"].lower()
+        fields["email"] = normalize_identity("email", fields["email"])
         identity_keys = []
         if fields["student_id"]:
             identity_keys.append("student:" + fields["student_id"])

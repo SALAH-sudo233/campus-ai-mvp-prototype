@@ -22,6 +22,7 @@ import org_service
 import relay
 import roster
 import works_service
+from identity import normalize_identity, owner_ref_of
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.environ.get("DEMO_DB", os.path.join(ROOT, "demo-backend.sqlite"))
@@ -56,11 +57,24 @@ def db():
 def setup():
     migrations.migrate(DB_PATH)
     relay.init(RELAY_DB)
+    migrations.fold_relay_email_case(RELAY_DB)
     migrations.backfill_relay(RELAY_DB, DB_PATH)
+    revoke_inactive_member_keys()
 
 
-def owner_ref_of(mode, identity):
-    return "stu_" + hashlib.sha256(("%s:%s" % (mode, identity)).encode("utf-8")).hexdigest()[:16]
+def revoke_inactive_member_keys():
+    """启动时清扫存量非准入成员的密钥；重复执行不会产生新的吊销。"""
+    conn = db()
+    try:
+        refs = [row["owner_ref"] for row in conn.execute(
+            "SELECT DISTINCT s.owner_ref FROM students s "
+            "JOIN org_memberships m ON m.user_id = s.user_id AND m.org_id = s.org_id "
+            "WHERE m.admission_status IN ('pending_review', 'disabled')").fetchall()]
+    finally:
+        conn.close()
+    for ref in refs:
+        relay.revoke_by_owner(RELAY_DB, ref)
+    return len(refs)
 
 
 def hash_password(password, salt):
@@ -242,6 +256,7 @@ def profile(conn, owner_ref):
 
 
 def _user_for_registration(conn, mode, identity, sid):
+    identity = normalize_identity(mode, identity)
     row = conn.execute("SELECT user_id FROM user_identities WHERE kind = ? AND value_norm = ?",
                        (mode, identity)).fetchone()
     if row:
@@ -258,6 +273,7 @@ def _user_for_registration(conn, mode, identity, sid):
 
 
 def _ensure_identity(conn, user_id, kind, value, source):
+    value = normalize_identity(kind, value)
     existing = conn.execute("SELECT user_id FROM user_identities WHERE kind = ? AND value_norm = ?",
                             (kind, value)).fetchone()
     if existing:
@@ -284,6 +300,7 @@ def _registration_membership(conn, user_id, mode, identity, org_id):
 
 
 def do_register(mode, identity, password, request_id, org_id=None):
+    identity = normalize_identity(mode, identity)
     problem = check_identity(mode, identity) or check_password(password)
     if problem:
         return 400, {"error": problem}
@@ -334,6 +351,7 @@ def do_register(mode, identity, password, request_id, org_id=None):
 
 
 def do_login(mode, identity, password, request_id, org_id=None):
+    identity = normalize_identity(mode, identity)
     problem = check_identity(mode, identity)
     if problem or not isinstance(password, str) or not password:
         return 401, {"error": "账号或密码错误"}
@@ -374,18 +392,21 @@ def do_login(mode, identity, password, request_id, org_id=None):
             conn.execute("DELETE FROM login_failures WHERE owner_ref = ?", (owner_ref,))
             token = new_session(conn, owner_ref, row["user_id"], membership["org_id"] if membership else row["org_id"])
             conn.execute("COMMIT")
+            # 发钥前在锁内重读准入状态：与成员状态变更串行，避免吊销后又插入 active 密钥。
+            current_membership = _membership(conn, row["user_id"], org_id or row["org_id"])
+            if current_membership and current_membership["admission_status"] == "active":
+                keys = ensure_key(owner_ref, request_id, mode, identity, row["user_id"],
+                                  current_membership["org_id"])
+            else:
+                # 非 active（如 pending_review）登录只回状态与提示，不补发明文密钥；口径与 /api/me 一致。
+                hint = relay.active_hint(RELAY_DB, owner_ref)
+                keys = {"status": "active" if hint else "none", "plaintext": None, "hint": hint}
         except BaseException:
             if conn.in_transaction:
                 conn.execute("ROLLBACK")
             raise
         finally:
             conn.close()
-    if membership and membership["admission_status"] == "active":
-        keys = ensure_key(owner_ref, request_id, mode, identity, row["user_id"], membership["org_id"])
-    else:
-        # 非 active（如 pending_review）登录只回状态与提示，不补发明文密钥；口径与 /api/me 一致。
-        hint = relay.active_hint(RELAY_DB, owner_ref)
-        keys = {"status": "active" if hint else "none", "plaintext": None, "hint": hint}
     conn = db()
     try:
         view = profile(conn, owner_ref)
@@ -543,8 +564,8 @@ def _import_identity_keys(fields):
     keys = []
     for kind, value in (("student", fields.get("student_id")), ("email", fields.get("email"))):
         if value:
-            keys.append((kind, value))
-    email = fields.get("email")
+            keys.append((kind, normalize_identity(kind, value)))
+    email = normalize_identity("email", fields.get("email"))
     if email and roster.is_enrolled("email", email):
         key = ("student", roster.student_id_of("email", email))
         if key not in keys:
@@ -556,6 +577,7 @@ def _identity_owners(conn, keys):
     """把身份键解析成用户主体，同一用户只记一次。"""
     owners = []
     for kind, value in keys:
+        value = normalize_identity(kind, value)
         row = conn.execute("SELECT user_id FROM user_identities WHERE kind = ? AND value_norm = ?",
                            (kind, value)).fetchone()
         if row and row["user_id"] not in owners:
@@ -572,7 +594,8 @@ def _preview_conflicts(conn, org_id, rows):
                                 (org_id, fields["external_ref"])).fetchone()
         if existing:
             same = (existing["student_id"] == (fields["student_id"] or None) and
-                    (existing["email"] or "") == (fields["email"] or "") and
+                    normalize_identity("email", existing["email"] or "") ==
+                    normalize_identity("email", fields["email"] or "") and
                     existing["name"] == fields["name"] and existing["role"] == fields["role"] and
                     existing["admission_status"] == fields["status"])
             row.update({"result": "skipped" if same else "conflict",
@@ -700,7 +723,8 @@ def _write_import_row(conn, org_id, fields, now):
         "INSERT INTO org_memberships (org_id, user_id, role, admission_status, external_ref, student_id, email, name, "
         "joined_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (org_id, user_id, fields["role"], fields["status"], fields["external_ref"],
-         fields.get("student_id") or None, fields.get("email") or None, fields["name"], now))
+         fields.get("student_id") or None, normalize_identity("email", fields.get("email")) or None,
+         fields["name"], now))
     return "accepted", None
 
 
@@ -1082,27 +1106,32 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             authz.require(principal, "members", "update_status", org_id=org_id)
             if data.get("role") is not None:
                 authz.require(principal, "members", "update_role", org_id=org_id)
-            conn = db()
-            try:
-                conn.execute("BEGIN IMMEDIATE")
-                item, revoke_keys = org_service.update_member(conn, org_id, match.group(2), data,
-                                                              principal.get("user_id"), principal["role"])
-                if not item:
-                    conn.execute("ROLLBACK")
-                    return self._send(403, {"error": "无权访问该资源"})
-                if revoke_keys:
-                    _revoke_user_keys(conn, match.group(2), org_id)
-                    org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
-                                      "member.key_revoked", "member", match.group(2),
-                                      metadata={"reason": "admission_disabled"})
-                conn.execute("COMMIT")
-                return self._send(200, item)
-            except BaseException:
-                if conn.in_transaction:
-                    conn.execute("ROLLBACK")
-                raise
-            finally:
-                conn.close()
+            with LOCK:
+                conn = db()
+                try:
+                    conn.execute("BEGIN IMMEDIATE")
+                    item, revoke_keys = org_service.update_member(conn, org_id, match.group(2), data,
+                                                                  principal.get("user_id"), principal["role"])
+                    if not item:
+                        conn.execute("ROLLBACK")
+                        return self._send(403, {"error": "无权访问该资源"})
+                    if revoke_keys:
+                        refs = _revoke_user_keys(conn, match.group(2), org_id)
+                        if data.get("admissionStatus") == "pending_review":
+                            reason = "admission_pending_review"
+                        else:
+                            reason = "admission_disabled"
+                        org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
+                                          "member.key_revoked", "member", match.group(2),
+                                          metadata={"reason": reason, "keys": len(refs)})
+                    conn.execute("COMMIT")
+                    return self._send(200, item)
+                except BaseException:
+                    if conn.in_transaction:
+                        conn.execute("ROLLBACK")
+                    raise
+                finally:
+                    conn.close()
         except (authz.AuthzError, ValueError) as exc:
             return self._error(exc)
         except relay.RelayUnavailable as exc:
@@ -1304,7 +1333,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             data = self._body()
             rid = str(data.get("requestId") or secrets.token_hex(8))[:64]
             mode = data.get("mode", "email")
-            identity = str(data.get("identity") or "").strip()
+            identity = normalize_identity(mode, data.get("identity"))
             password = data.get("password")
             target_org = data.get("orgId")
             if path == "/api/register":

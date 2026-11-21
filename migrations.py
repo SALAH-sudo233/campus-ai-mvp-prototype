@@ -7,6 +7,11 @@ import time
 
 import config
 import roster
+from identity import normalize_identity, owner_ref_of
+
+
+class MigrationConflict(RuntimeError):
+    """迁移遇到无法自动合并的数据冲突；保留原数据，交人工处理。"""
 
 
 LEGACY_SCHEMA = [
@@ -258,6 +263,73 @@ def _migration_6(conn):
     _execute_all(conn, INDEXES)
 
 
+def _case_fold_collisions(conn):
+    """统计邮箱归一后会撞车的组数；只返回计数，错误信息里不带原始身份值。"""
+    identity_dups = 0
+    seen_identities = set()
+    for row in conn.execute("SELECT value_norm FROM user_identities WHERE kind = 'email'").fetchall():
+        key = normalize_identity("email", row["value_norm"])
+        if key in seen_identities:
+            identity_dups += 1
+        else:
+            seen_identities.add(key)
+    account_dups = 0
+    seen_refs = set()
+    for row in conn.execute("SELECT identity FROM students WHERE mode = 'email'").fetchall():
+        ref = owner_ref_of("email", row["identity"])
+        if ref in seen_refs:
+            account_dups += 1
+        else:
+            seen_refs.add(ref)
+    return identity_dups, account_dups
+
+
+def _fold_email_case(conn):
+    """把历史邮箱身份归一为小写，并同步重算 students.owner_ref 及其引用表。
+
+    先整体检查撞车再写，任何一组归一后重复都中止迁移并抛 MigrationConflict，
+    由 migrate() 回滚整个版本，不静默丢行。
+    """
+    identity_dups, account_dups = _case_fold_collisions(conn)
+    if identity_dups or account_dups:
+        raise MigrationConflict(
+            "email-case-fold 迁移中止：邮箱身份归一后出现重复（身份记录 %d 条、账户 %d 条），"
+            "请先人工合并大小写不同的重复账号后再重试。" % (identity_dups, account_dups))
+    try:
+        moves = []
+        # 只有邮箱身份的归一结果会变，学号账户的 owner_ref 保持原样。
+        for row in conn.execute("SELECT owner_ref, identity FROM students WHERE mode = 'email'").fetchall():
+            new_ref = owner_ref_of("email", row["identity"])
+            new_identity = normalize_identity("email", row["identity"])
+            if new_ref != row["owner_ref"] or new_identity != row["identity"]:
+                moves.append((row["owner_ref"], new_ref, new_identity))
+        for old_ref, new_ref, new_identity in moves:
+            conn.execute("UPDATE students SET owner_ref = ?, identity = ? WHERE owner_ref = ?",
+                         (new_ref, new_identity, old_ref))
+            for table in ("ledger", "sessions", "login_failures"):
+                conn.execute("UPDATE %s SET owner_ref = ? WHERE owner_ref = ?" % table, (new_ref, old_ref))
+        for row in conn.execute("SELECT id, value_norm, value_display FROM user_identities "
+                                "WHERE kind = 'email'").fetchall():
+            value_norm = normalize_identity("email", row["value_norm"])
+            value_display = normalize_identity("email", row["value_display"])
+            if value_norm != row["value_norm"] or value_display != row["value_display"]:
+                conn.execute("UPDATE user_identities SET value_norm = ?, value_display = ? WHERE id = ?",
+                             (value_norm, value_display, row["id"]))
+        for row in conn.execute("SELECT org_id, user_id, email FROM org_memberships "
+                                "WHERE email IS NOT NULL").fetchall():
+            email = normalize_identity("email", row["email"])
+            if email != row["email"]:
+                conn.execute("UPDATE org_memberships SET email = ? WHERE org_id = ? AND user_id = ?",
+                             (email, row["org_id"], row["user_id"]))
+    except sqlite3.IntegrityError as exc:
+        raise MigrationConflict(
+            "email-case-fold 迁移中止：邮箱身份归一后出现唯一键冲突，请先人工合并重复账号后再重试。") from exc
+
+
+def _migration_7(conn):
+    _fold_email_case(conn)
+
+
 MIGRATIONS = [
     (1, "legacy-schema", _migration_1),
     (2, "org-schema", _migration_2),
@@ -265,6 +337,7 @@ MIGRATIONS = [
     (4, "pilot-org-and-seeds", _migration_4),
     (5, "legacy-backfill", _migration_5),
     (6, "indexes", _migration_6),
+    (7, "email-case-fold", _migration_7),
 ]
 
 
@@ -331,6 +404,52 @@ def backfill_relay(relay_db, main_db):
     finally:
         relay_conn.close()
         main.close()
+
+
+def fold_relay_email_case(relay_db):
+    """中转站台账独立在另一个库，按同一身份口径归一邮箱并同步 owner_ref。
+
+    只依赖台账自身存的 mode/identity 重算，可重复执行；由 app_server.setup 在 relay.init
+    之后调用。主库迁移已把 students.owner_ref 改成同一口径，这里不跟上的话旧账户的密钥
+    会挂在不存在的 owner_ref 上，登录后看起来像没有密钥。
+    """
+    if not os.path.exists(relay_db):
+        return 0
+    conn = connect(relay_db)
+    moved = 0
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        accounts = conn.execute("SELECT owner_ref, mode, identity FROM relay_accounts").fetchall()
+        targets = {}
+        for row in accounts:
+            targets.setdefault(owner_ref_of(row["mode"], row["identity"]), []).append(row["owner_ref"])
+        conflicts = [ref for ref, refs in targets.items() if len(refs) > 1]
+        if conflicts:
+            raise MigrationConflict(
+                "email-case-fold 中转站台账归一后出现重复（%d 组），请先人工合并大小写不同的重复账号后再重试。"
+                % len(conflicts))
+        try:
+            for row in accounts:
+                new_ref = owner_ref_of(row["mode"], row["identity"])
+                new_identity = normalize_identity(row["mode"], row["identity"])
+                if new_ref == row["owner_ref"] and new_identity == row["identity"]:
+                    continue
+                conn.execute("UPDATE relay_accounts SET owner_ref = ?, identity = ? WHERE owner_ref = ?",
+                             (new_ref, new_identity, row["owner_ref"]))
+                conn.execute("UPDATE relay_keys SET owner_ref = ? WHERE owner_ref = ?",
+                             (new_ref, row["owner_ref"]))
+                moved += 1
+        except sqlite3.IntegrityError as exc:
+            raise MigrationConflict(
+                "email-case-fold 中转站台账归一后出现唯一键冲突，请先人工合并重复账号后再重试。") from exc
+        conn.execute("COMMIT")
+    except BaseException:
+        if conn.in_transaction:
+            conn.execute("ROLLBACK")
+        raise
+    finally:
+        conn.close()
+    return moved
 
 
 def status(db_path):

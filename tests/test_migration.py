@@ -26,7 +26,7 @@ class MigrationTests(unittest.TestCase):
             conn.close()
 
             applied = migrations.migrate(db_path)
-            self.assertEqual(applied, [1, 2, 3, 4, 5, 6])
+            self.assertEqual(applied, [1, 2, 3, 4, 5, 6, 7])
             self.assertEqual(migrations.migrate(db_path), [])
 
             conn = sqlite3.connect(db_path)
@@ -50,7 +50,7 @@ class MigrationTests(unittest.TestCase):
                                  (config.PILOT_ORG["id"],)).fetchone()[0]
             self.assertGreaterEqual(count, 200)
             versions = conn.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0]
-            self.assertEqual(versions, 6)
+            self.assertEqual(versions, 7)
             conn.close()
 
     def test_failed_version_rolls_back_without_half_write(self):
@@ -75,7 +75,7 @@ class MigrationTests(unittest.TestCase):
             conn.close()
             self.assertEqual(versions, [1, 2])
             self.assertNotIn("half_write", tables)
-            self.assertEqual(migrations.migrate(db_path), [3, 4, 5, 6])
+            self.assertEqual(migrations.migrate(db_path), [3, 4, 5, 6, 7])
 
     def test_relay_backfill_fills_user_and_org(self):
         with tempfile.TemporaryDirectory() as tmp:
