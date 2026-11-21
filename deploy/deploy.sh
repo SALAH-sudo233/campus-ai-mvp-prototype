@@ -4,7 +4,7 @@
 #
 # 做的事：
 #   1. 建独立系统用户 campus-proto（无登录 shell），原型以它运行，和中转站的进程、文件权限隔离。
-#   2. 把仓库里的后端代码同步到 /opt/campus-prototype。
+#   2. 把仓库里的后端与前端文件同步到 /opt/campus-prototype，已有代码和数据库先备份。
 #   3. 准备 /etc/campus-prototype/env（首次运行从 env.example 生成，不覆盖已有配置）。
 #   4. 装 systemd unit，campus-prototype.service 跑在 127.0.0.1:8080，带资源上限和沙箱限制。
 #   5. 提示下一步：把 nginx 片段接入 campusgo.aihuanxi.ai 的 server 块。
@@ -29,8 +29,20 @@ if ! id -u "${SERVICE_USER}" >/dev/null 2>&1; then
 fi
 
 echo "==> 2/5 同步后端代码到 ${APP_DIR}"
+PY_FILES="server.py app_server.py config.py authz.py migrations.py migrate.py importer.py analytics.py onboarding.py works_service.py org_service.py relay.py roster.py"
+WEB_FILES="index.html admin.html teacher.html import.html app.js admin.js teacher.js import.js components.js styles.css"
 mkdir -p "${APP_DIR}"
-for f in server.py relay.py roster.py index.html admin.html app.js admin.js styles.css; do
+if [ -n "$(ls -A "${APP_DIR}" 2>/dev/null)" ]; then
+  BACKUP_DIR="${APP_DIR}.bak-$(date +%Y%m%d-%H%M%S)"
+  cp -a "${APP_DIR}" "${BACKUP_DIR}"
+  echo "    已备份旧代码到 ${BACKUP_DIR}"
+fi
+if [ -d "${DATA_DIR}" ] && [ -n "$(ls -A "${DATA_DIR}" 2>/dev/null)" ]; then
+  DATA_BACKUP="${DATA_DIR}.bak-$(date +%Y%m%d-%H%M%S)"
+  cp -a "${DATA_DIR}" "${DATA_BACKUP}"
+  echo "    已备份数据库到 ${DATA_BACKUP}，迁移会在已有库上运行。"
+fi
+for f in ${PY_FILES} ${WEB_FILES}; do
   install -o "${SERVICE_USER}" -g "${SERVICE_USER}" -m 0640 "${SRC_DIR}/${f}" "${APP_DIR}/${f}"
 done
 
