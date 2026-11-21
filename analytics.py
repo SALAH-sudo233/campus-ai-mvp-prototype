@@ -17,11 +17,13 @@ def summary(conn, org_id, now=None):
         "SELECT COALESCE(SUM(x.balance), 0) AS balance, COALESCE(SUM(x.spent), 0) AS spent FROM ("
         "SELECT s.user_id, SUM(s.balance) AS balance, SUM(s.spent) AS spent FROM students s "
         "JOIN org_memberships m ON m.user_id = s.user_id AND m.org_id = ? AND m.admission_status = 'active' "
+        "AND s.org_id = m.org_id "
         "GROUP BY s.user_id) x", (org_id,)).fetchone()
     active_members = conn.execute(
         "SELECT COUNT(DISTINCT l.user_id) AS n FROM ledger l "
         "JOIN org_memberships m ON m.user_id = l.user_id AND m.org_id = ? AND m.admission_status = 'active' "
-        "WHERE l.kind = 'use' AND l.created_at >= ?", (org_id, now - 30 * 86400)).fetchone()["n"]
+        "WHERE l.org_id = m.org_id AND l.kind = 'use' AND l.created_at >= ?",
+        (org_id, now - 30 * 86400)).fetchone()["n"]
     return {
         "memberCount": active,
         "activeMemberCount": active_members,
@@ -65,7 +67,7 @@ def ranking(conn, org_id, limit=10, now=None):
         "COALESCE(SUM(-l.amount), 0) AS consumed FROM ledger l "
         "JOIN org_memberships m ON m.user_id = l.user_id AND m.org_id = ? "
         "LEFT JOIN users u ON u.id = l.user_id "
-        "WHERE l.kind = 'use' AND l.created_at >= ? GROUP BY l.user_id "
+        "WHERE l.org_id = m.org_id AND l.kind = 'use' AND l.created_at >= ? GROUP BY l.user_id "
         "ORDER BY consumed DESC, name LIMIT ?", (org_id, now - 90 * 86400, limit)).fetchall()
     return [{"name": row["name"], "studentId": row["student_id"] or "", "consumed": int(row["consumed"])}
             for row in rows]
@@ -75,7 +77,8 @@ def activity(conn, org_id, now=None):
     now = now or time.time()
     rows = conn.execute(
         "SELECT m.user_id, COUNT(DISTINCT date(l.created_at, 'unixepoch')) AS active_days FROM org_memberships m "
-        "LEFT JOIN ledger l ON l.user_id = m.user_id AND l.kind = 'use' AND l.created_at >= ? "
+        "LEFT JOIN ledger l ON l.user_id = m.user_id AND l.org_id = m.org_id "
+        "AND l.kind = 'use' AND l.created_at >= ? "
         "WHERE m.org_id = ? AND m.admission_status = 'active' GROUP BY m.user_id",
         (now - 30 * 86400, org_id)).fetchall()
     buckets = [{"label": "30 天未使用", "count": 0, "tone": "quiet"},

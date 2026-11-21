@@ -380,8 +380,12 @@ def do_login(mode, identity, password, request_id, org_id=None):
             raise
         finally:
             conn.close()
-    keys = ensure_key(owner_ref, request_id, mode, identity, row["user_id"],
-                      membership["org_id"] if membership else row["org_id"])
+    if membership and membership["admission_status"] == "active":
+        keys = ensure_key(owner_ref, request_id, mode, identity, row["user_id"], membership["org_id"])
+    else:
+        # 非 active（如 pending_review）登录只回状态与提示，不补发明文密钥；口径与 /api/me 一致。
+        hint = relay.active_hint(RELAY_DB, owner_ref)
+        keys = {"status": "active" if hint else "none", "plaintext": None, "hint": hint}
     conn = db()
     try:
         view = profile(conn, owner_ref)
