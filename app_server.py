@@ -1096,10 +1096,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     conn.execute("ROLLBACK")
                     return self._send(403, {"error": "无权访问该资源"})
                 if revoke_keys:
-                    _revoke_user_keys(conn, match.group(2), org_id)
+                    refs = _revoke_user_keys(conn, match.group(2), org_id)
+                    if data.get("admissionStatus") == "pending_review":
+                        reason = "admission_pending_review"
+                    else:
+                        reason = "admission_disabled"
                     org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
                                       "member.key_revoked", "member", match.group(2),
-                                      metadata={"reason": "admission_disabled"})
+                                      metadata={"reason": reason, "keys": len(refs)})
                 conn.execute("COMMIT")
                 return self._send(200, item)
             except BaseException:
