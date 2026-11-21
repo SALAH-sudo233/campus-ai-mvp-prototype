@@ -531,6 +531,34 @@ def org_members(org_id, query=None):
         conn.close()
 
 
+def _import_identity_keys(fields):
+    """一行名册的全部身份键：行内学号、行内邮箱，以及名册邮箱里解析出的学号。
+
+    邮箱本地部分就是名册学号时，它和行内学号是同一个人；预览与确认共用这一口径。
+    """
+    keys = []
+    for kind, value in (("student", fields.get("student_id")), ("email", fields.get("email"))):
+        if value:
+            keys.append((kind, value))
+    email = fields.get("email")
+    if email and roster.is_enrolled("email", email):
+        key = ("student", roster.student_id_of("email", email))
+        if key not in keys:
+            keys.append(key)
+    return keys
+
+
+def _identity_owners(conn, keys):
+    """把身份键解析成用户主体，同一用户只记一次。"""
+    owners = []
+    for kind, value in keys:
+        row = conn.execute("SELECT user_id FROM user_identities WHERE kind = ? AND value_norm = ?",
+                           (kind, value)).fetchone()
+        if row and row["user_id"] not in owners:
+            owners.append(row["user_id"])
+    return owners
+
+
 def _preview_conflicts(conn, org_id, rows):
     for row in rows:
         if row["result"] != "accepted":
@@ -547,9 +575,7 @@ def _preview_conflicts(conn, org_id, rows):
                         "reason_code": "already_present" if same else "member_conflict",
                         "message": "成员已存在，内容一致" if same else "外部编号已存在且字段不同，请人工处理"})
             continue
-        for kind, value in (("student", fields["student_id"]), ("email", fields["email"])):
-            if not value:
-                continue
+        for kind, value in _import_identity_keys(fields):
             identity = conn.execute("SELECT user_id FROM user_identities WHERE kind = ? AND value_norm = ?",
                                     (kind, value)).fetchone()
             if identity:
@@ -647,14 +673,12 @@ def _write_import_row(conn, org_id, fields, now):
                             (org_id, fields["external_ref"])).fetchone()
     if existing:
         return "skipped", "already_present"
-    user_id = None
-    for kind, value in (("student", fields.get("student_id")), ("email", fields.get("email"))):
-        if value:
-            row = conn.execute("SELECT user_id FROM user_identities WHERE kind = ? AND value_norm = ?",
-                               (kind, value)).fetchone()
-            if row:
-                user_id = row["user_id"]
-                break
+    keys = _import_identity_keys(fields)
+    owners = _identity_owners(conn, keys)
+    if len(owners) > 1:
+        # 同一行的多个身份键指向不同用户，不能当成一个人复用，判冲突。
+        return "conflict", "identity_conflict"
+    user_id = owners[0] if owners else None
     if user_id:
         if conn.execute("SELECT 1 FROM org_memberships WHERE org_id = ? AND user_id = ?",
                         (org_id, user_id)).fetchone():
@@ -666,16 +690,8 @@ def _write_import_row(conn, org_id, fields, now):
         user_id = "u_" + secrets.token_hex(12)
         conn.execute("INSERT INTO users (id, display_name, created_at) VALUES (?, ?, ?)",
                      (user_id, fields["name"], now))
-    for kind, value in (("student", fields.get("student_id")), ("email", fields.get("email"))):
-        if not value:
-            continue
-        owner = conn.execute("SELECT user_id FROM user_identities WHERE kind = ? AND value_norm = ?",
-                             (kind, value)).fetchone()
-        if owner and owner["user_id"] != user_id:
-            return "conflict", "identity_conflict"
-    for kind, value in (("student", fields.get("student_id")), ("email", fields.get("email"))):
-        if value:
-            _ensure_identity(conn, user_id, kind, value, "import")
+    for kind, value in keys:
+        _ensure_identity(conn, user_id, kind, value, "import")
     conn.execute(
         "INSERT INTO org_memberships (org_id, user_id, role, admission_status, external_ref, student_id, email, name, "
         "joined_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
