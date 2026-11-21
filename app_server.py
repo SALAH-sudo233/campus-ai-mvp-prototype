@@ -59,6 +59,22 @@ def setup():
     relay.init(RELAY_DB)
     migrations.fold_relay_email_case(RELAY_DB)
     migrations.backfill_relay(RELAY_DB, DB_PATH)
+    revoke_inactive_member_keys()
+
+
+def revoke_inactive_member_keys():
+    """启动时清扫存量非准入成员的密钥；重复执行不会产生新的吊销。"""
+    conn = db()
+    try:
+        refs = [row["owner_ref"] for row in conn.execute(
+            "SELECT DISTINCT s.owner_ref FROM students s "
+            "JOIN org_memberships m ON m.user_id = s.user_id AND m.org_id = s.org_id "
+            "WHERE m.admission_status IN ('pending_review', 'disabled')").fetchall()]
+    finally:
+        conn.close()
+    for ref in refs:
+        relay.revoke_by_owner(RELAY_DB, ref)
+    return len(refs)
 
 
 def hash_password(password, salt):
@@ -376,18 +392,21 @@ def do_login(mode, identity, password, request_id, org_id=None):
             conn.execute("DELETE FROM login_failures WHERE owner_ref = ?", (owner_ref,))
             token = new_session(conn, owner_ref, row["user_id"], membership["org_id"] if membership else row["org_id"])
             conn.execute("COMMIT")
+            # 发钥前在锁内重读准入状态：与成员状态变更串行，避免吊销后又插入 active 密钥。
+            current_membership = _membership(conn, row["user_id"], org_id or row["org_id"])
+            if current_membership and current_membership["admission_status"] == "active":
+                keys = ensure_key(owner_ref, request_id, mode, identity, row["user_id"],
+                                  current_membership["org_id"])
+            else:
+                # 非 active（如 pending_review）登录只回状态与提示，不补发明文密钥；口径与 /api/me 一致。
+                hint = relay.active_hint(RELAY_DB, owner_ref)
+                keys = {"status": "active" if hint else "none", "plaintext": None, "hint": hint}
         except BaseException:
             if conn.in_transaction:
                 conn.execute("ROLLBACK")
             raise
         finally:
             conn.close()
-    if membership and membership["admission_status"] == "active":
-        keys = ensure_key(owner_ref, request_id, mode, identity, row["user_id"], membership["org_id"])
-    else:
-        # 非 active（如 pending_review）登录只回状态与提示，不补发明文密钥；口径与 /api/me 一致。
-        hint = relay.active_hint(RELAY_DB, owner_ref)
-        keys = {"status": "active" if hint else "none", "plaintext": None, "hint": hint}
     conn = db()
     try:
         view = profile(conn, owner_ref)
@@ -1087,31 +1106,32 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             authz.require(principal, "members", "update_status", org_id=org_id)
             if data.get("role") is not None:
                 authz.require(principal, "members", "update_role", org_id=org_id)
-            conn = db()
-            try:
-                conn.execute("BEGIN IMMEDIATE")
-                item, revoke_keys = org_service.update_member(conn, org_id, match.group(2), data,
-                                                              principal.get("user_id"), principal["role"])
-                if not item:
-                    conn.execute("ROLLBACK")
-                    return self._send(403, {"error": "无权访问该资源"})
-                if revoke_keys:
-                    refs = _revoke_user_keys(conn, match.group(2), org_id)
-                    if data.get("admissionStatus") == "pending_review":
-                        reason = "admission_pending_review"
-                    else:
-                        reason = "admission_disabled"
-                    org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
-                                      "member.key_revoked", "member", match.group(2),
-                                      metadata={"reason": reason, "keys": len(refs)})
-                conn.execute("COMMIT")
-                return self._send(200, item)
-            except BaseException:
-                if conn.in_transaction:
-                    conn.execute("ROLLBACK")
-                raise
-            finally:
-                conn.close()
+            with LOCK:
+                conn = db()
+                try:
+                    conn.execute("BEGIN IMMEDIATE")
+                    item, revoke_keys = org_service.update_member(conn, org_id, match.group(2), data,
+                                                                  principal.get("user_id"), principal["role"])
+                    if not item:
+                        conn.execute("ROLLBACK")
+                        return self._send(403, {"error": "无权访问该资源"})
+                    if revoke_keys:
+                        refs = _revoke_user_keys(conn, match.group(2), org_id)
+                        if data.get("admissionStatus") == "pending_review":
+                            reason = "admission_pending_review"
+                        else:
+                            reason = "admission_disabled"
+                        org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
+                                          "member.key_revoked", "member", match.group(2),
+                                          metadata={"reason": reason, "keys": len(refs)})
+                    conn.execute("COMMIT")
+                    return self._send(200, item)
+                except BaseException:
+                    if conn.in_transaction:
+                        conn.execute("ROLLBACK")
+                    raise
+                finally:
+                    conn.close()
         except (authz.AuthzError, ValueError) as exc:
             return self._error(exc)
         except relay.RelayUnavailable as exc:

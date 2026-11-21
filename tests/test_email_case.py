@@ -116,15 +116,18 @@ class EmailCaseMigrationTests(unittest.TestCase):
                 self.assertEqual(account["identity"], "alice@example.edu")
                 key = relay_conn.execute("SELECT * FROM relay_keys WHERE id = 'rk_legacy'").fetchone()
                 self.assertEqual(key["owner_ref"], new_ref)
+                self.assertEqual(key["status"], "revoked")
             finally:
                 relay_conn.close()
 
-            # 旧会话、台账和密钥在迁移后仍可用；登录不区分大小写。
+            # 旧会话和台账仍可用；该账户准入为 pending_review，存量密钥按准入规则吊销。
             code, me = server.get("/api/me", "legacy-session-token")
             self.assertEqual(code, 200, me)
             self.assertEqual(me["identity"], "alice@example.edu")
             self.assertEqual(me["balance"], 5000)
-            self.assertEqual(me["relayKey"]["hint"], "legacy-hint")
+            self.assertEqual(me["relayKey"]["status"], "none")
+            self.assertIsNone(me["relayKey"]["plaintext"])
+            self.assertIsNone(me["relayKey"]["hint"])
             self.assertEqual([item["amount"] for item in me["ledger"]], [5000])
             code, lower = login(server, "alice@example.edu", mode="email")
             self.assertEqual(code, 200, lower)
