@@ -3,44 +3,113 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>校园 AI 创作平台 · MVP</title>
+  <meta name="theme-color" content="#4968ed" />
+  <title>创作工作台</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="toast" class="toast" role="status"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <main class="shell">
     <section id="loginView" class="login-wrap">
+      <a class="corner-admin" href="admin.html" id="loginAdminEntry">管理入口</a>
       <div class="brand-mark">AI</div>
-      <p class="eyebrow">HUST CAMPUS AI</p>
+      <p class="eyebrow">CAMPUS CREATOR</p>
       <h1>让每个灵感，都能变成作品</h1>
-      <p class="muted intro">面向华中科技大学学生的 AI 软件创作空间</p>
+      <p class="muted intro" data-product-tagline>面向高校学生的 AI 软件创作空间</p>
       <div class="login-card">
-        <div class="tabs" role="tablist"><button class="tab active" data-mode="email">校园邮箱</button><button class="tab" data-mode="student">学号</button></div>
+        <div class="tabs" role="tablist" aria-label="登录身份类型">
+          <button class="tab active" data-mode="email">校园邮箱</button>
+          <button class="tab" data-mode="student">学号</button>
+        </div>
         <label id="identityLabel" for="identity">校园邮箱</label>
         <input id="identity" autocomplete="username" placeholder="例如 2024001001@mail.hust.edu.cn" />
-        <p class="hint" id="identityHint">原型演示可输入任意校园邮箱</p>
+        <p class="hint" id="identityHint">仅限名册内的学生，邮箱前缀为学号</p>
         <label for="password">密码</label>
         <input id="password" type="password" autocomplete="current-password" placeholder="至少 8 位，首次登录请先注册" />
-        <p class="hint" id="passwordHint">注册设置密码，登录用同一密码。原型密码只存服务端哈希。</p>
-        <div class="auth-actions"><button id="loginBtn" class="primary full">登录</button><button id="registerBtn" class="outline full">注册并领取额度</button></div>
-        <p class="legal">原型用账号密码模拟身份认证。正式版接入 HUST 官方 SSO/CAS，不在平台保存校园密码。</p>
+        <p class="hint">注册设置密码，登录用同一密码。原型密码只存服务端哈希。</p>
+        <div class="auth-actions">
+          <button id="loginBtn" class="primary full">登录</button>
+          <button id="registerBtn" class="outline full">注册并领取额度</button>
+        </div>
+        <p class="legal">原型用账号密码模拟身份认证。正式版接入学校统一认证，不在平台保存校园密码。</p>
       </div>
       <button id="resetFromLogin" class="text-btn">重置演示数据</button>
     </section>
 
     <section id="appView" class="app hidden">
-      <header class="topbar"><div class="wordmark"><span class="brand-mark small">AI</span><span>校园 AI 创作平台</span></div><div class="user-menu"><span id="userIdentity"></span><button id="logoutBtn" class="ghost">退出登录</button></div></header>
-      <div class="content"><div class="welcome"><div><p class="eyebrow">WORKSPACE</p><h2>你好，开始你的 AI 创作吧</h2><p class="muted">先从一个小作品开始，把想法变成现实。</p></div><button class="primary" id="createBtn">＋ 开始创作</button></div>
-        <div class="stats"><article class="stat-card accent"><span>可用 Token</span><strong id="balance">0</strong><small>本期可使用额度</small></article><article class="stat-card"><span>累计消耗</span><strong id="spent">0</strong><small>从领取以来的使用量</small></article><article class="stat-card"><span>使用天数</span><strong id="days">1</strong><small>持续探索中</small></article></div>
-        <div class="panel keycard"><div class="panel-head"><div><h3>中转站密钥</h3><p class="muted">中转站按你的身份发放，调用 AI 工具时使用</p></div><button id="rotateKeyBtn" class="outline">重新生成</button></div>
-          <div class="keyrow"><code id="relayKey" class="keyvalue">尚未发放</code><button id="copyKeyBtn" class="ghost">复制</button></div>
-          <p class="hint" id="keyNote">完整密钥只在发放时显示一次，请立即复制保存。平台与学院看不到密钥明文。</p>
+      <header class="topbar">
+        <div class="wordmark"><span class="brand-mark small">AI</span><span data-product-name>创作平台</span></div>
+        <nav class="topnav" aria-label="主导航">
+          <button class="navbtn active" data-page="workspace">工作台</button>
+          <button class="navbtn" data-page="gallery">产品广场</button>
+          <button class="navbtn" data-page="profile">个人信息</button>
+          <button class="navbtn guide-entry" id="guideNav">开始指南</button>
+        </nav>
+        <div class="user-menu">
+          <span id="userIdentity"></span>
+          <a class="ghost link-btn" id="adminEntry" href="admin.html">管理入口</a>
+          <button id="logoutBtn" class="ghost">退出登录</button>
         </div>
-        <div class="grid"><section class="panel"><div class="panel-head"><div><h3>Token 使用记录</h3><p class="muted">每一笔额度变动都清晰可见</p></div><button id="rechargeBtn" class="outline">充值额度</button></div><div id="ledger" class="ledger"></div></section><aside class="panel side"><h3>快速开始</h3><p class="muted">用 AI 辅助完成你的第一个软件作品。</p><button class="quick" id="demoUseBtn"><span>✦</span><div><b>模拟消耗 Token</b><small>体验额度扣除与流水记录</small></div><i>→</i></button><button class="quick"><span>◈</span><div><b>探索热门作品</b><small>看看同学们正在创造什么</small></div><i>→</i></button><div class="notice"><b>额度使用小贴士</b><p>Token 可用于 AI 对话、代码生成和智能体运行。额度用完后可充值继续创作。</p></div></aside></div>
-        <button id="resetBtn" class="text-btn reset">重置演示数据</button>
+      </header>
+
+      <div class="content">
+        <div id="pendingBanner" class="notice error pending-banner hidden" role="status">账户待复核，复核通过后开放消费、密钥重置和作品功能。你可以先查看个人信息、额度和流水，完成开始指南。</div>
+        <section id="page-workspace" class="page active">
+          <div class="welcome">
+            <div><p class="eyebrow">WORKSPACE</p><h2>你好，开始你的 AI 创作吧</h2><p class="muted">先从一个小作品开始，把想法变成现实。</p></div>
+            <button class="primary" id="createBtn">＋ 开始创作</button>
+          </div>
+          <div id="guideBanner" class="guide-banner hidden">
+            <div><b>开始指南还在等你</b><p class="muted">四步认识团队、选择工具，并用演示小工具做出第一个作品。</p></div>
+            <button class="outline" id="guideBannerBtn">继续指南</button>
+          </div>
+          <div class="stats" id="studentStats"></div>
+          <div class="panel keycard">
+            <div class="panel-head"><div><h3>中转站密钥</h3><p class="muted">中转站按你的身份发放，调用 AI 工具时使用</p></div><button id="rotateKeyBtn" class="outline">重新生成</button></div>
+            <div class="keyrow"><code id="relayKey" class="keyvalue">尚未发放</code><button id="copyKeyBtn" class="ghost">复制</button></div>
+            <p class="hint" id="keyNote">完整密钥只在发放时显示一次，请立即复制保存。平台与学院看不到密钥明文。</p>
+          </div>
+          <div class="grid">
+            <section class="panel"><div class="panel-head"><div><h3>Token 使用记录</h3><p class="muted">每一笔额度变动都清晰可见</p></div><button id="rechargeBtn" class="outline">充值额度</button></div><div id="ledger" class="ledger"></div></section>
+            <aside class="panel side"><h3>快速开始</h3><p class="muted">用 AI 辅助完成你的第一个软件作品。</p><button class="quick" id="demoUseBtn"><span>✦</span><div><b>模拟消耗 Token</b><small>体验额度扣除与流水记录</small></div><i>→</i></button><button class="quick" id="galleryQuick"><span>◈</span><div><b>探索热门作品</b><small>看看同学们正在创造什么</small></div><i>→</i></button><div class="notice"><b>额度使用小贴士</b><p>Token 可用于 AI 对话、代码生成和智能体运行。额度用完后可充值继续创作。</p></div></aside>
+          </div>
+          <button id="resetBtn" class="text-btn reset">重置演示数据</button>
+        </section>
+
+        <section id="page-gallery" class="page">
+          <div class="page-head"><div><p class="eyebrow">GALLERY</p><h2>产品广场</h2><p class="muted">演示作品与本组织已审核作品放在一起。</p></div><button class="outline" id="submitWorkBtn">提交我的作品</button></div>
+          <section class="panel submit-panel hidden" id="submitPanel">
+            <h3>提交作品</h3><p class="muted">提交后由本组织教师审核，通过后仅在本组织可见。你可以随时撤回。</p>
+            <div class="form-grid"><label>作品名称<input id="workTitle" maxlength="60" placeholder="一句话说清作品名" /></label><label>分类<input id="workCategory" maxlength="30" placeholder="活动 / 学习 / 效率" /></label></div>
+            <label>简介<textarea id="workSummary" maxlength="160" placeholder="说明它帮谁完成什么"></textarea></label>
+            <div class="form-actions"><button class="primary" id="submitWorkConfirm">提交审核</button><button class="ghost" id="submitWorkCancel">取消</button></div>
+          </section>
+          <h3 class="section-title">我的作品</h3><div id="myWorks" class="work-grid"></div>
+          <h3 class="section-title">广场作品</h3><div id="galleryWorks" class="work-grid"></div>
+        </section>
+
+        <section id="page-profile" class="page">
+          <div class="page-head"><div><p class="eyebrow">PROFILE</p><h2>个人信息</h2><p class="muted">额度、密钥、使用记录与组织身份。</p></div><a class="outline link-btn hidden" id="teacherLink" href="teacher.html">进入教师端</a></div>
+          <div class="grid">
+            <section class="panel"><h3>我的额度</h3><div class="profile-metrics" id="profileMetrics"></div><h3 class="section-title">用量记录</h3><div id="profileLedger" class="ledger"></div></section>
+            <aside class="panel"><h3>组织身份</h3><div id="profileOrg" class="org-profile"></div><div class="notice"><b>密钥安全</b><p>完整密钥只在发放时显示一次。教师可以查看你的密钥掩码，但不能读取明文。</p></div></aside>
+          </div>
+        </section>
       </div>
     </section>
   </main>
-  <div id="modal" class="modal hidden"><div class="modal-box"><button class="close" id="closeModal">×</button><h3 id="modalTitle">充值额度</h3><p class="muted" id="modalText">充值功能将在正式版开放，原型阶段仅展示入口。</p><button class="primary full" id="modalAction">知道了</button></div></div>
+
+  <div id="onboarding" class="onboarding hidden" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+    <div class="onboarding-box">
+      <div class="onboarding-head"><div><p class="eyebrow">START GUIDE</p><h2 id="onboardingTitle">开始指南</h2></div><button id="onboardingClose" class="close" aria-label="退出开始指南">×</button></div>
+      <div class="progress-track" id="onboardingProgress"></div>
+      <div id="onboardingBody" class="onboarding-body"></div>
+      <div class="onboarding-actions" id="onboardingActions"></div>
+    </div>
+  </div>
+
+  <div id="modal" class="modal hidden"><div class="modal-box"><button class="close" id="closeModal">×</button><h3 id="modalTitle">作品预览</h3><p class="muted" id="modalText"></p><button class="primary full" id="modalAction">知道了</button></div></div>
+  <script src="components.js"></script>
   <script src="app.js"></script>
-</body></html>
+</body>
+</html>

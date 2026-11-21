@@ -1,0 +1,36 @@
+[Unit]
+Description=Campus AI prototype backend
+After=network.target
+
+[Service]
+Type=simple
+User=campus-proto
+Group=campus-proto
+WorkingDirectory=/opt/campus-prototype
+EnvironmentFile=/etc/campus-prototype/env
+ExecStart=/usr/bin/python3 /opt/campus-prototype/server.py
+Restart=on-failure
+RestartSec=3
+
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+LockPersonality=true
+ReadWritePaths=/var/lib/campus-prototype
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+MemoryMax=256M
+CPUQuota=50%
+TasksMax=64
+LimitNOFILE=1024
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>教师端</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <header class="topbar teacher-topbar">
+    <div class="wordmark"><span class="brand-mark small">AI</span><span data-product-name>创作平台</span><span class="muted">教师端</span></div>
+    <nav class="topnav"><a class="navbtn" href="index.html">学生工作台</a><button class="navbtn active">教学看板</button><a class="navbtn" id="importLink" href="import.html">导入名单</a></nav>
+    <div class="user-menu"><span id="teacherOrg"></span><button class="ghost" id="teacherLogout">退出</button></div>
+  </header>
+
+  <main class="content teacher-content">
+    <section id="teacherDenied" class="panel denied hidden">
+      <h2>需要教师权限</h2><p class="muted">请先登录组织管理员账号。管理员入口在产品右上角。</p><a class="primary link-btn" href="index.html">回到登录页</a>
+    </section>
+
+    <section id="teacherMain" class="hidden">
+      <div class="page-head"><div><p class="eyebrow">TEACHING OVERVIEW</p><h2 id="orgTitle">组织总览</h2><p class="muted" id="orgSubtitle">本组织成员、用量与精选作品</p></div><a class="outline link-btn" id="importBtn" href="import.html">导入名单</a></div>
+      <div id="teacherError" class="data-unavailable hidden"></div>
+      <div class="stats" id="teacherStats"></div>
+      <div class="grid teacher-grid">
+        <section class="panel"><div class="panel-head"><div><h3>用量趋势</h3><p class="muted">按天聚合，保留近 90 天</p></div><span class="badge active">Token</span></div><div id="trendChart"></div></section>
+        <aside class="panel"><h3>活跃度分布</h3><div id="activityChart"></div><h3 class="section-title">近 90 天热力</h3><div id="heatmap"></div></aside>
+      </div>
+      <div class="grid teacher-grid">
+        <section class="panel"><div class="panel-head"><div><h3>额度消耗排行</h3><p class="muted">本组织成员，近 90 天</p></div></div><div class="table-scroll"><table class="data-table" id="rankingTable"></table></div></section>
+        <aside class="panel"><h3>精选作品</h3><p class="muted">精选关系按本组织单独保存</p><div id="featuredWorks" class="work-grid compact-grid"></div></aside>
+      </div>
+      <section class="panel"><div class="panel-head"><div><h3>成员管理</h3><p class="muted">姓名、学号、角色、用量和密钥掩码</p></div><div class="inline-actions"><input id="memberSearch" placeholder="搜索姓名 / 学号 / 邮箱" /><button class="outline" id="memberSearchBtn">搜索</button></div></div><div class="table-scroll"><table class="data-table" id="memberTable"></table></div></section>
+      <section class="panel"><div class="panel-head"><div><h3>作品审核</h3><p class="muted">学生提交后只在本组织内展示</p></div><button class="outline" id="refreshWorks">刷新</button></div><div id="pendingWorks" class="work-grid"></div></section>
+      <section class="panel"><div class="panel-head"><div><h3>操作审计</h3><p class="muted">不含密钥明文</p></div><button class="ghost" id="refreshAudit">刷新</button></div><div class="table-scroll"><table class="data-table" id="auditTable"></table></div></section>
+    </section>
+  </main>
+  <script src="components.js"></script>
+  <script src="teacher.js"></script>
+</body>
+</html>
