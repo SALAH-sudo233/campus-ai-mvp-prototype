@@ -12,6 +12,8 @@ import secrets
 import sqlite3
 import time
 
+from identity import normalize_identity
+
 KEY_PREFIX = "sk-mock-"
 
 SCHEMA = """
@@ -135,6 +137,7 @@ def _insert_key(conn, owner_ref, request_id):
 
 def upsert_account(path, owner_ref, mode, identity, name, user_id=None, org_id=None):
     """写入或更新中转站台账。按第 4 题决定，台账存实名，不做匿名化。"""
+    identity = normalize_identity(mode, identity)
     conn = connect(path)
     try:
         conn.execute(

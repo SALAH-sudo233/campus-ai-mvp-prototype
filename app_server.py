@@ -22,6 +22,7 @@ import org_service
 import relay
 import roster
 import works_service
+from identity import normalize_identity, owner_ref_of
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.environ.get("DEMO_DB", os.path.join(ROOT, "demo-backend.sqlite"))
@@ -56,11 +57,8 @@ def db():
 def setup():
     migrations.migrate(DB_PATH)
     relay.init(RELAY_DB)
+    migrations.fold_relay_email_case(RELAY_DB)
     migrations.backfill_relay(RELAY_DB, DB_PATH)
-
-
-def owner_ref_of(mode, identity):
-    return "stu_" + hashlib.sha256(("%s:%s" % (mode, identity)).encode("utf-8")).hexdigest()[:16]
 
 
 def hash_password(password, salt):
@@ -242,6 +240,7 @@ def profile(conn, owner_ref):
 
 
 def _user_for_registration(conn, mode, identity, sid):
+    identity = normalize_identity(mode, identity)
     row = conn.execute("SELECT user_id FROM user_identities WHERE kind = ? AND value_norm = ?",
                        (mode, identity)).fetchone()
     if row:
@@ -258,6 +257,7 @@ def _user_for_registration(conn, mode, identity, sid):
 
 
 def _ensure_identity(conn, user_id, kind, value, source):
+    value = normalize_identity(kind, value)
     existing = conn.execute("SELECT user_id FROM user_identities WHERE kind = ? AND value_norm = ?",
                             (kind, value)).fetchone()
     if existing:
@@ -284,6 +284,7 @@ def _registration_membership(conn, user_id, mode, identity, org_id):
 
 
 def do_register(mode, identity, password, request_id, org_id=None):
+    identity = normalize_identity(mode, identity)
     problem = check_identity(mode, identity) or check_password(password)
     if problem:
         return 400, {"error": problem}
@@ -334,6 +335,7 @@ def do_register(mode, identity, password, request_id, org_id=None):
 
 
 def do_login(mode, identity, password, request_id, org_id=None):
+    identity = normalize_identity(mode, identity)
     problem = check_identity(mode, identity)
     if problem or not isinstance(password, str) or not password:
         return 401, {"error": "账号或密码错误"}
@@ -543,8 +545,8 @@ def _import_identity_keys(fields):
     keys = []
     for kind, value in (("student", fields.get("student_id")), ("email", fields.get("email"))):
         if value:
-            keys.append((kind, value))
-    email = fields.get("email")
+            keys.append((kind, normalize_identity(kind, value)))
+    email = normalize_identity("email", fields.get("email"))
     if email and roster.is_enrolled("email", email):
         key = ("student", roster.student_id_of("email", email))
         if key not in keys:
@@ -556,6 +558,7 @@ def _identity_owners(conn, keys):
     """把身份键解析成用户主体，同一用户只记一次。"""
     owners = []
     for kind, value in keys:
+        value = normalize_identity(kind, value)
         row = conn.execute("SELECT user_id FROM user_identities WHERE kind = ? AND value_norm = ?",
                            (kind, value)).fetchone()
         if row and row["user_id"] not in owners:
@@ -572,7 +575,8 @@ def _preview_conflicts(conn, org_id, rows):
                                 (org_id, fields["external_ref"])).fetchone()
         if existing:
             same = (existing["student_id"] == (fields["student_id"] or None) and
-                    (existing["email"] or "") == (fields["email"] or "") and
+                    normalize_identity("email", existing["email"] or "") ==
+                    normalize_identity("email", fields["email"] or "") and
                     existing["name"] == fields["name"] and existing["role"] == fields["role"] and
                     existing["admission_status"] == fields["status"])
             row.update({"result": "skipped" if same else "conflict",
@@ -700,7 +704,8 @@ def _write_import_row(conn, org_id, fields, now):
         "INSERT INTO org_memberships (org_id, user_id, role, admission_status, external_ref, student_id, email, name, "
         "joined_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (org_id, user_id, fields["role"], fields["status"], fields["external_ref"],
-         fields.get("student_id") or None, fields.get("email") or None, fields["name"], now))
+         fields.get("student_id") or None, normalize_identity("email", fields.get("email")) or None,
+         fields["name"], now))
     return "accepted", None
 
 
@@ -1304,7 +1309,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             data = self._body()
             rid = str(data.get("requestId") or secrets.token_hex(8))[:64]
             mode = data.get("mode", "email")
-            identity = str(data.get("identity") or "").strip()
+            identity = normalize_identity(mode, data.get("identity"))
             password = data.get("password")
             target_org = data.get("orgId")
             if path == "/api/register":

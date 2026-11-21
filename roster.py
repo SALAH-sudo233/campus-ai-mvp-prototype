@@ -6,6 +6,8 @@
 """
 import random
 
+from identity import normalize_identity
+
 ROSTER_START = 2024001001
 ROSTER_SIZE = 200
 ROSTER_SEED = 20261119
@@ -34,6 +36,7 @@ def student_id_of(mode, identity):
     """从登录身份解析学号：学号模式就是本身，邮箱模式取 @ 前缀。解析不出返回 None。"""
     if not identity:
         return None
+    identity = normalize_identity(mode, identity)
     if mode == "student":
         return identity
     if mode == "email" and "@" in identity:
