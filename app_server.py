@@ -236,6 +236,51 @@ def ensure_key(owner_ref, request_id, mode=None, identity=None, user_id=None, or
         return {"status": "unavailable", "plaintext": None, "hint": None, "note": str(exc)}
 
 
+def inactive_key_block(owner_ref):
+    """非准入成员的发钥回执：不给明文，只回状态与掩码，口径与 /api/me 一致。"""
+    hint = relay.active_hint(RELAY_DB, owner_ref)
+    return {"status": "active" if hint else "none", "plaintext": None, "hint": hint}
+
+
+def issue_key_for_member(owner_ref, request_id, mode=None, identity=None, user_id=None, org_id=None,
+                         rotate=False):
+    """发钥的唯一入口：持 LOCK 重读准入，只有 active 成员才发/轮换明文密钥。
+
+    登录、注册、主动轮换都走这里。判权与发钥之间若准入被改成 pending_review/disabled，
+    吊销与发钥由同一把 LOCK 串行化，锁内重读到非 active 就不发；轮换路径还会幂等吊销
+    残留的 active 密钥，避免「吊销后又补发」。非 active 只回状态与掩码，与 /api/me 同口径。
+
+    返回 (密钥块, 是否已准入)。调用方不得在持有 LOCK 时调用本函数。
+    """
+    with LOCK:
+        conn = db()
+        try:
+            row = _student_row(conn, owner_ref)
+            member_id = user_id or (row["user_id"] if row else None)
+            member_org = org_id or (row["org_id"] if row else None)
+            membership = _membership(conn, member_id, member_org)
+            active = membership is not None and membership["admission_status"] == "active"
+            admitted_org = membership["org_id"] if membership else member_org
+        finally:
+            conn.close()
+        if not active:
+            if rotate:
+                # 非 active 时不仅不发，还要顺手吊销残留的 active 密钥；没有有效密钥时也是空操作。
+                relay.revoke_by_owner(RELAY_DB, owner_ref)
+            return inactive_key_block(owner_ref), False
+        if rotate:
+            result = relay.rotate_key(RELAY_DB, owner_ref, "rotate:" + request_id)
+            if member_id:
+                relay_conn = relay.connect(RELAY_DB)
+                try:
+                    relay_conn.execute("UPDATE relay_keys SET user_id = ? WHERE owner_ref = ?",
+                                       (member_id, owner_ref))
+                finally:
+                    relay_conn.close()
+            return key_block(result), True
+        return ensure_key(owner_ref, request_id, mode, identity, member_id, admitted_org), True
+
+
 def _student_row(conn, owner_ref):
     return conn.execute("SELECT * FROM students WHERE owner_ref = ?", (owner_ref,)).fetchone()
 
@@ -340,7 +385,8 @@ def do_register(mode, identity, password, request_id, org_id=None):
             raise
         finally:
             conn.close()
-    keys = ensure_key(owner_ref, request_id, mode, identity, user_id, membership["org_id"])
+    # 注册与准入变更串行：锁内重读准入，非 active 时只回状态与掩码，不补发明文密钥。
+    keys, _ = issue_key_for_member(owner_ref, request_id, mode, identity, user_id, membership["org_id"])
     conn = db()
     try:
         view = profile(conn, owner_ref)
@@ -392,21 +438,15 @@ def do_login(mode, identity, password, request_id, org_id=None):
             conn.execute("DELETE FROM login_failures WHERE owner_ref = ?", (owner_ref,))
             token = new_session(conn, owner_ref, row["user_id"], membership["org_id"] if membership else row["org_id"])
             conn.execute("COMMIT")
-            # 发钥前在锁内重读准入状态：与成员状态变更串行，避免吊销后又插入 active 密钥。
-            current_membership = _membership(conn, row["user_id"], org_id or row["org_id"])
-            if current_membership and current_membership["admission_status"] == "active":
-                keys = ensure_key(owner_ref, request_id, mode, identity, row["user_id"],
-                                  current_membership["org_id"])
-            else:
-                # 非 active（如 pending_review）登录只回状态与提示，不补发明文密钥；口径与 /api/me 一致。
-                hint = relay.active_hint(RELAY_DB, owner_ref)
-                keys = {"status": "active" if hint else "none", "plaintext": None, "hint": hint}
         except BaseException:
             if conn.in_transaction:
                 conn.execute("ROLLBACK")
             raise
         finally:
             conn.close()
+    # 登录事务提交后再发钥：helper 在锁内重读准入，与成员状态变更串行，避免吊销后又补发。
+    keys, _ = issue_key_for_member(owner_ref, request_id, mode, identity, row["user_id"],
+                                   membership["org_id"] if membership else row["org_id"])
     conn = db()
     try:
         view = profile(conn, owner_ref)
@@ -428,22 +468,14 @@ def do_me(owner_ref):
 
 
 def do_rotate(owner_ref, request_id):
-    conn = db()
     try:
-        row = _student_row(conn, owner_ref)
-    finally:
-        conn.close()
-    try:
-        result = relay.rotate_key(RELAY_DB, owner_ref, "rotate:" + request_id)
-        if row and row["user_id"]:
-            relay_conn = relay.connect(RELAY_DB)
-            try:
-                relay_conn.execute("UPDATE relay_keys SET user_id = ? WHERE owner_ref = ?", (row["user_id"], owner_ref))
-            finally:
-                relay_conn.close()
-        return 200, key_block(result)
+        block, admitted = issue_key_for_member(owner_ref, request_id, rotate=True)
     except relay.RelayUnavailable as exc:
         return 503, {"error": str(exc)}
+    if not admitted:
+        # 与 authz 的待复核口径一致：轮换被拒绝，已吊销的旧密钥不会因此复活。
+        return 403, {"error": authz.PENDING_REVIEW_MESSAGE}
+    return 200, block
 
 
 def do_consume(owner_ref, amount, request_id):
@@ -1363,20 +1395,23 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 owner_ref = str(data.get("owner_ref") or "").strip()
                 if not owner_ref:
                     return self._send(400, {"error": "缺少 owner_ref"})
-                conn = db()
-                try:
-                    row = conn.execute("SELECT org_id FROM students WHERE owner_ref = ?", (owner_ref,)).fetchone()
-                    if not row:
-                        return self._send(403, {"error": "无权访问该资源"})
-                    authz.require(principal, "accounts", "revoke_key", org_id=row["org_id"])
-                    relay.revoke_by_owner(RELAY_DB, owner_ref)
-                    conn.execute("BEGIN IMMEDIATE")
-                    org_service.audit(conn, principal.get("user_id"), principal["role"], row["org_id"],
-                                      "admin.key_revoked", "account", owner_ref)
-                    conn.execute("COMMIT")
-                    return self._send(200, {"ok": True})
-                finally:
-                    conn.close()
+                # 与发钥入口共用 LOCK：管理端吊销不会和在途发钥互相穿插，吊销结果不会被补发覆盖。
+                with LOCK:
+                    conn = db()
+                    try:
+                        row = conn.execute("SELECT org_id FROM students WHERE owner_ref = ?",
+                                           (owner_ref,)).fetchone()
+                        if not row:
+                            return self._send(403, {"error": "无权访问该资源"})
+                        authz.require(principal, "accounts", "revoke_key", org_id=row["org_id"])
+                        relay.revoke_by_owner(RELAY_DB, owner_ref)
+                        conn.execute("BEGIN IMMEDIATE")
+                        org_service.audit(conn, principal.get("user_id"), principal["role"], row["org_id"],
+                                          "admin.key_revoked", "account", owner_ref)
+                        conn.execute("COMMIT")
+                        return self._send(200, {"ok": True})
+                    finally:
+                        conn.close()
             if path == "/api/reset" and os.environ.get("DEMO_ALLOW_RESET") == "1":
                 return self._send(*do_reset())
             return self._send(404, {"error": "未知接口"})

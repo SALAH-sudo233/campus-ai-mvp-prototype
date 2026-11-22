@@ -289,14 +289,18 @@ def _fold_email_case(conn):
 
     先整体检查撞车再写，任何一组归一后重复都中止迁移并抛 MigrationConflict，
     由 migrate() 回滚整个版本，不静默丢行。
+
+    login_failures 是易失的风控计数：升级前可能已经有归一后 owner_ref 的行（有人用小写登录
+    失败过），搬移会撞主键卡死升级，所以直接丢弃旧 owner_ref 的行，不做 rename。
     """
     identity_dups, account_dups = _case_fold_collisions(conn)
     if identity_dups or account_dups:
         raise MigrationConflict(
             "email-case-fold 迁移中止：邮箱身份归一后出现重复（身份记录 %d 条、账户 %d 条），"
             "请先人工合并大小写不同的重复账号后再重试。" % (identity_dups, account_dups))
+    moves = []
+    stage = "students"
     try:
-        moves = []
         # 只有邮箱身份的归一结果会变，学号账户的 owner_ref 保持原样。
         for row in conn.execute("SELECT owner_ref, identity FROM students WHERE mode = 'email'").fetchall():
             new_ref = owner_ref_of("email", row["identity"])
@@ -304,10 +308,15 @@ def _fold_email_case(conn):
             if new_ref != row["owner_ref"] or new_identity != row["identity"]:
                 moves.append((row["owner_ref"], new_ref, new_identity))
         for old_ref, new_ref, new_identity in moves:
+            stage = "students"
             conn.execute("UPDATE students SET owner_ref = ?, identity = ? WHERE owner_ref = ?",
                          (new_ref, new_identity, old_ref))
-            for table in ("ledger", "sessions", "login_failures"):
+            for table in ("ledger", "sessions"):
+                stage = table
                 conn.execute("UPDATE %s SET owner_ref = ? WHERE owner_ref = ?" % table, (new_ref, old_ref))
+            stage = "login_failures"
+            conn.execute("DELETE FROM login_failures WHERE owner_ref = ?", (old_ref,))
+        stage = "user_identities"
         for row in conn.execute("SELECT id, value_norm, value_display FROM user_identities "
                                 "WHERE kind = 'email'").fetchall():
             value_norm = normalize_identity("email", row["value_norm"])
@@ -315,6 +324,7 @@ def _fold_email_case(conn):
             if value_norm != row["value_norm"] or value_display != row["value_display"]:
                 conn.execute("UPDATE user_identities SET value_norm = ?, value_display = ? WHERE id = ?",
                              (value_norm, value_display, row["id"]))
+        stage = "org_memberships"
         for row in conn.execute("SELECT org_id, user_id, email FROM org_memberships "
                                 "WHERE email IS NOT NULL").fetchall():
             email = normalize_identity("email", row["email"])
@@ -323,7 +333,8 @@ def _fold_email_case(conn):
                              (email, row["org_id"], row["user_id"]))
     except sqlite3.IntegrityError as exc:
         raise MigrationConflict(
-            "email-case-fold 迁移中止：邮箱身份归一后出现唯一键冲突，请先人工合并重复账号后再重试。") from exc
+            "email-case-fold 迁移中止：表 %s 在邮箱身份归一后出现唯一键冲突（需搬移的账户 %d 条），"
+            "请先人工合并重复账号后再重试。" % (stage, len(moves))) from exc
 
 
 def _migration_7(conn):
@@ -441,7 +452,8 @@ def fold_relay_email_case(relay_db):
                 moved += 1
         except sqlite3.IntegrityError as exc:
             raise MigrationConflict(
-                "email-case-fold 中转站台账归一后出现唯一键冲突，请先人工合并重复账号后再重试。") from exc
+                "email-case-fold 中转站台账归一后出现唯一键冲突（表 relay_accounts / relay_keys），"
+                "请先人工合并重复账号后再重试。") from exc
         conn.execute("COMMIT")
     except BaseException:
         if conn.in_transaction:

@@ -97,13 +97,16 @@ class EmailCaseMigrationTests(unittest.TestCase):
                 membership = conn.execute("SELECT * FROM org_memberships WHERE user_id = ?",
                                           (student["user_id"],)).fetchone()
                 self.assertEqual(membership["email"], "alice@example.edu")
-                for table in ("ledger", "sessions", "login_failures"):
+                for table in ("ledger", "sessions"):
                     row = conn.execute("SELECT owner_ref FROM %s WHERE owner_ref = ?" % table,
                                        (new_ref,)).fetchone()
                     self.assertIsNotNone(row, "%s.owner_ref 应同步到新值" % table)
                     stale = conn.execute("SELECT 1 FROM %s WHERE owner_ref = ?" % table,
                                          (old_ref,)).fetchone()
                     self.assertIsNone(stale, "%s.owner_ref 不应残留旧值" % table)
+                # login_failures 是易失数据：迁移只丢弃旧 ref 的行，不搬移到新 ref。
+                failures = conn.execute("SELECT owner_ref FROM login_failures").fetchall()
+                self.assertEqual([row[0] for row in failures], [])
                 self.assertEqual(conn.execute("SELECT COUNT(*) FROM students").fetchone()[0], 1)
             finally:
                 conn.close()
@@ -178,6 +181,46 @@ class EmailCaseMigrationTests(unittest.TestCase):
                 conn.close()
             with self.assertRaises(migrations.MigrationConflict):
                 migrations.migrate(db_path)
+
+
+    def test_login_failure_rows_for_old_and_new_ref_do_not_block_migration(self):
+        """升级前已有人用小写登录失败留下 new_ref 行时，迁移 7 仍能完成。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = os.path.join(tmp, "login-failures.sqlite")
+            salt = bytes.fromhex("00112233445566778899aabbccddeeff")
+            pw_hash = app_server.hash_password(TEST_AUTH_VALUE, salt)
+            old_ref = legacy_ref("email", "Alice@Example.edu")
+            new_ref = identity.owner_ref_of("email", "alice@example.edu")
+            self.assertNotEqual(old_ref, new_ref)
+            conn = sqlite3.connect(db_path)
+            try:
+                for statement in migrations.LEGACY_SCHEMA:
+                    conn.execute(statement)
+                conn.execute(
+                    "INSERT INTO students (owner_ref, mode, identity, pw_salt, pw_hash, balance, spent, created_at) "
+                    "VALUES (?, 'email', 'Alice@Example.edu', ?, ?, 10, 0, 1)", (old_ref, salt.hex(), pw_hash))
+                conn.execute("INSERT INTO login_failures (owner_ref, failures, locked_until, updated_at) "
+                             "VALUES (?, 2, 0, 1)", (old_ref,))
+                conn.execute("INSERT INTO login_failures (owner_ref, failures, locked_until, updated_at) "
+                             "VALUES (?, 3, 0, 2)", (new_ref,))
+                conn.commit()
+            finally:
+                conn.close()
+
+            self.assertEqual(migrations.migrate(db_path), [1, 2, 3, 4, 5, 6, 7])
+
+            conn = sqlite3.connect(db_path)
+            conn.row_factory = sqlite3.Row
+            try:
+                versions = [row[0] for row in conn.execute(
+                    "SELECT version FROM schema_migrations ORDER BY version").fetchall()]
+                self.assertEqual(versions, [1, 2, 3, 4, 5, 6, 7])
+                failures = conn.execute("SELECT owner_ref, failures FROM login_failures").fetchall()
+                self.assertEqual([(row["owner_ref"], row["failures"]) for row in failures], [(new_ref, 3)])
+                student = conn.execute("SELECT owner_ref, identity FROM students").fetchone()
+                self.assertEqual((student["owner_ref"], student["identity"]), (new_ref, "alice@example.edu"))
+            finally:
+                conn.close()
 
 
 class EmailCaseEndToEndTests(unittest.TestCase):
