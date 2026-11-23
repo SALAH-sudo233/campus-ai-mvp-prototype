@@ -2,6 +2,7 @@
 import hashlib
 import hmac
 import http.server
+import mimetypes
 import json
 import os
 import re
@@ -26,6 +27,7 @@ from identity import normalize_identity, owner_ref_of
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.environ.get("DEMO_DB", os.path.join(ROOT, "demo-backend.sqlite"))
+DATA_DIR = os.path.dirname(os.path.abspath(DB_PATH))
 RELAY_DB = os.environ.get("DEMO_RELAY_DB", os.path.join(ROOT, "demo-relay.sqlite"))
 INITIAL_GRANT = 100000
 MIN_PASSWORD = 8
@@ -39,8 +41,8 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME")
 ADMIN_SESSION_SECONDS = 2 * 3600
 STATIC_FILES = {"/", "/index.html", "/admin", "/admin.html", "/teacher", "/teacher.html",
-                "/import", "/import.html", "/app.js", "/admin.js", "/teacher.js", "/import.js",
-                "/components.js", "/styles.css"}
+                "/import", "/import.html", "/gallery", "/gallery.html", "/app.js", "/admin.js",
+                "/teacher.js", "/import.js", "/gallery.js", "/components.js", "/styles.css"}
 MAX_JSON_BODY = 65536
 MAX_IMPORT_BODY = importer.MAX_BYTES
 LOCK = threading.Lock()
@@ -59,6 +61,13 @@ def setup():
     relay.init(RELAY_DB)
     migrations.fold_relay_email_case(RELAY_DB)
     migrations.backfill_relay(RELAY_DB, DB_PATH)
+    conn = db()
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        works_service.ensure_social_tables(conn, DATA_DIR)
+        conn.execute("COMMIT")
+    finally:
+        conn.close()
     revoke_inactive_member_keys()
 
 
@@ -529,6 +538,35 @@ def do_admin_login(username, password):
     return 200, {"token": token, "role": authz.PLATFORM_ADMIN}
 
 
+def do_demo_login(role):
+    """演示快捷登录使用服务端配置的管理员凭据映射到目标端身份。"""
+    if role == "admin":
+        return do_admin_login(ADMIN_USERNAME, ADMIN_PASSWORD)
+    if role not in ("student", "teacher"):
+        return 400, {"error": "不支持的演示身份"}
+    if not ADMIN_USERNAME or not ADMIN_PASSWORD:
+        return 404, {"error": "管理功能未启用"}
+    target_role = authz.ORG_ADMIN if role == "teacher" else authz.ORG_MEMBER
+    preferred_identity = "2024001040" if role == "teacher" else "2024001100"
+    conn = db()
+    try:
+        row = conn.execute(
+            "SELECT s.owner_ref, s.user_id, s.org_id FROM students s "
+            "JOIN org_memberships m ON m.user_id = s.user_id AND m.org_id = s.org_id "
+            "WHERE m.role = ? AND m.admission_status = 'active' "
+            "ORDER BY CASE WHEN s.identity = ? THEN 0 ELSE 1 END, s.created_at LIMIT 1",
+            (target_role, preferred_identity),
+        ).fetchone()
+        if not row:
+            return 503, {"error": "暂无可用的演示身份"}
+        token = new_session(conn, row["owner_ref"], row["user_id"], row["org_id"])
+        view = profile(conn, row["owner_ref"])
+    finally:
+        conn.close()
+    view.update({"token": token, "firstLogin": False})
+    return 200, view
+
+
 def _admin_principal(token):
     if not token:
         return None
@@ -873,7 +911,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except ValueError:
             raise importer.ImportError_("invalid_length", "上传长度不合法", 400)
         if length > limit:
-            raise importer.ImportError_("file_too_large", "文件超过 10 MB 上限", 413)
+            mb = max(1, limit // (1024 * 1024))
+            raise importer.ImportError_("file_too_large", f"文件超过 {mb} MB 上限", 413)
         return self.rfile.read(length) if length else b""
 
     def _principal(self):
@@ -944,7 +983,53 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 authz.require(principal, "works", "read_gallery", org_id=org_id)
                 conn = db()
                 try:
-                    return self._send(200, {"items": works_service.gallery(conn, org_id), "nextCursor": None})
+                    return self._send(200, {"items": works_service.gallery(conn, org_id, viewer_user_id=principal.get("user_id")), "nextCursor": None})
+                finally:
+                    conn.close()
+            match = re.match(r"^/api/works/([^/]+)/download$", path)
+            if match:
+                principal = self._require_user()
+                conn = db()
+                try:
+                    row = works_service.get(conn, match.group(1))
+                    if not row:
+                        return self._send(404, {"error": "未找到作品"})
+                    if not authz.work_readable(principal, row["org_id"], row["owner_user_id"],
+                                               row["status"] == "published"):
+                        return self._send(403, {"error": "无权访问该资源"})
+                    art = works_service.get_artifact(conn, row["artifact_ref"])
+                    if not art or not art["storage_path"] or not os.path.isfile(art["storage_path"]):
+                        return self._send(404, {"error": "该作品暂无可下载安装包"})
+                    real_pkg = os.path.realpath(art["storage_path"])
+                    pkg_root = os.path.realpath(os.path.join(DATA_DIR, "packages"))
+                    if not real_pkg.startswith(pkg_root + os.sep):
+                        return self._send(403, {"error": "无权访问该资源"})
+                    with open(real_pkg, "rb") as fh:
+                        payload = fh.read()
+                    fname = art["file_name"] or os.path.basename(real_pkg)
+                    ascii_name = re.sub(r"[^a-zA-Z0-9._-]+", "_", fname) or "package.zip"
+                    quoted = urllib.parse.quote(fname)
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/octet-stream")
+                    self.send_header("Content-Disposition", f'attachment; filename="{ascii_name}"; filename*=UTF-8''{quoted}')
+                    self.send_header("Content-Length", str(len(payload)))
+                    self.end_headers()
+                    self.wfile.write(payload)
+                    return
+                finally:
+                    conn.close()
+            match = re.match(r"^/api/works/([^/]+)/comments$", path)
+            if match:
+                principal = self._require_user()
+                conn = db()
+                try:
+                    row = works_service.get(conn, match.group(1))
+                    if not row:
+                        return self._send(404, {"error": "未找到作品"})
+                    if not authz.work_readable(principal, row["org_id"], row["owner_user_id"],
+                                               row["status"] == "published"):
+                        return self._send(403, {"error": "无权访问该资源"})
+                    return self._send(200, {"items": works_service.list_comments(conn, row["work_id"])})
                 finally:
                     conn.close()
             if path == "/api/works/mine":
@@ -1015,7 +1100,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 principal = self._require_admin()
                 authz.require(principal, "accounts", "list", org_id=principal.get("org_id"))
                 q = query.get("q", [None])[0]
-                org_filter = None if principal["role"] == authz.PLATFORM_ADMIN else principal.get("org_id")
+                org_filter = query.get("orgId", [None])[0] if principal["role"] == authz.PLATFORM_ADMIN else principal.get("org_id")
                 return self._send(200, {"accounts": relay.list_accounts(RELAY_DB, q, org_filter)})
             match = re.match(r"^/api/orgs/([^/]+)/(tree|summary|trends|dashboard|members|featured|audit|imports/template)$", path)
             if match:
@@ -1110,6 +1195,49 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     return self._send(200, item)
                 finally:
                     conn.close()
+            if path.startswith("/media/"):
+                fname = path[len("/media/"):]
+                if not re.match(r"^(img_[a-f0-9]{20}|demo_[a-z0-9_]{3,40})\.(png|jpg|gif|webp)$", fname):
+                    return self._send(404, {"error": "未找到图片"})
+                media_root = os.path.realpath(os.path.join(DATA_DIR, "media"))
+                target_file = os.path.realpath(os.path.join(media_root, fname))
+                if not (target_file.startswith(media_root + os.sep) and os.path.isfile(target_file)):
+                    return self._send(404, {"error": "未找到图片"})
+                ctype, _ = mimetypes.guess_type(target_file)
+                with open(target_file, "rb") as fh:
+                    raw_bytes = fh.read()
+                self.send_response(200)
+                self.send_header("Content-Type", ctype or "application/octet-stream")
+                self.send_header("Cache-Control", "public, max-age=86400")
+                self.send_header("Content-Length", str(len(raw_bytes)))
+                self.end_headers()
+                self.wfile.write(raw_bytes)
+                return
+            if path.startswith("/hosted/"):
+                parts = path[len("/hosted/"):].split("/", 1)
+                art_id = parts[0]
+                rel = parts[1] if len(parts) > 1 and parts[1] else "index.html"
+                if not re.match(r"^[a-zA-Z0-9_-]{4,64}$", art_id):
+                    return self._send(404, {"error": "未找到托管站点"})
+                site_root = os.path.realpath(os.path.join(DATA_DIR, "hosted", art_id))
+                target_file = os.path.realpath(os.path.join(site_root, urllib.parse.unquote(rel)))
+                if os.path.isdir(target_file):
+                    target_file = os.path.join(target_file, "index.html")
+                if not (target_file.startswith(site_root + os.sep) and os.path.isfile(target_file)):
+                    return self._send(404, {"error": "未找到托管页面"})
+                ctype, _ = mimetypes.guess_type(target_file)
+                ctype = ctype or "application/octet-stream"
+                if ctype.startswith("text/") or ctype in ("application/javascript", "application/json"):
+                    ctype = ctype + "; charset=utf-8"
+                with open(target_file, "rb") as fh:
+                    raw_bytes = fh.read()
+                self.send_response(200)
+                self.send_header("Content-Type", ctype)
+                self.send_header("Content-Security-Policy", "sandbox allow-scripts allow-forms allow-popups allow-modals")
+                self.send_header("Content-Length", str(len(raw_bytes)))
+                self.end_headers()
+                self.wfile.write(raw_bytes)
+                return
             if path.startswith("/api/"):
                 return self._send(404, {"error": "未知接口"})
             if path not in STATIC_FILES:
@@ -1120,6 +1248,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.path = "/teacher.html"
             if path == "/import":
                 self.path = "/import.html"
+            if path == "/gallery":
+                self.path = "/gallery.html"
             return super().do_GET()
         except (authz.AuthzError, importer.ImportError_, onboarding.OnboardingError, works_service.WorkError,
                 ValueError) as exc:
@@ -1129,6 +1259,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         data = self._body()
         try:
+            work_match = re.match(r"^/api/works/([^/]+)$", parsed.path)
+            if work_match:
+                principal = self._require_user()
+                authz.require(principal, "works", "submit", owner_user_id=principal["user_id"])
+                conn = db()
+                try:
+                    conn.execute("BEGIN IMMEDIATE")
+                    row = works_service.update(conn, work_match.group(1), principal["user_id"], data)
+                    org_service.audit(conn, principal["user_id"], principal["role"], row["org_id"],
+                                      "work.updated", "work", row["work_id"])
+                    conn.execute("COMMIT")
+                    return self._send(200, works_service._card(row))
+                except BaseException:
+                    if conn.in_transaction:
+                        conn.execute("ROLLBACK")
+                    raise
+                finally:
+                    conn.close()
             match = re.match(r"^/api/orgs/([^/]+)/members/([^/]+)$", parsed.path)
             if not match:
                 return self._send(404, {"error": "未知接口"})
@@ -1186,12 +1334,67 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 conn = db()
                 try:
                     conn.execute("BEGIN IMMEDIATE")
+                    if conn.execute("SELECT 1 FROM organizations WHERE slug = ?", (slug,)).fetchone():
+                        conn.execute("ROLLBACK")
+                        return self._send(409, {"error": "该组织标识（slug）已存在"})
                     org_id = migrations.ensure_org(conn, slug, name, data.get("adminLabel") or "教师",
                                                    data.get("memberLabel") or "学生")
                     org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
                                       "organization.created", "organization", org_id, metadata={"name": name})
                     conn.execute("COMMIT")
                     return self._send(201, org_service.org(conn, org_id))
+                except BaseException:
+                    if conn.in_transaction:
+                        conn.execute("ROLLBACK")
+                    raise
+                finally:
+                    conn.close()
+            match = re.match(r"^/api/orgs/([^/]+)/members$", path)
+            if match:
+                principal = self._require_admin()
+                org_id = self._org_allowed(principal, match.group(1))
+                self._require_org(org_id)
+                authz.require(principal, "members", "import", org_id=org_id)
+                data = self._body()
+                name = str(data.get("name") or "").strip()
+                role_raw = str(data.get("role") or "org_member").strip()
+                role = {"学生": authz.ORG_MEMBER, "教师": authz.ORG_ADMIN, "老师": authz.ORG_ADMIN}.get(role_raw, role_raw)
+                status = str(data.get("admissionStatus") or "active").strip()
+                student_id = str(data.get("studentId") or "").strip()
+                email = normalize_identity("email", str(data.get("email") or "").strip())
+                if not name or len(name) > 80:
+                    return self._send(400, {"error": "姓名必填且不超过 80 字符"})
+                if role not in (authz.ORG_MEMBER, authz.ORG_ADMIN):
+                    return self._send(400, {"error": "角色只能是学生或教师"})
+                if status not in ("active", "disabled", "pending_review"):
+                    return self._send(400, {"error": "准入状态无效"})
+                if not student_id and not email:
+                    return self._send(400, {"error": "学号/工号与校园邮箱至少填写一项"})
+                if student_id and (not student_id.isdigit() or len(student_id) > 40):
+                    return self._send(400, {"error": "学号/工号只能是数字"})
+                if email and ("@" not in email or email.startswith("@") or email.endswith("@") or len(email) > 80):
+                    return self._send(400, {"error": "校园邮箱格式不正确"})
+                external_ref = str(data.get("externalRef") or "").strip() or ("manual:" + (student_id or email))
+                fields = {"external_ref": external_ref, "student_id": student_id, "email": email,
+                          "name": name, "role": role, "status": status}
+                now = time.time()
+                conn = db()
+                try:
+                    conn.execute("BEGIN IMMEDIATE")
+                    outcome, reason = _write_import_row(conn, org_id, fields, now)
+                    if outcome != "accepted":
+                        conn.execute("ROLLBACK")
+                        msg = "该成员编号已存在" if reason == "already_present" else "该学号或邮箱已被占用"
+                        return self._send(409, {"error": msg})
+                    created_row = conn.execute("SELECT user_id FROM org_memberships WHERE org_id = ? AND external_ref = ?",
+                                               (org_id, external_ref)).fetchone()
+                    org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
+                                      "member.created", "membership", created_row["user_id"],
+                                      metadata={"role": role, "status": status})
+                    conn.execute("COMMIT")
+                    item = org_service.member(conn, org_id, created_row["user_id"])
+                    _merge_key_hints(conn, [item])
+                    return self._send(201, item)
                 except BaseException:
                     if conn.in_transaction:
                         conn.execute("ROLLBACK")
@@ -1314,6 +1517,31 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     raise
                 finally:
                     conn.close()
+            if path == "/api/works/preview-image":
+                principal = self._require_user()
+                authz.require(principal, "works", "submit", owner_user_id=principal["user_id"])
+                payload = self._raw(works_service.MAX_PREVIEW_IMAGE_BYTES)
+                result = works_service.save_preview_image(DATA_DIR, payload)
+                return self._send(201, result)
+            if path == "/api/works/upload":
+                principal = self._require_user()
+                authz.require(principal, "works", "submit", owner_user_id=principal["user_id"])
+                query = urllib.parse.parse_qs(parsed.query)
+                sw = query.get("softwareType", ["web"])[0]
+                filename = query.get("filename", ["upload.bin"])[0]
+                payload = self._raw(works_service.MAX_ARTIFACT_BYTES)
+                conn = db()
+                try:
+                    conn.execute("BEGIN IMMEDIATE")
+                    result = works_service.save_artifact(conn, DATA_DIR, principal["user_id"], principal["org_id"], sw, filename, payload)
+                    conn.execute("COMMIT")
+                    return self._send(201, result)
+                except BaseException:
+                    if conn.in_transaction:
+                        conn.execute("ROLLBACK")
+                    raise
+                finally:
+                    conn.close()
             if path == "/api/works":
                 principal = self._require_user()
                 authz.require(principal, "works", "submit", owner_user_id=principal["user_id"])
@@ -1328,6 +1556,48 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                                       "work.submitted", "work", row["work_id"])
                     conn.execute("COMMIT")
                     return self._send(201, works_service._card(row))
+                except BaseException:
+                    if conn.in_transaction:
+                        conn.execute("ROLLBACK")
+                    raise
+                finally:
+                    conn.close()
+            match = re.match(r"^/api/works/([^/]+)/upvote$", path)
+            if match:
+                principal = self._require_user()
+                conn = db()
+                try:
+                    row = works_service.get(conn, match.group(1))
+                    if not row:
+                        return self._send(404, {"error": "未找到作品"})
+                    authz.require(principal, "works", "read_gallery", org_id=row["org_id"])
+                    conn.execute("BEGIN IMMEDIATE")
+                    result = works_service.toggle_upvote(conn, row["work_id"], row["org_id"], principal["user_id"])
+                    conn.execute("COMMIT")
+                    return self._send(200, result)
+                except BaseException:
+                    if conn.in_transaction:
+                        conn.execute("ROLLBACK")
+                    raise
+                finally:
+                    conn.close()
+            match = re.match(r"^/api/works/([^/]+)/comments$", path)
+            if match:
+                principal = self._require_user()
+                data = self._body()
+                conn = db()
+                try:
+                    row = works_service.get(conn, match.group(1))
+                    if not row:
+                        return self._send(404, {"error": "未找到作品"})
+                    authz.require(principal, "works", "read_gallery", org_id=row["org_id"])
+                    author_name = (principal.get("membership") or {}).get("name") if isinstance(principal.get("membership"), dict) else (principal["membership"]["name"] if principal.get("membership") else None)
+                    author_name = author_name or principal.get("display_name") or "成员"
+                    conn.execute("BEGIN IMMEDIATE")
+                    result = works_service.add_comment(conn, row["work_id"], row["org_id"], principal["user_id"],
+                                                       author_name, principal["role"], data.get("body"))
+                    conn.execute("COMMIT")
+                    return self._send(201, result)
                 except BaseException:
                     if conn.in_transaction:
                         conn.execute("ROLLBACK")
@@ -1368,6 +1638,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             identity = normalize_identity(mode, data.get("identity"))
             password = data.get("password")
             target_org = data.get("orgId")
+            if path == "/api/demo/login":
+                return self._send(*do_demo_login(data.get("role")))
             if path == "/api/register":
                 return self._send(*do_register(mode, identity, password, rid, target_org))
             if path == "/api/login":

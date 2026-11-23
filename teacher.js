@@ -25,6 +25,8 @@ async function api(path, options) {
 }
 
 function denied() {
+  $('teacherNav').classList.add('hidden');
+  $('teacherLogout').classList.add('hidden');
   $('teacherMain').classList.add('hidden');
   $('teacherDenied').classList.remove('hidden');
 }
@@ -37,16 +39,19 @@ async function boot() {
   if (!token) { denied(); return; }
   try {
     me = await api('/api/me');
+    if (me.role === 'org_member') { window.location.replace('index.html'); return; }
     if (me.role !== 'org_admin' && me.role !== 'platform_admin') { denied(); return; }
     orgId = me.org && me.org.id;
     if (!orgId) { denied(); return; }
+    $('teacherNav').classList.remove('hidden');
+    $('teacherLogout').classList.remove('hidden');
     $('teacherMain').classList.remove('hidden');
     $('teacherOrg').textContent = me.org.name;
     $('orgTitle').textContent = me.org.name;
     $('orgSubtitle').textContent = ((me.labels && me.labels.admin) || '教师') + '视角 · 本组织成员、用量与精选作品';
     $('importLink').href = 'import.html?org=' + encodeURIComponent(orgId);
     $('importBtn').href = $('importLink').href;
-    await Promise.all([loadDashboard(), loadMembers(), loadWorks(), loadAudit()]);
+    await Promise.all([loadDashboard(), loadWorks(), loadAudit()]);
   } catch (error) {
     if (error.status === 401 || error.status === 403) denied(); else toast(error.message);
   }
@@ -104,53 +109,6 @@ function renderRanking(rows) {
     el('td', { text: fmt(row.consumed) + ' Token' })
   ])));
   table.appendChild(body);
-}
-
-async function loadMembers(query) {
-  const suffix = query ? '?q=' + encodeURIComponent(query) : '';
-  try {
-    const data = await api('/api/orgs/' + encodeURIComponent(orgId) + '/members' + suffix);
-    renderMembers(data.members);
-  } catch (error) { toast(error.message || '成员列表暂时不可用'); }
-}
-
-function renderMembers(rows) {
-  const table = $('memberTable');
-  table.replaceChildren(el('thead', {}, [el('tr', {}, ['姓名', '学号', '角色', '余额', '消耗', '密钥掩码', '准入', '操作'].map(label => el('th', { text: label })))]));
-  const body = el('tbody');
-  for (const row of rows) {
-    const select = el('select', { className: 'compact-select', 'aria-label': '调整 ' + row.name + ' 的准入状态', onchange: event => changeStatus(row, event.target.value) }, [
-      ['active', '已准入'], ['disabled', '已停用'], ['pending_review', '待复核']
-    ].map(([value, label]) => el('option', { value, selected: row.admissionStatus === value, text: label })));
-    body.appendChild(el('tr', {}, [
-      el('td', { text: row.name || '—' }),
-      el('td', { text: row.studentId || '—' }),
-      el('td', {}, [UI.RoleBadge(row, me.labels)]),
-      el('td', { text: fmt(row.balance) }),
-      el('td', { text: fmt(row.spent) }),
-      el('td', {}, [el('code', { text: row.keyHint || '无有效密钥' })]),
-      el('td', {}, [select]),
-      el('td', {}, [el('button', { className: 'danger', text: '吊销密钥', onclick: () => revokeKey(row) })])
-    ]));
-  }
-  table.appendChild(body);
-}
-
-async function changeStatus(row, status) {
-  try {
-    await api('/api/orgs/' + encodeURIComponent(orgId) + '/members/' + encodeURIComponent(row.userId), {
-      method: 'PATCH', body: JSON.stringify({ admissionStatus: status })
-    });
-    toast('准入状态已更新');
-  } catch (error) { toast(error.message || '更新失败'); await loadMembers(); }
-}
-
-async function revokeKey(row) {
-  if (!confirm('确认吊销 ' + (row.name || row.studentId) + ' 的当前密钥？')) return;
-  try {
-    await api('/api/orgs/' + encodeURIComponent(orgId) + '/members/' + encodeURIComponent(row.userId) + '/revoke-key', { method: 'POST', body: '{}' });
-    await loadMembers(); toast('密钥已吊销');
-  } catch (error) { toast(error.message || '吊销失败'); }
 }
 
 async function loadWorks() {
@@ -220,10 +178,13 @@ async function loadAudit() {
   } catch (error) { /* audit is secondary */ }
 }
 
-$('memberSearchBtn').onclick = () => loadMembers($('memberSearch').value.trim());
-$('memberSearch').addEventListener('keydown', event => { if (event.key === 'Enter') loadMembers($('memberSearch').value.trim()); });
 $('refreshWorks').onclick = loadWorks;
 $('refreshAudit').onclick = loadAudit;
-$('teacherLogout').onclick = () => { localStorage.removeItem(STORE_KEY); location.href = 'index.html'; };
+$('teacherLogout').onclick = async () => {
+  try { await api('/api/logout', { method: 'POST', body: '{}' }); } catch (error) { /* ignore */ }
+  localStorage.removeItem(STORE_KEY);
+  location.href = 'index.html';
+};
+$('teacherBackLogin').onclick = () => { localStorage.removeItem(STORE_KEY); };
 
 boot();

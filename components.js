@@ -91,8 +91,11 @@
         onclick: () => action.onClick && action.onClick(work)
       }));
     }
+    const coverImg = work.previewImages && work.previewImages.length ? work.previewImages[0] : '';
     return el('article', { className: 'work-card ' + (opts.density === 'compact' ? 'compact' : '') }, [
-      el('div', { className: 'work-cover', 'aria-hidden': 'true' }, [el('span', { text: (work.category || '作品').slice(0, 1) })]),
+      el('div', { className: 'work-cover', 'aria-hidden': 'true' }, [
+        coverImg ? el('img', { className: 'work-cover-img', src: coverImg, alt: '' }) : el('span', { text: (work.category || '作品').slice(0, 1) })
+      ]),
       el('div', { className: 'work-body' }, [
         el('div', { className: 'work-badges' }, badges),
         el('h3', { text: work.title }),
@@ -188,13 +191,19 @@
       ]);
     }
     function branch(node, depth, expanded) {
-      const details = el('details', { className: 'org-tree' + (depth ? ' nested' : '') });
-      if (expanded) details.setAttribute('open', '');
-      details.appendChild(el('summary', {}, [
+      const isSelectedOrg = node.kind === 'organization' && opts.selectedOrgId && node.id === opts.selectedOrgId;
+      const details = el('details', { className: 'org-tree' + (depth ? ' nested' : '') + (isSelectedOrg ? ' is-selected' : '') });
+      if (expanded || isSelectedOrg) details.setAttribute('open', '');
+      const summary = el('summary', {
+        onclick: node.kind === 'organization' && opts.onSelectOrg ? () => {
+          if (node.id !== opts.selectedOrgId) opts.onSelectOrg(node.id);
+        } : null
+      }, [
         el('span', { className: 'tree-icon', text: '▾' }),
         el('strong', { text: node.name }),
         el('span', { className: 'muted', text: Number(node.count || 0) + ' 名成员' })
-      ]));
+      ]);
+      details.appendChild(summary);
       const labels = { admin: node.adminLabel || '组织管理员', member: node.memberLabel || '组织用户' };
       const list = el('ul', { className: 'tree-members' });
       for (const child of node.children || []) {

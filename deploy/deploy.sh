@@ -30,7 +30,7 @@ fi
 
 echo "==> 2/5 同步后端代码到 ${APP_DIR}"
 PY_FILES="server.py app_server.py config.py authz.py identity.py migrations.py migrate.py importer.py analytics.py onboarding.py works_service.py org_service.py relay.py roster.py"
-WEB_FILES="index.html admin.html teacher.html import.html app.js admin.js teacher.js import.js components.js styles.css"
+WEB_FILES="index.html admin.html teacher.html import.html gallery.html app.js admin.js teacher.js import.js gallery.js components.js styles.css"
 mkdir -p "${APP_DIR}"
 if [ -n "$(ls -A "${APP_DIR}" 2>/dev/null)" ]; then
   BACKUP_DIR="${APP_DIR}.bak-$(date +%Y%m%d-%H%M%S)"
@@ -45,6 +45,14 @@ fi
 for f in ${PY_FILES} ${WEB_FILES}; do
   install -o "${SERVICE_USER}" -g "${SERVICE_USER}" -m 0640 "${SRC_DIR}/${f}" "${APP_DIR}/${f}"
 done
+if [ -d "${SRC_DIR}/demo-media" ]; then
+  mkdir -p "${APP_DIR}/demo-media"
+  chown "${SERVICE_USER}:${SERVICE_USER}" "${APP_DIR}/demo-media"
+  chmod 0750 "${APP_DIR}/demo-media"
+  for img in "${SRC_DIR}"/demo-media/*; do
+    [ -f "${img}" ] && install -o "${SERVICE_USER}" -g "${SERVICE_USER}" -m 0640 "${img}" "${APP_DIR}/demo-media/$(basename "${img}")"
+  done
+fi
 
 echo "==> 3/5 准备配置目录 ${CONF_DIR} 和数据目录 ${DATA_DIR}"
 mkdir -p "${CONF_DIR}" "${DATA_DIR}"

@@ -13,7 +13,7 @@
       <div class="brand-mark">AD</div>
       <p class="eyebrow">PLATFORM ADMIN</p>
       <h1>平台管理入口</h1>
-      <p class="muted intro">平台管理员凭环境变量配置的账号登录。组织管理员请回产品右上角进入教师端。</p>
+      <p class="muted intro">平台管理员凭环境变量配置的账号登录。老师请从登录页切换“老师登录”进入教师端。</p>
       <div class="login-card">
         <label for="adminUsername">管理员账号</label>
         <input id="adminUsername" autocomplete="username" placeholder="管理员账号" />
@@ -21,38 +21,160 @@
         <input id="adminPassword" type="password" autocomplete="current-password" placeholder="管理员密码" />
         <p class="hint">账号与密码只从环境变量读取，不落库、不进仓库。</p>
         <button id="adminLoginBtn" class="primary full">登录</button>
+        <button id="adminQuickLoginBtn" class="outline full">管理员快捷登录管理端</button>
         <a class="text-btn center-link" href="index.html">返回产品</a>
       </div>
     </section>
 
     <section id="adminView" class="hidden">
-      <header class="topbar"><div class="wordmark"><span class="brand-mark small">AD</span><span>平台管理</span></div><nav class="topnav"><button class="navbtn active" data-admin-tab="orgs">组织管理</button><button class="navbtn" data-admin-tab="relay">中转站台账</button><button class="navbtn" data-admin-tab="audit">审计日志</button></nav><div class="user-menu"><a class="ghost link-btn" href="index.html">返回产品</a><button id="adminLogoutBtn" class="ghost">退出</button></div></header>
+      <header class="topbar">
+        <div class="wordmark"><span class="brand-mark small">AD</span><span>平台管理</span></div>
+        <nav class="topnav">
+          <button class="navbtn active" data-admin-tab="orgs">组织管理</button>
+          <button class="navbtn" data-admin-tab="relay">中转站台账</button>
+          <button class="navbtn" data-admin-tab="audit">审计日志</button>
+        </nav>
+        <div class="user-menu">
+          <select id="orgSwitcher" class="compact-select org-switcher" aria-label="切换当前组织"></select>
+          <a class="ghost link-btn" href="index.html">返回产品</a>
+          <button id="adminLogoutBtn" class="ghost">退出</button>
+        </div>
+      </header>
       <div class="content admin-content">
         <section id="tab-orgs" class="admin-tab active">
-          <div class="page-head"><div><p class="eyebrow">ORGANIZATIONS</p><h2>组织树与管理</h2><p class="muted">平台 → 组织 → 成员，可展开查看用量、角色、密钥掩码和身份信息。</p></div></div>
-          <div class="grid admin-top-grid">
-            <section class="panel"><h3>组织列表</h3><div id="orgList" class="org-list"></div>
-              <h3 class="section-title">创建组织</h3>
-              <div class="form-grid"><label>组织名称<input id="newOrgName" placeholder="例如 某某学院" /></label><label>slug<input id="newOrgSlug" placeholder="例如 school-a" /></label></div>
-              <div class="form-actions"><button class="primary" id="createOrgBtn">创建组织</button></div>
-            </section>
-            <section class="panel"><div class="panel-head"><div><h3>组织总览</h3><p class="muted" id="selectedOrgLabel">请选择组织</p></div></div><div id="adminOrgStats" class="stats compact-stats"></div><div id="adminOrgTree"></div></section>
+          <div class="page-head">
+            <div><p class="eyebrow">ORGANIZATIONS</p><h2>组织管理</h2><p class="muted">通过顶部切换组织查看总览，录入学生/老师信息，或批量管理额度与密钥。</p></div>
+            <button class="primary" id="openCreateOrgBtn">＋ 创建组织</button>
           </div>
-          <section class="panel"><div class="panel-head"><div><h3>成员与批量操作</h3><p class="muted">批量赠送额度、批量吊销密钥，操作幂等并写审计。</p></div><div class="inline-actions"><input id="bulkAmount" type="number" min="1" value="5000" aria-label="批量赠送额度" /><button class="primary" id="bulkGrantBtn">批量赠送</button><button class="danger" id="bulkRevokeBtn">批量吊销</button></div></div><div class="table-scroll"><table class="data-table" id="adminMemberTable"></table></div></section>
-          <section class="panel"><div class="panel-head"><div><h3>组织作品</h3><p class="muted">平台管理员可全局下架。</p></div><button class="ghost" id="refreshOrgWorks">刷新</button></div><div id="adminWorks" class="work-grid"></div></section>
+          <section class="panel">
+            <div class="panel-head"><div><h3>组织总览</h3><p class="muted" id="selectedOrgLabel">请选择组织</p></div></div>
+            <div id="adminOrgStats" class="stats admin-overview-stats"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <div><h3>成员管理与批量操作</h3><p class="muted" id="memberOrgHint">支持录入学生/老师、CSV 批量导入、批量赠送额度与吊销密钥。</p></div>
+              <div class="inline-actions">
+                <button class="primary compact-primary" id="openAddMemberBtn">＋ 录入成员</button>
+                <button class="outline compact-btn" id="openImportModalBtn">CSV 批量导入</button>
+              </div>
+            </div>
+            <div class="member-toolbar">
+              <div class="inline-actions">
+                <input id="adminMemberSearch" placeholder="搜索姓名 / 学号 / 邮箱" />
+                <button class="outline" id="adminMemberSearchBtn">搜索</button>
+              </div>
+              <div class="inline-actions">
+                <input id="bulkAmount" type="number" min="1" value="5000" aria-label="批量赠送额度" class="compact-num" />
+                <button class="outline" id="bulkGrantBtn">批量赠送</button>
+                <button class="danger" id="bulkRevokeBtn">批量吊销</button>
+              </div>
+            </div>
+            <div class="table-scroll"><table class="data-table" id="adminMemberTable"></table></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div><h3>组织作品</h3><p class="muted" id="worksOrgHint">平台管理员可全局下架。</p></div><button class="ghost" id="refreshOrgWorks">刷新</button></div>
+            <div id="adminWorks" class="work-grid"></div>
+          </section>
         </section>
+
         <section id="tab-relay" class="admin-tab">
-          <div class="page-head"><div><p class="eyebrow">RELAY ACCOUNTS</p><h2>中转站台账</h2><p class="muted">按学号、邮箱或姓名搜索，吊销当前密钥。</p></div></div>
-          <div class="searchbar"><input id="relaySearch" placeholder="按学号 / 邮箱 / 姓名搜索" /><button id="relaySearchBtn" class="primary">搜索</button><button id="relayRefreshBtn" class="outline">刷新</button></div>
+          <div class="page-head"><div><p class="eyebrow">RELAY ACCOUNTS</p><h2>中转站台账</h2><p class="muted">按学号、邮箱或姓名搜索，支持按当前组织筛选并吊销当前密钥。</p></div></div>
+          <div class="searchbar">
+            <select id="relayOrgFilter" class="compact-select" aria-label="中转站台账组织范围"><option value="selected">仅看当前组织</option><option value="all">全部组织</option></select>
+            <input id="relaySearch" placeholder="按学号 / 邮箱 / 姓名搜索" />
+            <button id="relaySearchBtn" class="primary">搜索</button>
+            <button id="relayRefreshBtn" class="outline">刷新</button>
+          </div>
           <div class="panel table-scroll"><table class="data-table" id="relayTable"></table></div>
         </section>
+
         <section id="tab-audit" class="admin-tab">
-          <div class="page-head"><div><p class="eyebrow">AUDIT</p><h2>审计日志</h2><p class="muted">平台管理员查看全部组织，不含密钥明文。</p></div><button class="outline" id="refreshAdminAudit">刷新</button></div>
+          <div class="page-head">
+            <div><p class="eyebrow">AUDIT</p><h2>审计日志</h2><p class="muted">支持查看全部组织或当前组织的审计记录，不含密钥明文。</p></div>
+            <div class="inline-actions">
+              <select id="auditOrgFilter" class="compact-select" aria-label="审计日志组织范围"><option value="selected">仅看当前组织</option><option value="all">全部组织</option></select>
+              <button class="outline" id="refreshAdminAudit">刷新</button>
+            </div>
+          </div>
           <div class="panel table-scroll"><table class="data-table" id="adminAuditTable"></table></div>
         </section>
       </div>
     </section>
   </main>
+
+  <div id="createOrgModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="createOrgModalTitle">
+    <div class="modal-box modal-form">
+      <button class="close" data-close-modal="createOrgModal" aria-label="关闭">×</button>
+      <h3 id="createOrgModalTitle">创建组织</h3>
+      <p class="muted modal-desc">创建后将自动切换到该组织，可继续录入老师与学生名单。</p>
+      <label for="newOrgName">组织名称</label>
+      <input id="newOrgName" maxlength="80" placeholder="例如 计算机学院" />
+      <label for="newOrgSlug" class="field-gap">组织标识（slug）</label>
+      <input id="newOrgSlug" maxlength="60" placeholder="例如 cs-school" />
+      <p class="hint">仅支持小写字母、数字和连字符（2–60 位）。</p>
+      <div class="modal-actions">
+        <button class="ghost" data-close-modal="createOrgModal">取消</button>
+        <button class="primary" id="createOrgBtn">确认创建</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="addMemberModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="addMemberModalTitle">
+    <div class="modal-box modal-form">
+      <button class="close" data-close-modal="addMemberModal" aria-label="关闭">×</button>
+      <h3 id="addMemberModalTitle">录入成员</h3>
+      <p class="muted modal-desc" id="addMemberOrgLabel">所属组织：—</p>
+      <div class="form-grid">
+        <label>身份角色
+          <select id="memberRole" class="full-select">
+            <option value="org_member">学生</option>
+            <option value="org_admin">教师</option>
+          </select>
+        </label>
+        <label>准入状态
+          <select id="memberAdmission" class="full-select">
+            <option value="active">已准入</option>
+            <option value="pending_review">待复核</option>
+            <option value="disabled">已停用</option>
+          </select>
+        </label>
+      </div>
+      <label for="memberName" class="field-gap">姓名</label>
+      <input id="memberName" maxlength="80" placeholder="请输入姓名" />
+      <label for="memberStudentId" class="field-gap">学号 / 工号</label>
+      <input id="memberStudentId" maxlength="40" placeholder="例如 2024001201（学号与邮箱至少填一项）" />
+      <label for="memberEmail" class="field-gap">校园邮箱</label>
+      <input id="memberEmail" maxlength="80" placeholder="例如 2024001201@mail.hust.edu.cn" />
+      <div class="modal-actions">
+        <button class="ghost" data-close-modal="addMemberModal">取消</button>
+        <button class="primary" id="addMemberConfirmBtn">确认录入</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="importMembersModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="importMembersModalTitle">
+    <div class="modal-box modal-wide">
+      <button class="close" data-close-modal="importMembersModal" aria-label="关闭">×</button>
+      <div class="import-head modal-import-head">
+        <div class="import-title"><h3 id="importMembersModalTitle">CSV 批量导入名单</h3><span class="muted" id="importModalOrgLabel">所属组织：—</span></div>
+        <button class="outline compact-btn" id="adminDownloadTemplate">下载 CSV 模板</button>
+      </div>
+      <p class="hint">仅收 UTF-8 CSV，先预览再确认，预览不会写入成员表（上限 10 MB、10,000 行）。</p>
+      <div class="import-bar">
+        <label class="file-drop compact"><input id="adminCsvFile" type="file" accept=".csv,text/csv" /><span>选择 UTF-8 CSV 文件</span></label>
+        <button class="primary compact-primary" id="adminPreviewBtn">解析并预览</button>
+        <span id="adminImportStatus" class="import-status">未选择文件</span>
+      </div>
+      <details class="import-spec">
+        <summary>查看列定义与常见错误说明</summary>
+        <table class="data-table compact-table"><thead><tr><th>列</th><th>说明</th></tr></thead><tbody><tr><td>external_ref</td><td>组织内稳定的外部编号，必填</td></tr><tr><td>student_id</td><td>学号，学号与邮箱至少填一个</td></tr><tr><td>email</td><td>校园邮箱，统一转小写</td></tr><tr><td>name</td><td>姓名，必填</td></tr><tr><td>role</td><td>org_admin / org_member，也接受教师 / 学生</td></tr><tr><td>status</td><td>active / disabled</td></tr></tbody></table>
+        <p class="hint">常见错误：列数不对、身份重复、字段以公式前缀开头、文件不是 UTF-8、超出大小或行数上限。错误信息会脱敏邮箱和学号。</p>
+      </details>
+      <section id="adminPreviewArea" class="hidden"><h4 class="section-title">预览结果</h4><div id="adminPreviewContent"></div></section>
+      <section id="adminCommitArea" class="hidden notice success"><b>确认结果</b><div id="adminCommitContent"></div></section>
+    </div>
+  </div>
+
   <script src="components.js"></script>
   <script src="admin.js"></script>
 </body>

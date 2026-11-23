@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>作品广场</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <header class="topbar">
+    <div class="wordmark"><span class="brand-mark small">AI</span><span data-product-name>创作平台</span><span class="muted hidden" id="galleryRoleTag">教师端</span></div>
+    <nav class="topnav hidden" id="studentNav" aria-label="学生主导航">
+      <a class="navbtn" href="index.html">我的作品</a>
+      <button class="navbtn active">作品广场</button>
+    </nav>
+    <nav class="topnav hidden" id="teacherNav" aria-label="教师主导航">
+      <a class="navbtn" href="teacher.html">教学看板</a>
+      <a class="navbtn" id="teacherMembersLink" href="import.html">成员管理</a>
+      <button class="navbtn active">作品广场</button>
+    </nav>
+    <div class="user-menu">
+      <span id="galleryUser"></span>
+      <button class="ghost hidden" id="galleryLogout">退出登录</button>
+    </div>
+  </header>
+
+  <main class="content gallery-content">
+    <section id="galleryDenied" class="panel denied hidden">
+      <h2>请先登录</h2><p class="muted">登录后即可浏览、体验、点赞与讨论本组织软件作品。</p><a class="primary link-btn" id="galleryBackLogin" href="index.html">回到登录页</a>
+    </section>
+
+    <section id="galleryMain" class="hidden">
+      <div id="pendingBanner" class="notice error pending-banner hidden" role="status">账户待复核，复核通过后开放作品广场、点赞、讨论与发布功能。</div>
+
+      <div class="page-head ph-head">
+        <div>
+          <p class="eyebrow">CAMPUS SOFTWARE LAUNCHES</p>
+          <h2>作品广场</h2>
+          <p class="muted">学生自主使用 Token 开发的 Web 应用、App 与 PC 软件，发布即上榜，点赞决定排名。</p>
+        </div>
+        <button class="primary hidden" id="submitWorkBtn">＋ 发布我的软件</button>
+      </div>
+
+      <div class="ph-toolbar">
+        <div class="ph-cats" id="phCategories" role="tablist" aria-label="软件类型筛选"></div>
+        <div class="ph-controls">
+          <div class="ph-sorts" role="tablist" aria-label="排序方式">
+            <button class="ph-sort active" data-sort="hot">热门</button>
+            <button class="ph-sort" data-sort="featured">精选</button>
+            <button class="ph-sort" data-sort="newest">最新</button>
+          </div>
+          <input id="phSearch" class="ph-search" placeholder="搜索软件名、简介或作者..." aria-label="搜索作品" />
+        </div>
+      </div>
+
+      <div class="ph-layout">
+        <section class="ph-main">
+          <div class="panel ph-feed-panel">
+            <div class="ph-feed-head">
+              <div class="ph-feed-title">
+                <h3 id="phFeedHeading">热门作品榜</h3>
+                <span class="muted" id="phFeedMeta">按点赞数实时排序</span>
+              </div>
+              <span class="muted ph-count" id="phFeedCount"></span>
+            </div>
+            <div id="phFeedList" class="ph-list"></div>
+          </div>
+        </section>
+
+        <aside class="ph-sidebar">
+          <section class="panel ph-side-card">
+            <div class="ph-side-head"><h3>榜单焦点</h3><span class="muted">Top 3</span></div>
+            <div id="phTopSpotlight" class="ph-spotlight"></div>
+          </section>
+
+          <section id="myWorksSection" class="panel ph-side-card hidden">
+            <div class="ph-side-head"><h3>我的发布</h3><button class="ghost compact-btn" id="sideSubmitBtn">＋ 发布</button></div>
+            <div id="myWorks" class="ph-my-list"></div>
+          </section>
+
+          <section id="teacherSideCard" class="panel ph-side-card hidden">
+            <div class="ph-side-head"><h3>广场概览</h3><a class="ph-side-link" href="teacher.html">精选管理 →</a></div>
+            <div id="teacherGalleryStats" class="ph-mini-stats"></div>
+          </section>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <div id="workDetailModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+    <div class="modal-box modal-wide ph-detail-box">
+      <button class="close" data-close-modal="workDetailModal" aria-label="关闭">×</button>
+      <div class="ph-detail-hero">
+        <div class="ph-icon ph-icon-lg" id="detailIcon">WEB</div>
+        <div class="ph-detail-info">
+          <div class="ph-title-line">
+            <h3 id="detailTitle">作品详情</h3>
+            <div id="detailBadges" class="work-badges"></div>
+          </div>
+          <p class="ph-detail-tagline" id="detailSummary"></p>
+          <div class="ph-meta" id="detailMeta"></div>
+        </div>
+        <div class="ph-detail-cta">
+          <button class="ph-upvote-lg" id="detailUpvoteBtn"><span class="ph-arrow">▲</span><span id="detailUpvoteLabel">点赞</span><b id="detailUpvoteCount">0</b></button>
+          <button class="outline" id="detailLaunchBtn">访问网站</button>
+        </div>
+      </div>
+
+      <div id="detailShots" class="ph-detail-shots hidden"></div>
+      <div class="ph-detail-about" id="detailAbout"></div>
+
+      <section class="ph-comments">
+        <div class="ph-comments-head">
+          <h4>讨论区 <span class="muted" id="detailCommentCount">(0)</span></h4>
+          <span class="hint">分享使用体验或改进建议</span>
+        </div>
+        <div class="ph-comment-form">
+          <textarea id="commentInput" maxlength="300" placeholder="写下你对这个软件的看法、Bug 反馈或改进建议..."></textarea>
+          <div class="ph-comment-actions">
+            <span class="hint">最多 300 字</span>
+            <button class="primary compact-primary" id="commentSubmitBtn">发表评论</button>
+          </div>
+        </div>
+        <div id="detailCommentsList" class="ph-comment-list"></div>
+      </section>
+    </div>
+  </div>
+
+  <div id="submitWorkModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="submitModalTitle">
+    <div class="modal-box modal-wide ph-submit-box">
+      <button class="close" data-close-modal="submitWorkModal" aria-label="关闭">×</button>
+      <h3 id="submitModalTitle">发布软件作品</h3>
+      <p class="muted modal-desc">发布后即刻出现在本组织作品广场，补充体验链接与预览图片让同学更直观了解你的软件。</p>
+
+      <div class="sw-type-grid" role="radiogroup" aria-label="软件类型">
+        <button type="button" class="sw-type-card active" data-sw-type="web"><b>🌐 Web 应用</b><small>网页 / H5 / 在线工具</small></button>
+        <button type="button" class="sw-type-card" data-sw-type="app"><b>📱 App</b><small>Android / iOS / 鸿蒙应用</small></button>
+        <button type="button" class="sw-type-card" data-sw-type="pc"><b>💻 PC 软件</b><small>macOS / Windows / Linux 软件</small></button>
+      </div>
+
+      <details class="import-spec modal-prompt-spec">
+        <summary>需要让 AI 帮你打包和写介绍？展开复制「<span id="modalPromptTypeLabel">Web 应用</span>」发布 Prompt</summary>
+        <pre id="modalPromptPre" class="prompt-pre compact-pre"></pre>
+        <div class="form-actions"><button type="button" class="outline compact-btn" id="modalCopyPromptBtn">一键复制 Prompt</button></div>
+      </details>
+
+      <div class="form-grid field-gap">
+        <label>软件名称<input id="workTitle" maxlength="60" placeholder="例如：校园活动清单" /></label>
+        <label>版本号<input id="workVersion" maxlength="30" value="v1.0.0" placeholder="例如 v1.0.0" /></label>
+      </div>
+      <div class="form-grid field-gap">
+        <label>适用平台<input id="workPlatform" maxlength="40" value="浏览器" placeholder="例如 浏览器 / Android / macOS" /></label>
+        <label>使用的 AI 工具（可多选）
+          <div class="ph-quick-cats" id="aiToolChips">
+            <button type="button" class="chip" data-tool="Codex">Codex</button>
+            <button type="button" class="chip" data-tool="Cursor">Cursor</button>
+            <button type="button" class="chip" data-tool="Claude Code">Claude Code</button>
+            <button type="button" class="chip" data-tool="欢喜 OS">欢喜 OS</button>
+          </div>
+        </label>
+      </div>
+      <label for="workSummary" class="field-gap">一句话卖点（Tagline）</label>
+      <textarea id="workSummary" maxlength="160" placeholder="一句话说清它帮谁解决什么问题"></textarea>
+
+      <label for="workExternalUrl" class="field-gap" id="externalUrlLabel">体验 / 下载链接（选填）</label>
+      <input id="workExternalUrl" maxlength="500" placeholder="https://..." />
+
+      <div class="preview-images-box field-gap">
+        <div class="upload-box-head">
+          <b>预览图片</b>
+          <span class="hint">最多 4 张，支持 PNG / JPG / WebP（单张 ≤ 8 MB），第一张将作为作品封面展示</span>
+        </div>
+        <div class="shot-grid" id="previewImageGrid"></div>
+        <input id="previewImageInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="hidden" />
+      </div>
+
+      <div class="preview-strip field-gap">
+        <span class="hint">上榜卡片实时预览</span>
+        <div id="liveCardPreview"></div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="ghost" data-close-modal="submitWorkModal">取消</button>
+        <button class="primary" id="submitWorkConfirm">立即发布上榜</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="components.js"></script>
+  <script src="gallery.js"></script>
+</body>
+</html>

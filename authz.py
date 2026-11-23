@@ -59,9 +59,6 @@ _RULES = {
         ("organizations", "read"): "org",
         ("members", "list"): "org",
         ("members", "read"): "org",
-        ("members", "update_status"): "org",
-        ("members", "import"): "org",
-        ("members", "revoke_key"): "org",
         ("usage", "read_org"): "org",
         ("usage", "read_self"): "self",
         ("works", "read_gallery"): "org",
@@ -76,7 +73,6 @@ _RULES = {
         ("usage", "consume_self"): "self",
         ("sessions", "revoke_self"): "self",
         ("accounts", "list"): "org",
-        ("accounts", "revoke_key"): "org",
     },
     ORG_MEMBER: {
         ("organizations", "read"): "org",

@@ -3,20 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>名单导入</title>
+  <title>成员管理</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <header class="topbar"><div class="wordmark"><span class="brand-mark small">CSV</span><span data-product-name>创作平台</span><span class="muted">名单导入</span></div><nav class="topnav"><a class="navbtn" id="backLink" href="teacher.html">返回</a></nav></header>
+  <header class="topbar teacher-topbar">
+    <div class="wordmark"><span class="brand-mark small">AI</span><span data-product-name>创作平台</span><span class="muted">教师端</span></div>
+    <nav class="topnav hidden" id="teacherNav"><a class="navbtn" id="dashboardLink" href="teacher.html">教学看板</a><button class="navbtn active">成员管理</button><a class="navbtn" id="galleryLink" href="gallery.html">作品广场</a></nav>
+    <div class="user-menu"><span id="teacherOrg"></span><button class="ghost hidden" id="teacherLogout">退出</button></div>
+  </header>
+
   <main class="content import-content">
-    <div class="page-head"><div><p class="eyebrow">ROSTER IMPORT</p><h2>名单导入</h2><p class="muted">只收 UTF-8 CSV，先预览再确认。预览不会写入成员表。</p></div><button class="outline" id="downloadTemplate">下载 CSV 模板</button></div>
-    <div class="grid import-grid">
-      <section class="panel"><h3>上传文件</h3><p class="hint">上限：10 MB、10,000 行、单字段 256 字符、整行 4 KB。</p><label class="file-drop"><input id="csvFile" type="file" accept=".csv,text/csv" /><span>选择 UTF-8 CSV 文件</span></label><div class="form-actions"><button class="primary" id="previewBtn">解析并预览</button></div><div id="importStatus" class="notice">还没有选择文件。</div></section>
-      <section class="panel"><h3>列定义</h3><table class="data-table compact-table"><thead><tr><th>列</th><th>说明</th></tr></thead><tbody><tr><td>external_ref</td><td>组织内稳定的外部编号，必填</td></tr><tr><td>student_id</td><td>学号，学号与邮箱至少填一个</td></tr><tr><td>email</td><td>校园邮箱，统一转小写</td></tr><tr><td>name</td><td>姓名，必填</td></tr><tr><td>role</td><td>org_admin / org_member，也接受教师 / 学生</td></tr><tr><td>status</td><td>active / disabled</td></tr></tbody></table><p class="hint">常见错误：列数不对、身份重复、字段以公式前缀开头、文件不是 UTF-8、超出大小或行数上限。错误信息会脱敏邮箱和学号。</p></section>
-    </div>
-    <section id="previewArea" class="hidden"><h3 class="section-title">预览结果</h3><div id="previewContent"></div></section>
-    <section id="commitArea" class="hidden panel"><h3>确认结果</h3><div id="commitContent"></div></section>
+    <section id="importDenied" class="panel denied hidden">
+      <h2>需要教师权限</h2><p class="muted">请使用老师账号登录后访问教师端。</p><a class="primary link-btn" id="importBackLogin" href="index.html">回到登录页</a>
+    </section>
+
+    <section id="importMain" class="hidden">
+      <div class="page-head compact-head"><div><p class="eyebrow">MEMBER DIRECTORY</p><h2>成员管理</h2><p class="muted">查看与搜索本组织成员信息。</p></div></div>
+
+      <section class="panel member-panel">
+        <div class="panel-head"><div><h3>成员列表</h3><p class="muted">姓名、学号、角色、用量、密钥掩码与准入状态（仅展示）</p></div><div class="inline-actions"><input id="memberSearch" placeholder="搜索姓名 / 学号 / 邮箱" /><button class="outline" id="memberSearchBtn">搜索</button></div></div>
+        <div class="table-scroll"><table class="data-table" id="memberTable"></table></div>
+      </section>
+    </section>
   </main>
   <script src="components.js"></script>
   <script src="import.js"></script>
