@@ -36,6 +36,7 @@ def organizations(conn):
         "FROM organizations o ORDER BY o.created_at, o.name").fetchall()
     return [{"id": row["id"], "slug": row["slug"], "name": row["name"], "status": row["status"],
              "adminLabel": row["admin_label"], "memberLabel": row["member_label"],
+             "quotaLimit": row["quota_limit"] if "quota_limit" in row.keys() else None,
              "memberCount": row["member_count"]} for row in rows]
 
 
@@ -44,7 +45,8 @@ def org(conn, org_id):
     if not row:
         return None
     return {"id": row["id"], "slug": row["slug"], "name": row["name"], "status": row["status"],
-            "adminLabel": row["admin_label"], "memberLabel": row["member_label"]}
+            "adminLabel": row["admin_label"], "memberLabel": row["member_label"],
+            "quotaLimit": row["quota_limit"] if "quota_limit" in row.keys() else None}
 
 
 def members(conn, org_id, query=None):

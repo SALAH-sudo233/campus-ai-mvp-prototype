@@ -1331,6 +1331,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 slug = str(data.get("slug") or "").strip().lower()
                 if not name or len(name) > 80 or not re.match(r"^[a-z0-9-]{2,60}$", slug):
                     return self._send(400, {"error": "组织名称必填，slug 只能用小写字母、数字和连字符"})
+                quota_raw = data.get("quotaLimit")
+                quota_limit = None
+                if quota_raw is not None and str(quota_raw).strip() != "":
+                    if isinstance(quota_raw, bool):
+                        return self._send(400, {"error": "总额度上限必须是正整数"})
+                    try:
+                        quota_limit = int(quota_raw)
+                    except (TypeError, ValueError):
+                        return self._send(400, {"error": "总额度上限必须是正整数"})
+                    if quota_limit <= 0 or quota_limit > 10 ** 12:
+                        return self._send(400, {"error": "总额度上限必须在 1 到 1,000,000,000,000 之间"})
                 conn = db()
                 try:
                     conn.execute("BEGIN IMMEDIATE")
@@ -1338,9 +1349,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         conn.execute("ROLLBACK")
                         return self._send(409, {"error": "该组织标识（slug）已存在"})
                     org_id = migrations.ensure_org(conn, slug, name, data.get("adminLabel") or "教师",
-                                                   data.get("memberLabel") or "学生")
+                                                   data.get("memberLabel") or "学生", quota_limit=quota_limit)
                     org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
-                                      "organization.created", "organization", org_id, metadata={"name": name})
+                                      "organization.created", "organization", org_id,
+                                      metadata={"name": name, "quotaLimit": quota_limit})
                     conn.execute("COMMIT")
                     return self._send(201, org_service.org(conn, org_id))
                 except BaseException:

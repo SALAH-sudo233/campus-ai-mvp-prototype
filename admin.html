@@ -31,8 +31,6 @@
         <div class="wordmark"><span class="brand-mark small">AD</span><span>平台管理</span></div>
         <nav class="topnav">
           <button class="navbtn active" data-admin-tab="orgs">组织管理</button>
-          <button class="navbtn" data-admin-tab="relay">中转站台账</button>
-          <button class="navbtn" data-admin-tab="audit">审计日志</button>
         </nav>
         <div class="user-menu">
           <select id="orgSwitcher" class="compact-select org-switcher" aria-label="切换当前组织"></select>
@@ -77,27 +75,7 @@
           </section>
         </section>
 
-        <section id="tab-relay" class="admin-tab">
-          <div class="page-head"><div><p class="eyebrow">RELAY ACCOUNTS</p><h2>中转站台账</h2><p class="muted">按学号、邮箱或姓名搜索，支持按当前组织筛选并吊销当前密钥。</p></div></div>
-          <div class="searchbar">
-            <select id="relayOrgFilter" class="compact-select" aria-label="中转站台账组织范围"><option value="selected">仅看当前组织</option><option value="all">全部组织</option></select>
-            <input id="relaySearch" placeholder="按学号 / 邮箱 / 姓名搜索" />
-            <button id="relaySearchBtn" class="primary">搜索</button>
-            <button id="relayRefreshBtn" class="outline">刷新</button>
-          </div>
-          <div class="panel table-scroll"><table class="data-table" id="relayTable"></table></div>
-        </section>
 
-        <section id="tab-audit" class="admin-tab">
-          <div class="page-head">
-            <div><p class="eyebrow">AUDIT</p><h2>审计日志</h2><p class="muted">支持查看全部组织或当前组织的审计记录，不含密钥明文。</p></div>
-            <div class="inline-actions">
-              <select id="auditOrgFilter" class="compact-select" aria-label="审计日志组织范围"><option value="selected">仅看当前组织</option><option value="all">全部组织</option></select>
-              <button class="outline" id="refreshAdminAudit">刷新</button>
-            </div>
-          </div>
-          <div class="panel table-scroll"><table class="data-table" id="adminAuditTable"></table></div>
-        </section>
       </div>
     </section>
   </main>
@@ -112,6 +90,9 @@
       <label for="newOrgSlug" class="field-gap">组织标识（slug）</label>
       <input id="newOrgSlug" maxlength="60" placeholder="例如 cs-school" />
       <p class="hint">仅支持小写字母、数字和连字符（2–60 位）。</p>
+      <label for="newOrgQuotaLimit" class="field-gap">总额度上限（Token）</label>
+      <input id="newOrgQuotaLimit" type="number" min="1" step="10000" value="1000000" placeholder="例如 1000000（留空表示不限）" />
+      <p class="hint">设置本组织可使用的 Token 总额度上限，留空表示不限制。</p>
       <div class="modal-actions">
         <button class="ghost" data-close-modal="createOrgModal">取消</button>
         <button class="primary" id="createOrgBtn">确认创建</button>

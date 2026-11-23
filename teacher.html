@@ -31,7 +31,14 @@
         <section class="panel"><div class="panel-head"><div><h3>额度消耗排行</h3><p class="muted">本组织成员，近 90 天</p></div></div><div class="table-scroll"><table class="data-table" id="rankingTable"></table></div></section>
         <aside class="panel"><h3>当前精选</h3><p class="muted">已加入本组织精选的作品</p><div id="featuredWorks" class="work-grid compact-grid"></div></aside>
       </div>
-      <section class="panel"><div class="panel-head"><div><h3>精选作品</h3><p class="muted">学生提交后只在本组织内展示，可进行精选与管理</p></div><div class="inline-actions"><a class="outline link-btn" id="galleryEntry" href="gallery.html">作品广场 →</a><button class="outline" id="refreshWorks">刷新</button></div></div><div id="pendingWorks" class="work-grid"></div></section>
+      <section class="panel">
+        <div class="panel-head"><div><h3>精选作品</h3><p class="muted">学生提交后只在本组织内展示，可按状态和软件类型快速筛选</p></div><div class="inline-actions"><a class="outline link-btn" id="galleryEntry" href="gallery.html">作品广场 →</a><button class="outline" id="refreshWorks">刷新</button></div></div>
+        <div class="teacher-works-toolbar">
+          <div class="ph-sorts" id="teacherWorkTabs" role="tablist" aria-label="作品状态筛选"></div>
+          <div class="ph-cats" id="teacherWorkTypes" role="tablist" aria-label="软件类型筛选"></div>
+        </div>
+        <div id="pendingWorks" class="work-grid"></div>
+      </section>
       <section class="panel"><div class="panel-head"><div><h3>操作审计</h3><p class="muted">不含密钥明文</p></div><button class="ghost" id="refreshAudit">刷新</button></div><div class="table-scroll"><table class="data-table" id="auditTable"></table></div></section>
     </section>
   </main>

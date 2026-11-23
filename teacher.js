@@ -5,6 +5,9 @@ const $ = id => document.getElementById(id);
 const el = UI.el;
 let me = null;
 let orgId = null;
+let allOrgWorks = [];
+let workStatusTab = 'all';
+let workTypeTab = 'all';
 
 function toast(message) {
   const node = $('toast');
@@ -111,25 +114,76 @@ function renderRanking(rows) {
   table.appendChild(body);
 }
 
+function matchesWorkStatus(work, tab) {
+  if (tab === 'featured') return work.status === 'published' && !!work.featured;
+  if (tab === 'published') return work.status === 'published';
+  if (tab === 'pending_review') return work.status === 'pending_review';
+  if (tab === 'inactive') return ['removed', 'withdrawn', 'rejected'].includes(work.status);
+  return true;
+}
+
+function matchesWorkType(work, typeKey) {
+  if (typeKey === 'all') return true;
+  return (work.softwareType || 'web') === typeKey;
+}
+
+function renderWorkFilters() {
+  const statusTabs = [
+    ['all', '全部'],
+    ['featured', '已精选'],
+    ['published', '已发布'],
+    ['pending_review', '待审核'],
+    ['inactive', '已下架']
+  ];
+  $('teacherWorkTabs').replaceChildren(...statusTabs.map(([key, label]) => {
+    const count = allOrgWorks.filter(w => matchesWorkStatus(w, key) && matchesWorkType(w, workTypeTab)).length;
+    return el('button', {
+      className: 'ph-sort' + (workStatusTab === key ? ' active' : ''),
+      text: label + ' (' + count + ')',
+      onclick: () => { workStatusTab = key; renderWorkFilters(); renderWorkCards(); }
+    });
+  }));
+  const typePills = [
+    ['all', '全部类型'],
+    ['web', 'Web 应用'],
+    ['app', 'App'],
+    ['pc', 'PC 软件']
+  ];
+  $('teacherWorkTypes').replaceChildren(...typePills.map(([key, label]) => el('button', {
+    className: 'ph-cat' + (workTypeTab === key ? ' active' : ''),
+    text: label,
+    onclick: () => { workTypeTab = key; renderWorkFilters(); renderWorkCards(); }
+  })));
+}
+
+function renderWorkCards() {
+  const wrap = $('pendingWorks');
+  wrap.replaceChildren();
+  const items = allOrgWorks.filter(w => matchesWorkStatus(w, workStatusTab) && matchesWorkType(w, workTypeTab));
+  if (!items.length) {
+    wrap.appendChild(el('p', { className: 'muted empty', text: '当前筛选条件下暂无作品。' }));
+    return;
+  }
+  for (const work of items) {
+    const actions = [];
+    if (work.status === 'pending_review') {
+      actions.push({ label: '通过', tone: 'primary', onClick: () => reviewWork(work, 'approve') });
+      actions.push({ label: '驳回', tone: 'danger', onClick: () => reviewWork(work, 'reject') });
+    }
+    if (work.status === 'published') {
+      actions.push({ label: work.featured ? '取消精选' : '精选', tone: 'outline', onClick: () => featureWork(work, !work.featured) });
+      actions.push({ label: '下架', tone: 'danger', onClick: () => unpublishWork(work) });
+    }
+    wrap.appendChild(UI.WorkCard(work, { density: 'compact', showStatus: true, onOpen: openWork, actions }));
+  }
+}
+
 async function loadWorks() {
   try {
     const data = await api('/api/orgs/' + encodeURIComponent(orgId) + '/works');
-    const wrap = $('pendingWorks');
-    wrap.replaceChildren();
-    const items = data.items || [];
-    if (!items.length) wrap.appendChild(el('p', { className: 'muted empty', text: '暂无待审核或已发布作品。' }));
-    for (const work of items) {
-      const actions = [];
-      if (work.status === 'pending_review') {
-        actions.push({ label: '通过', tone: 'primary', onClick: () => reviewWork(work, 'approve') });
-        actions.push({ label: '驳回', tone: 'danger', onClick: () => reviewWork(work, 'reject') });
-      }
-      if (work.status === 'published') {
-        actions.push({ label: work.featured ? '取消精选' : '精选', tone: 'outline', onClick: () => featureWork(work, !work.featured) });
-        actions.push({ label: '下架', tone: 'danger', onClick: () => unpublishWork(work) });
-      }
-      wrap.appendChild(UI.WorkCard(work, { density: 'compact', showStatus: true, onOpen: openWork, actions }));
-    }
+    allOrgWorks = data.items || [];
+    renderWorkFilters();
+    renderWorkCards();
   } catch (error) { toast(error.message || '作品列表暂时不可用'); }
 }
 
@@ -158,7 +212,9 @@ async function unpublishWork(work) {
 }
 
 function openWork(work) {
-  toast(work.title + '：这是作品卡预览，演示作品不会打开外部脚本。');
+  if (work.hostedUrl) { window.open(API + '/' + work.hostedUrl, '_blank', 'noopener,noreferrer'); return; }
+  if (work.externalUrl) { window.open(work.externalUrl, '_blank', 'noopener,noreferrer'); return; }
+  toast(work.title + '：可前往“作品广场”查看详情或下载安装包。');
 }
 
 async function loadAudit() {

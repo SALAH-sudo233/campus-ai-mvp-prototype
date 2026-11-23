@@ -36,7 +36,7 @@ CORE_SCHEMA = [
     """CREATE TABLE IF NOT EXISTS organizations (
       id TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'active', admin_label TEXT NOT NULL DEFAULT '教师',
-      member_label TEXT NOT NULL DEFAULT '学生', created_at REAL NOT NULL)""",
+      member_label TEXT NOT NULL DEFAULT '学生', quota_limit INTEGER, created_at REAL NOT NULL)""",
     """CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY, display_name TEXT, created_at REAL NOT NULL, disabled_at REAL)""",
     """CREATE TABLE IF NOT EXISTS user_identities (
@@ -349,6 +349,10 @@ MIGRATIONS = [
     (5, "legacy-backfill", _migration_5),
     (6, "indexes", _migration_6),
     (7, "email-case-fold", _migration_7),
+    (8, "org-quota-limit", lambda conn: (
+        None if "quota_limit" in _columns(conn, "organizations")
+        else conn.execute("ALTER TABLE organizations ADD COLUMN quota_limit INTEGER")
+    )),
 ]
 
 
@@ -382,15 +386,15 @@ def migrate(db_path):
         conn.close()
 
 
-def ensure_org(conn, slug, name, admin_label="教师", member_label="学生"):
+def ensure_org(conn, slug, name, admin_label="教师", member_label="学生", quota_limit=None):
     row = conn.execute("SELECT id FROM organizations WHERE slug = ?", (slug,)).fetchone()
     if row:
         return row["id"]
     org_id = "org_" + hashlib.sha256((slug + str(time.time())).encode("utf-8")).hexdigest()[:16]
     now = time.time()
-    conn.execute("INSERT INTO organizations (id, slug, name, status, admin_label, member_label, created_at) "
-                 "VALUES (?, ?, ?, 'active', ?, ?, ?)",
-                 (org_id, slug, name, admin_label, member_label, now))
+    conn.execute("INSERT INTO organizations (id, slug, name, status, admin_label, member_label, quota_limit, created_at) "
+                 "VALUES (?, ?, ?, 'active', ?, ?, ?, ?)",
+                 (org_id, slug, name, admin_label, member_label, quota_limit, now))
     conn.execute("INSERT OR IGNORE INTO org_policies (org_id, trend_days, updated_at) VALUES (?, 90, ?)",
                  (org_id, now))
     _seed_works(conn, org_id)

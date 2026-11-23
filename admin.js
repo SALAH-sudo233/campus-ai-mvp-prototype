@@ -98,8 +98,6 @@ async function loadOrgs(preferredOrgId) {
     renderOrgControls();
     if (selectedOrg) {
       await selectOrg(selectedOrg);
-    } else {
-      await Promise.all([loadRelay(), loadAudit()]);
     }
   } catch (error) {
     if (error.status === 401) showLogin(); else toast(error.message);
@@ -115,7 +113,8 @@ async function selectOrg(orgId) {
 
   const org = currentOrg();
   if (org) orgLabels = { admin: org.adminLabel || '教师', member: org.memberLabel || '学生' };
-  const label = org ? (org.name + ' · ' + org.slug) : orgId;
+  const quotaText = org && org.quotaLimit ? (' · 总额度上限 ' + fmt(org.quotaLimit) + ' Token') : ' · 总额度不限';
+  const label = org ? (org.name + ' · ' + org.slug + quotaText) : orgId;
   $('selectedOrgLabel').textContent = label;
   $('memberOrgHint').textContent = '当前组织：' + (org ? org.name : orgId) + ' · 支持录入学生/老师、CSV 批量导入与批量操作。';
   $('worksOrgHint').textContent = '当前组织：' + (org ? org.name : orgId) + ' · 平台管理员可全局下架。';
@@ -130,16 +129,16 @@ async function selectOrg(orgId) {
     ]);
     if (seq !== selectSeq) return;
     const s = dashboard.summary;
+    const quotaHint = org && org.quotaLimit ? ('组织上限 ' + fmt(org.quotaLimit) + ' Token') : '未设总额度上限';
     $('adminOrgStats').replaceChildren(
       UI.MetricCard({ label: '成员', value: s.memberCount }),
       UI.MetricCard({ label: '活跃', value: s.activeMemberCount, tone: 'accent' }),
       UI.MetricCard({ label: '总消耗', value: s.totalConsumed }),
-      UI.MetricCard({ label: '剩余额度', value: s.remainingQuota })
+      UI.MetricCard({ label: '剩余额度', value: s.remainingQuota, hint: quotaHint })
     );
     memberRows = members.members || [];
     renderMembers();
     renderWorks(works.items || []);
-    await Promise.all([loadRelay(), loadAudit()]);
   } catch (error) {
     if (seq === selectSeq) toast(error.message || '组织数据暂时不可用');
   }
@@ -248,72 +247,23 @@ async function globalUnpublish(work) {
   } catch (error) { toast(error.message || '下架失败'); }
 }
 
-async function loadRelay() {
-  const query = $('relaySearch').value.trim();
-  const params = new URLSearchParams();
-  if (query) params.set('q', query);
-  if ($('relayOrgFilter').value === 'selected' && selectedOrg) params.set('orgId', selectedOrg);
-  const qs = params.toString() ? '?' + params.toString() : '';
-  try {
-    const data = await api('/api/admin/accounts' + qs);
-    const table = $('relayTable');
-    table.replaceChildren(el('thead', {}, [el('tr', {}, ['学生编号', '身份', '姓名', '组织', '密钥掩码', '状态', '操作'].map(label => el('th', { text: label })))]));
-    const body = el('tbody');
-    if (!data.accounts.length) {
-      body.appendChild(el('tr', {}, [el('td', { colspan: '7', className: 'muted', text: '当前条件下暂无台账记录' })]));
-    }
-    for (const account of data.accounts) {
-      body.appendChild(el('tr', {}, [
-        el('td', {}, [el('code', { text: account.owner_ref })]), el('td', { text: account.identity }),
-        el('td', { text: account.name || '（名册外）' }), el('td', { text: account.org_id || '—' }),
-        el('td', {}, [el('code', { text: account.key_hint || '—' })]),
-        el('td', {}, [el('span', { className: 'badge ' + (account.key_status === 'active' ? 'active' : 'none'), text: account.key_status })]),
-        el('td', {}, [account.key_status === 'active' ? el('button', { className: 'danger', text: '吊销', onclick: () => revokeRelay(account) }) : el('span', { text: '—' })])
-      ]));
-    }
-    table.appendChild(body);
-  } catch (error) { toast(error.message || '台账暂时不可用'); }
-}
-
-async function revokeRelay(account) {
-  if (!confirm('确认吊销该账户当前密钥？')) return;
-  try {
-    await api('/api/admin/revoke', { method: 'POST', body: JSON.stringify({ owner_ref: account.owner_ref }) });
-    await loadRelay();
-    toast('已吊销');
-  } catch (error) { toast(error.message || '吊销失败'); }
-}
-
-async function loadAudit() {
-  const qs = $('auditOrgFilter').value === 'selected' && selectedOrg ? '?orgId=' + encodeURIComponent(selectedOrg) : '';
-  try {
-    const data = await api('/api/audit-events' + qs);
-    const table = $('adminAuditTable');
-    table.replaceChildren(el('thead', {}, [el('tr', {}, ['时间', '组织', '角色', '动作', '资源', '请求编号'].map(label => el('th', { text: label })))]));
-    const body = el('tbody');
-    if (!data.events.length) {
-      body.appendChild(el('tr', {}, [el('td', { colspan: '6', className: 'muted', text: '当前条件下暂无审计记录' })]));
-    }
-    for (const event of data.events) {
-      body.appendChild(el('tr', {}, [
-        el('td', { text: new Date(event.createdAt * 1000).toLocaleString('zh-CN') }), el('td', { text: event.orgId || '—' }),
-        el('td', { text: event.actorRole || '—' }), el('td', { text: event.action }),
-        el('td', { text: event.resourceType + ' / ' + (event.resourceId || '—') }), el('td', { text: event.requestId || '—' })
-      ]));
-    }
-    table.appendChild(body);
-  } catch (error) { /* audit is secondary */ }
-}
-
 // Create organization modal
 async function createOrg() {
   const name = $('newOrgName').value.trim();
   const slug = $('newOrgSlug').value.trim().toLowerCase();
+  const quotaText = $('newOrgQuotaLimit').value.trim();
   if (!name || !slug) { toast('请填写组织名称和 slug'); return; }
+  const payload = { name, slug };
+  if (quotaText !== '') {
+    const num = Number(quotaText);
+    if (!Number.isInteger(num) || num <= 0) { toast('总额度上限必须是正整数'); return; }
+    payload.quotaLimit = num;
+  }
   try {
-    const org = await api('/api/orgs', { method: 'POST', body: JSON.stringify({ name, slug }) });
+    const org = await api('/api/orgs', { method: 'POST', body: JSON.stringify(payload) });
     $('newOrgName').value = '';
     $('newOrgSlug').value = '';
+    $('newOrgQuotaLimit').value = '1000000';
     closeModal('createOrgModal');
     await loadOrgs(org.id);
     toast('组织「' + org.name + '」已创建并切换');
@@ -415,16 +365,10 @@ $('adminQuickLoginBtn').addEventListener('click', quickLogin);
 $('adminPassword').addEventListener('keydown', event => { if (event.key === 'Enter') login(); });
 $('adminLogoutBtn').addEventListener('click', showLogin);
 $('orgSwitcher').addEventListener('change', event => selectOrg(event.target.value));
-document.querySelectorAll('[data-admin-tab]').forEach(button => button.addEventListener('click', () => {
-  document.querySelectorAll('[data-admin-tab]').forEach(node => node.classList.toggle('active', node === button));
-  document.querySelectorAll('.admin-tab').forEach(node => node.classList.toggle('active', node.id === 'tab-' + button.dataset.adminTab));
-  if (button.dataset.adminTab === 'audit') loadAudit();
-  if (button.dataset.adminTab === 'relay') loadRelay();
-}));
-
 $('openCreateOrgBtn').onclick = () => { openModal('createOrgModal'); $('newOrgName').focus(); };
 $('createOrgBtn').onclick = createOrg;
 $('newOrgSlug').addEventListener('keydown', event => { if (event.key === 'Enter') createOrg(); });
+$('newOrgQuotaLimit').addEventListener('keydown', event => { if (event.key === 'Enter') createOrg(); });
 
 $('openAddMemberBtn').onclick = () => {
   if (!selectedOrg) { toast('请先选择组织'); return; }
@@ -462,11 +406,5 @@ $('adminMemberSearch').addEventListener('keydown', event => { if (event.key === 
 $('bulkGrantBtn').onclick = () => bulk('grant');
 $('bulkRevokeBtn').onclick = () => bulk('revoke');
 $('refreshOrgWorks').onclick = () => selectedOrg && selectOrg(selectedOrg);
-$('relayOrgFilter').onchange = loadRelay;
-$('relaySearchBtn').onclick = loadRelay;
-$('relayRefreshBtn').onclick = loadRelay;
-$('relaySearch').addEventListener('keydown', event => { if (event.key === 'Enter') loadRelay(); });
-$('auditOrgFilter').onchange = loadAudit;
-$('refreshAdminAudit').onclick = loadAudit;
 
 if (adminToken) showAdmin(); else showLogin();
