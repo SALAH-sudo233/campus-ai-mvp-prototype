@@ -75,10 +75,6 @@ async function loadDashboard() {
     $('heatmap').replaceChildren(UI.Heatmap(data.heatmap));
     renderActivity(data.activity);
     renderRanking(data.ranking);
-    const featured = data.featuredWorks || [];
-    $('featuredWorks').replaceChildren();
-    if (!featured.length) $('featuredWorks').appendChild(el('p', { className: 'muted empty', text: '还没有精选作品。' }));
-    for (const work of featured) $('featuredWorks').appendChild(UI.WorkCard(work, { density: 'compact', onOpen: openWork }));
   } catch (error) {
     $('teacherError').classList.remove('hidden');
     $('teacherError').textContent = '数据暂不可用（近 90 天）。' + (error.message || '请稍后重试。');
