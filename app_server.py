@@ -387,10 +387,10 @@ def profile(conn, owner_ref):
     view["quota"] = {
         "totalQuota": total_quota,
         "memberQuota": member_quota,
-        "remainingQuota": key_state["remainingQuota"],
-        "usedQuota": key_state["usedQuota"],
+        "remainingQuota": int(row["balance"] or 0),
+        "usedQuota": int(row["spent"] or 0),
         "state": key_state["state"],
-        "source": "newapi" if key_state["state"] == "active" else "pending",
+        "source": "platform_ledger",
         "displayBalance": row["balance"],
     }
     if principal:
@@ -471,13 +471,14 @@ def do_register(mode, identity, password, request_id, org_id=None):
                 conn.execute("ROLLBACK")
                 return 403, {"error": "该身份尚未获得组织准入"}
             now = time.time()
+            _, grant = _org_quota(conn, membership["org_id"])
             conn.execute("INSERT INTO students (owner_ref, mode, identity, pw_salt, pw_hash, balance, spent, created_at, "
                          "user_id, org_id) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)",
-                         (owner_ref, mode, identity, salt.hex(), pw_hash, INITIAL_GRANT, now, user_id,
+                         (owner_ref, mode, identity, salt.hex(), pw_hash, grant, now, user_id,
                           membership["org_id"]))
             conn.execute("INSERT INTO ledger (owner_ref, user_id, org_id, title, amount, kind, request_id, created_at) "
                          "VALUES (?, ?, ?, '新用户注册赠送', ?, 'grant', ?, ?)",
-                         (owner_ref, user_id, membership["org_id"], INITIAL_GRANT, "grant:" + owner_ref, now))
+                         (owner_ref, user_id, membership["org_id"], grant, "grant:" + owner_ref, now))
             onboarding.ensure(conn, user_id, auto_pending=1)
             token = new_session(conn, owner_ref, user_id, membership["org_id"])
             conn.execute("COMMIT")
@@ -597,7 +598,7 @@ def do_rotate(owner_ref, request_id):
 
 
 def do_consume(owner_ref, amount, request_id):
-    """仅演示：真实额度与用量以 New-API 为准，这里只改平台账面。"""
+    """仅演示：只改平台分摊账面；New-API token 不设硬限额，不做同步扣减。"""
     if not isinstance(amount, int) or isinstance(amount, bool) or amount <= 0 or amount > 10 ** 7:
         return 400, {"error": "消耗数量必须是正整数"}
     # 客户端请求编号只在本接口内解释，避免与赠送等其他流水的 request_id 撞号。
@@ -630,7 +631,7 @@ def do_consume(owner_ref, amount, request_id):
     try:
         view = profile(conn, owner_ref)
         view["demoOnly"] = True
-        view["notice"] = "平台消费仅用于演示账面，真实额度以 New-API 为准"
+        view["notice"] = "平台消费仅用于演示账面，不代表 New-API 实际扣减"
         return 200, view
     finally:
         conn.close()
@@ -747,29 +748,36 @@ def _merge_key_hints(conn, rows, org_id=None):
                                                (item["ownerRefs"][0],)).fetchone()["org_id"]
                                   if item.get("ownerRefs") else None)
         total_quota, member_quota = _org_quota(conn, resolved_org)
-        remaining = sum(int(view["remainingQuota"] or 0) for view in views if view["state"] == "active")
-        used = sum(int(view["usedQuota"] or 0) for view in views if view["state"] == "active")
+        remaining = int(item.get("balance") or 0)
+        used = int(item.get("spent") or 0)
         item["quota"] = {"totalQuota": total_quota, "memberQuota": member_quota,
-                         "remainingQuota": remaining if active else None,
-                         "usedQuota": used if active else None,
-                         "source": "newapi" if active else "pending"}
-        item["remainingQuota"] = remaining if active else None
-        item["usedQuota"] = used if active else None
+                         "remainingQuota": remaining, "usedQuota": used,
+                         "source": "platform_ledger"}
+        item["remainingQuota"] = remaining
+        item["usedQuota"] = used
     return rows
 
 
 def _enrich_account_quotas(conn, accounts):
+    refs = [item.get("owner_ref") for item in accounts if item.get("owner_ref")]
+    balances = {}
+    if refs:
+        placeholders = ",".join("?" for _ in refs)
+        rows = conn.execute("SELECT owner_ref, COALESCE(balance, 0) AS balance, COALESCE(spent, 0) AS spent "
+                            "FROM students WHERE owner_ref IN (%s)" % placeholders, tuple(refs)).fetchall()
+        balances = {row["owner_ref"]: (int(row["balance"]), int(row["spent"])) for row in rows}
     shares = {}
     for item in accounts:
         org_id = item.get("org_id")
         if org_id not in shares:
             shares[org_id] = _org_quota(conn, org_id)
         total_quota, member_quota = shares[org_id]
-        state = item.get("key_status")
+        remaining, used = balances.get(item.get("owner_ref"), (None, None))
         item["quota"] = {"totalQuota": total_quota, "memberQuota": member_quota,
-                         "remainingQuota": item.get("remainingQuota") if state == "active" else None,
-                         "usedQuota": item.get("usedQuota") if state == "active" else None,
-                         "source": "newapi" if state == "active" else "pending"}
+                         "remainingQuota": remaining, "usedQuota": used,
+                         "source": "platform_ledger"}
+        item["remainingQuota"] = remaining
+        item["usedQuota"] = used
     return accounts
 
 

@@ -106,7 +106,7 @@ function renderKey(relayKey) {
     } else if (status === 'revoking') {
       $('keyNote').textContent = '旧密钥正在回收，完成后可重新生成。';
     } else {
-      $('keyNote').textContent = '完整密钥只在发放时显示一次，平台与学院看不到密钥明文；真实额度以 New-API 为准。';
+      $('keyNote').textContent = '完整密钥只在发放时显示一次，平台与学院看不到密钥明文；额度按组织总额分摊展示。';
     }
   }
 }
@@ -136,8 +136,8 @@ function renderAccount(next) {
   const quota = next.quota || {};
   $('studentStats').replaceChildren(
     UI.MetricCard({ label: '可用 Token', value: quota.remainingQuota == null ? '—' : quota.remainingQuota, tone: 'accent',
-      hint: 'New-API 实时剩余 · 人均 ' + fmt(quota.memberQuota) }),
-    UI.MetricCard({ label: '累计消耗', value: quota.usedQuota == null ? '—' : quota.usedQuota, hint: 'New-API 实际用量' }),
+      hint: '平台账面剩余 · 人均 ' + fmt(quota.memberQuota) }),
+    UI.MetricCard({ label: '累计消耗', value: quota.usedQuota == null ? '—' : quota.usedQuota, hint: '平台记账消耗' }),
     UI.MetricCard({ label: '所属组织', value: (next.org && next.org.name) || '试点组织', hint: '组织是权限与可见范围' })
   );
   const rows = next.ledger || [];
@@ -305,7 +305,7 @@ $('demoUseBtn').onclick = async () => {
     const next = await api('/api/consume', { method: 'POST', body: JSON.stringify({ amount: 1200, requestId: 'ui-' + Date.now() }) });
     renderAccount(next);
     $('ledgerFold').open = true;
-    toast('已模拟消耗 1,200 Token（仅演示账面，New-API 真实额度不变）');
+    toast('已模拟消耗 1,200 Token（仅演示账面，不改 New-API token）');
   } catch (error) { toast(error.status === 409 ? 'Token 余额不足' : (error.message || '操作失败')); }
 };
 $('galleryNav').addEventListener('click', event => {

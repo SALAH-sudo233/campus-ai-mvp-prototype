@@ -1,4 +1,4 @@
-"""组织用量汇总。真实额度来自 New-API，students/ledger 只作演示账面。"""
+"""组织用量汇总。额度按 organizations.quota_limit 分摊，students/ledger 是平台账面。"""
 import datetime
 import time
 
@@ -40,13 +40,9 @@ def summary(conn, org_id, now=None, provider_quota=None):
         "JOIN org_memberships m ON m.user_id = l.user_id AND m.org_id = ? AND m.admission_status = 'active' "
         "WHERE l.org_id = m.org_id AND l.kind = 'use' AND l.created_at >= ?",
         (org_id, now - 30 * 86400)).fetchone()["n"]
+    # New-API token 不设硬限额；额度分摊与消耗口径统一取平台账面。
     remaining = int(balances["balance"])
     consumed = int(balances["spent"])
-    source = "display_ledger"
-    if provider_quota and provider_quota.get("available"):
-        remaining = int(provider_quota.get("remainingQuota") or 0)
-        consumed = int(provider_quota.get("usedQuota") or 0)
-        source = "newapi"
     return {
         "memberCount": active,
         "activeMemberCount": active_members,
@@ -54,7 +50,7 @@ def summary(conn, org_id, now=None, provider_quota=None):
         "memberQuota": member_quota,
         "totalConsumed": consumed,
         "remainingQuota": remaining,
-        "quotaSource": source,
+        "quotaSource": "platform_ledger",
         "activeTokenCount": int((provider_quota or {}).get("activeTokens") or 0),
         "range": {"from": _day(now - 30 * 86400), "to": _day(now), "days": 30},
         "available": True,

@@ -54,12 +54,23 @@ class ProtocolTests(unittest.TestCase):
             created = client.create_and_get("campus:u1:r1", 100000)
             self.assertGreater(created["id"], 0)
             self.assertTrue(created["key"].startswith("sk-test-"))
+            self.assertEqual(fake.last_create_payload["unlimited_quota"], True)
+            self.assertEqual(fake.last_create_payload["remain_quota"], 0)
             listed = client.list_tokens()
             self.assertEqual([item["name"] for item in listed], ["campus:u1:r1"])
             self.assertNotIn(created["key"], json.dumps(listed))
             self.assertEqual(client.get_key(created["id"]), created["key"])
+            self.assertEqual(fake.last_key_method, "GET")
             self.assertTrue(client.delete_token(created["id"]))
             self.assertEqual(client.list_tokens(), [])
+
+    def test_get_key_falls_back_to_post_when_get_is_unsupported(self):
+        with FakeNewApi() as fake:
+            client = client_for(fake)
+            created = fake.add_token("campus:u1:post", 0, unlimited=True)
+            fake.disable_get_key = True
+            self.assertEqual(client.get_key(created["id"]), created["key"])
+            self.assertEqual(fake.last_key_method, "POST")
 
     def test_duplicate_and_lost_response_are_claimed_by_name(self):
         with FakeNewApi() as fake:
@@ -124,7 +135,8 @@ class ShadowStateTests(unittest.TestCase):
             self.assertEqual(again["status"], "active")
             self.assertIsNone(again["plaintext"])
             token = fake.token_by_name("campus:u1:r1")
-            self.assertEqual(token["remain_quota"], 100000)
+            self.assertTrue(token["unlimited_quota"])
+            self.assertEqual(token["remain_quota"], 0)
 
             rotated = relay.rotate_key(path, "u1", "r2", quota=100000)
             self.assertEqual(rotated["status"], "active")
@@ -355,7 +367,7 @@ class EndToEndNewApiTests(unittest.TestCase):
             self.assertIsNone(server.new_api.token_by_name(rotate_name))
             self.assertFalse(any(row["state"] == "active" for row in relay_rows(server.relay_path, owner_ref)))
 
-    def test_quota_share_and_all_readers_use_newapi(self):
+    def test_quota_share_and_all_readers_use_platform_ledger(self):
         with DemoServer() as server:
             code, registered = register(server, "2024001102")
             self.assertEqual(code, 201, registered)
@@ -368,34 +380,43 @@ class EndToEndNewApiTests(unittest.TestCase):
             finally:
                 conn.close()
             self.assertEqual(roster, 200)
-            self.assertEqual(token["remain_quota"], config.PILOT_TOTAL_QUOTA // roster)
-            self.assertEqual(token["remain_quota"], config.DEFAULT_MEMBER_QUOTA)
+            # New-API token 不设硬限额，份额只在平台侧按 quota_limit 分摊。
+            self.assertTrue(token["unlimited_quota"])
+            self.assertEqual(token["remain_quota"], 0)
 
-            server.new_api.set_quota(name, remaining=70000, used=30000)
+            code, consumed = server.post("/api/consume", {"amount": 30000, "requestId": "quota-consume"},
+                                         registered["token"])
+            self.assertEqual(code, 200, consumed)
+            self.assertEqual(consumed["balance"], 70000)
+            self.assertEqual(server.new_api.token_by_name(name)["used_quota"], 0)
             code, me = server.get("/api/me", registered["token"])
             self.assertEqual(code, 200, me)
             self.assertEqual(me["quota"]["totalQuota"], config.PILOT_TOTAL_QUOTA)
             self.assertEqual(me["quota"]["memberQuota"], config.DEFAULT_MEMBER_QUOTA)
             self.assertEqual(me["quota"]["remainingQuota"], 70000)
             self.assertEqual(me["quota"]["usedQuota"], 30000)
-            self.assertEqual(me["quota"]["source"], "newapi")
+            self.assertEqual(me["quota"]["source"], "platform_ledger")
 
             admin = server.admin_token()
             code, dash = server.get("/api/orgs/%s/dashboard" % PILOT, admin)
             self.assertEqual(code, 200, dash)
-            self.assertEqual(dash["summary"]["quotaSource"], "newapi")
+            self.assertEqual(dash["summary"]["quotaSource"], "platform_ledger")
             self.assertEqual(dash["summary"]["totalQuota"], config.PILOT_TOTAL_QUOTA)
             self.assertEqual(dash["summary"]["memberQuota"], config.DEFAULT_MEMBER_QUOTA)
             self.assertEqual(dash["summary"]["remainingQuota"], 70000)
             self.assertEqual(dash["summary"]["totalConsumed"], 30000)
+            self.assertEqual(dash["summary"]["activeTokenCount"], 1)
 
             accounts = server.get("/api/admin/accounts?q=2024001102", admin)[1]["accounts"]
             account = next(item for item in accounts if item["identity"] == "2024001102")
             self.assertEqual(account["quota"]["remainingQuota"], 70000)
             self.assertEqual(account["quota"]["usedQuota"], 30000)
+            self.assertEqual(account["quota"]["source"], "platform_ledger")
             members = server.get("/api/orgs/%s/members" % PILOT, admin)[1]["members"]
             member = next(item for item in members if item["studentId"] == "2024001102")
             self.assertEqual(member["quota"]["remainingQuota"], 70000)
+            self.assertEqual(member["quota"]["usedQuota"], 30000)
+            self.assertEqual(member["quota"]["source"], "platform_ledger")
             self.assertEqual(member["remainingQuota"], 70000)
 
     def test_pending_recovery_delivers_once(self):

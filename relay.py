@@ -1,7 +1,8 @@
 """New-API 中转站影子存储。
 
 平台不再生成本地假钥。成员 token 的创建、取明文、轮换和吊销都映射到
-New-API，本模块只保存可恢复的影子状态、SHA-256 摘要、掩码和额度缓存。
+New-API，本模块只保存可恢复的影子状态、SHA-256 摘要与掩码。额度分摊
+与账面在平台侧，New-API token 一律 unlimited_quota，不存上游额度缓存。
 明文只在发放的那一次返回，绝不落库。
 """
 import hashlib
@@ -325,9 +326,9 @@ class NewApiClient:
 
     def list_tokens(self):
         items = []
-        page = 1
+        page = 0
         while page <= 100:
-            query = urllib.parse.urlencode({"p": page, "page_size": 100})
+            query = urllib.parse.urlencode({"p": page, "size": 100})
             body = self._request("GET", "/api/token/?" + query)
             data = body.get("data") if isinstance(body, dict) else None
             if isinstance(data, dict):
@@ -356,8 +357,9 @@ class NewApiClient:
     def create_token(self, name, quota):
         payload = {
             "name": name,
-            "remain_quota": int(quota or 0),
-            "unlimited_quota": False,
+            # 平台额度只在本地记账；New-API token 不设硬限额，避免依赖超管充值。
+            "remain_quota": 0,
+            "unlimited_quota": True,
             "expired_time": -1,
             "model_limits_enabled": False,
             "model_limits": "",
@@ -365,7 +367,7 @@ class NewApiClient:
             "group": "",
         }
         try:
-            return self._request("POST", "/api/token/", payload)
+            return self._request("POST", "/api/token", payload)
         except NewApiError as exc:
             if exc.duplicate:
                 existing = self.find_token(name)
@@ -374,7 +376,14 @@ class NewApiClient:
             raise
 
     def get_key(self, token_id):
-        body = self._request("POST", "/api/token/%s/key" % urllib.parse.quote(str(token_id)))
+        path = "/api/token/%s/key" % urllib.parse.quote(str(token_id))
+        try:
+            body = self._request("GET", path)
+        except NewApiError as exc:
+            # 实例实测以 GET 取明文；旧版 rc.51 源码为 POST，保留回退兼容。
+            if exc.status not in (400, 404, 405):
+                raise
+            body = self._request("POST", path)
         data = body.get("data") if isinstance(body, dict) else None
         if isinstance(data, dict):
             key = data.get("key") or data.get("token") or data.get("value")
@@ -749,13 +758,13 @@ def finish_issue(job, deliver_plaintext=True):
                 _mark(conn, old["id"], "revoking", revoked_at=time.time(), next_attempt_at=time.time(), attempts=0)
                 old_ids.append(old["id"])
             delivered_at = time.time() if deliver_plaintext else None
+            # 上游 token 不设硬限额，额度只看平台台账；这里不再缓存 remain/used。
             conn.execute(
                 "UPDATE relay_keys SET state = 'active', status = 'active', provider_token_id = ?, key_hash = ?, "
-                "key_hint = ?, remaining_quota = COALESCE(?, remaining_quota), used_quota = COALESCE(?, used_quota), "
+                "key_hint = ?, remaining_quota = NULL, used_quota = NULL, "
                 "attempts = 0, next_attempt_at = NULL, last_error = NULL, delivered_at = ?, revoked_at = NULL "
                 "WHERE id = ?",
-                (provider_id, digest(plaintext), hint_of(plaintext), token.get("remain_quota"), token.get("used_quota"),
-                 delivered_at, current["id"]))
+                (provider_id, digest(plaintext), hint_of(plaintext), delivered_at, current["id"]))
         conn.execute("COMMIT")
     except BaseException:
         if conn.in_transaction:
@@ -1002,6 +1011,7 @@ def manual_reissue(path, owner_ref, quota_lookup=None):
 
 
 def sync_provider_quotas(path):
+    """只回填 provider_token_id；额度不在上游缓存。"""
     client = _client()
     if not client.config.enabled:
         return False
@@ -1016,11 +1026,8 @@ def sync_provider_quotas(path):
             name = token.get("name")
             if not name or not str(name).startswith(KEY_PREFIX):
                 continue
-            conn.execute("UPDATE relay_keys SET provider_token_id = COALESCE(provider_token_id, ?), "
-                         "remaining_quota = COALESCE(?, remaining_quota), used_quota = COALESCE(?, used_quota) "
-                         "WHERE token_name = ?",
-                         (token.get("id"), _int_or_none(token.get("remain_quota")),
-                          _int_or_none(token.get("used_quota")), name))
+            conn.execute("UPDATE relay_keys SET provider_token_id = COALESCE(provider_token_id, ?) "
+                         "WHERE token_name = ?", (token.get("id"), name))
         conn.execute("COMMIT")
     except BaseException:
         if conn.in_transaction:
@@ -1035,14 +1042,12 @@ def quota_overview(path, org_id):
     conn = connect(path)
     try:
         row = conn.execute(
-            "SELECT COUNT(*) AS n, COALESCE(SUM(k.remaining_quota), 0) AS remaining, "
-            "COALESCE(SUM(k.used_quota), 0) AS used FROM relay_keys k "
+            "SELECT COUNT(*) AS n FROM relay_keys k "
             "JOIN relay_accounts a ON a.owner_ref = k.owner_ref "
             "WHERE k.state = 'active' AND a.org_id = ?", (org_id,)).fetchone()
     finally:
         conn.close()
-    return {"available": True, "activeTokens": int(row["n"] or 0), "remainingQuota": int(row["remaining"] or 0),
-            "usedQuota": int(row["used"] or 0)}
+    return {"available": True, "activeTokens": int(row["n"] or 0)}
 
 
 def key_view(path, owner_ref):
@@ -1055,8 +1060,8 @@ def key_view(path, owner_ref):
         return {"state": "none", "hint": None, "quota": 0, "remainingQuota": None, "usedQuota": None,
                 "lastError": None, "nextRetryAt": None}
     return {"state": row["state"], "hint": row["key_hint"] if row["state"] == "active" else None,
-            "quota": int(row["quota"] or 0), "remainingQuota": row["remaining_quota"],
-            "usedQuota": row["used_quota"], "lastError": row["last_error"],
+            "quota": int(row["quota"] or 0), "remainingQuota": None,
+            "usedQuota": None, "lastError": row["last_error"],
             "nextRetryAt": row["next_attempt_at"]}
 
 

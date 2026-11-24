@@ -19,6 +19,9 @@ class FakeNewApi:
         self.list_count = 0
         self.key_fetch_count = 0
         self.delete_count = 0
+        self.last_create_payload = None
+        self.last_key_method = None
+        self.disable_get_key = False
         self.server = None
         self.thread = None
 
@@ -87,9 +90,9 @@ class FakeNewApi:
                         fake.list_count += 1
                         values = list(fake.tokens.values())
                     query = urllib.parse.parse_qs(parsed.query)
-                    page = max(int((query.get("p") or ["1"])[0]), 1)
+                    page = max(int((query.get("p") or ["0"])[0]), 0)
                     size = min(max(int((query.get("page_size") or query.get("size") or ["10"])[0]), 1), 100)
-                    begin = (page - 1) * size
+                    begin = page * size
                     batch = [self._masked(item) for item in values[begin:begin + size]]
                     return self._json(200, {"success": True, "message": "",
                                             "data": {"page": page, "page_size": size, "total": len(values),
@@ -102,7 +105,23 @@ class FakeNewApi:
                     return self._json(200, {"success": True, "message": "",
                                             "data": {"items": [self._masked(item) for item in values],
                                                      "total": len(values)}})
-                return None
+                parts = parsed.path.strip("/").split("/")
+                if len(parts) == 4 and parts[:2] == ["api", "token"] and parts[3] == "key":
+                    if fake.disable_get_key:
+                        return self._json(405, {"success": False, "message": "method not allowed"})
+                    try:
+                        token_id = int(parts[2])
+                    except ValueError:
+                        return self._json(400, {"success": False, "message": "bad token id"})
+                    with fake.lock:
+                        item = fake.tokens.get(token_id)
+                        if item is None:
+                            return self._json(404, {"success": False, "message": "not found"})
+                        fake.key_fetch_count += 1
+                        fake.last_key_method = "GET"
+                        key = item["key"]
+                    return self._json(200, {"success": True, "message": "", "data": {"key": key}})
+                return self._json(404, {"success": False, "message": "not found"})
 
             def do_POST(self):
                 if not self._authorized():
@@ -116,16 +135,20 @@ class FakeNewApi:
                     name = str(data.get("name") or "")
                     with fake.lock:
                         fake.create_count += 1
+                        fake.last_create_payload = dict(data)
                         if mode == "create_conflict_once":
                             fake.fail_mode = None
-                            item = fake._add(name, int(data.get("remain_quota") or 0))
+                            item = fake._add(name, int(data.get("remain_quota") or 0),
+                                             bool(data.get("unlimited_quota")))
                             return self._json(409, {"success": False, "message": "duplicate token name",
                                                     "data": {"id": item["id"]}})
                         if mode == "drop_create_response_once":
                             fake.fail_mode = None
-                            fake._add(name, int(data.get("remain_quota") or 0))
+                            fake._add(name, int(data.get("remain_quota") or 0),
+                                      bool(data.get("unlimited_quota")))
                             return self._json(500, {"success": False, "message": "upstream error"})
-                        item = fake._add(name, int(data.get("remain_quota") or 0))
+                        item = fake._add(name, int(data.get("remain_quota") or 0),
+                                         bool(data.get("unlimited_quota")))
                     return self._json(200, {"success": True, "message": "", "data": {"id": item["id"]}})
                 parts = parsed.path.strip("/").split("/")
                 if len(parts) == 4 and parts[:2] == ["api", "token"] and parts[3] == "key":
@@ -138,6 +161,7 @@ class FakeNewApi:
                         if item is None:
                             return self._json(404, {"success": False, "message": "not found"})
                         fake.key_fetch_count += 1
+                        fake.last_key_method = "POST"
                         key = item["key"]
                     return self._json(200, {"success": True, "message": "", "data": {"key": key}})
                 return self._json(404, {"success": False, "message": "not found"})
@@ -167,7 +191,7 @@ class FakeNewApi:
                 masked = "********" if len(key) <= 8 else key[:4] + "**********" + key[-4:]
                 return {"id": item["id"], "name": item["name"], "status": 1, "key": masked,
                         "remain_quota": item["remain_quota"], "used_quota": item["used_quota"],
-                        "unlimited_quota": False, "expired_time": -1,
+                        "unlimited_quota": item["unlimited_quota"], "expired_time": -1,
                         "created_time": item["created_time"]}
 
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
@@ -176,16 +200,17 @@ class FakeNewApi:
         self.thread.start()
         return self
 
-    def _add(self, name, quota):
+    def _add(self, name, quota=0, unlimited=False):
         item = {"id": self.next_id, "name": name, "key": "sk-test-" + secrets.token_urlsafe(24),
-                "remain_quota": int(quota), "used_quota": 0, "created_time": int(time.time())}
+                "remain_quota": int(quota), "used_quota": 0, "unlimited_quota": bool(unlimited),
+                "created_time": int(time.time())}
         self.next_id += 1
         self.tokens[item["id"]] = item
         return item
 
-    def add_token(self, name, quota=0):
+    def add_token(self, name, quota=0, unlimited=False):
         with self.lock:
-            return dict(self._add(name, quota))
+            return dict(self._add(name, quota, unlimited))
 
     def token_by_name(self, name):
         with self.lock:

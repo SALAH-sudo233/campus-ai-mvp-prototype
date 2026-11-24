@@ -138,7 +138,7 @@ async function selectOrg(orgId) {
     ]);
     if (seq !== selectSeq) return;
     const s = dashboard.summary;
-    const quotaHint = (s.totalQuota ? ('组织上限 ' + fmt(s.totalQuota) + ' · 人均 ' + fmt(s.memberQuota) + ' Token') : '未设总额度上限') + ' · 真实额度来自 New-API';
+    const quotaHint = (s.totalQuota ? ('组织上限 ' + fmt(s.totalQuota) + ' · 人均 ' + fmt(s.memberQuota) + ' Token') : '未设总额度上限') + ' · 额度按总额 ÷ 名册分摊';
     $('adminOrgStats').replaceChildren(
       UI.MetricCard({ label: '成员', value: s.memberCount }),
       UI.MetricCard({ label: '活跃', value: s.activeMemberCount, tone: 'accent' }),
