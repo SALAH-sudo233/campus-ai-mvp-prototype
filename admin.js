@@ -78,6 +78,15 @@ async function quickLogin() {
   } catch (error) { toast(error.message || '快捷登录失败'); }
 }
 
+async function loadDemoGate() {
+  try {
+    const config = await fetch(API + '/api/config').then(resp => resp.json());
+    $('adminQuickLoginBtn').classList.toggle('hidden', !config.demoLoginEnabled);
+  } catch (error) {
+    $('adminQuickLoginBtn').classList.add('hidden');
+  }
+}
+
 function renderOrgControls() {
   const switcher = $('orgSwitcher');
   switcher.replaceChildren();
@@ -129,7 +138,7 @@ async function selectOrg(orgId) {
     ]);
     if (seq !== selectSeq) return;
     const s = dashboard.summary;
-    const quotaHint = org && org.quotaLimit ? ('组织上限 ' + fmt(org.quotaLimit) + ' Token') : '未设总额度上限';
+    const quotaHint = (s.totalQuota ? ('组织上限 ' + fmt(s.totalQuota) + ' · 人均 ' + fmt(s.memberQuota) + ' Token') : '未设总额度上限') + ' · 真实额度来自 New-API';
     $('adminOrgStats').replaceChildren(
       UI.MetricCard({ label: '成员', value: s.memberCount }),
       UI.MetricCard({ label: '活跃', value: s.activeMemberCount, tone: 'accent' }),
@@ -157,7 +166,7 @@ async function refreshOrgMembers() {
 
 function renderMembers() {
   const table = $('adminMemberTable');
-  table.replaceChildren(el('thead', {}, [el('tr', {}, ['', '姓名', '学号', '角色', '余额', '消耗', '密钥掩码', '准入', '操作'].map(label => el('th', { text: label })))]));
+  table.replaceChildren(el('thead', {}, [el('tr', {}, ['', '姓名', '学号', '角色', '剩余额度', '已用额度', '密钥掩码', '准入', '操作'].map(label => el('th', { text: label })))]));
   const body = el('tbody');
   if (!memberRows.length) {
     body.appendChild(el('tr', {}, [el('td', { colspan: '9', className: 'muted', text: '当前组织暂无成员，可点击右上角“录入成员”或“CSV 批量导入”。' })]));
@@ -168,19 +177,23 @@ function renderMembers() {
       ['active', '已准入'], ['disabled', '已停用'], ['pending_review', '待复核']
     ].map(([value, label]) => el('option', { value, selected: row.admissionStatus === value, text: label })));
     const isAdmin = row.role === 'org_admin';
+    const quota = row.quota || {};
+    const canReissue = ['pending', 'failed', 'revoking', 'none'].includes(row.keyStatus);
+    const actions = [
+      el('button', {
+        className: 'ghost',
+        text: isAdmin ? '设为学生' : '设为教师',
+        onclick: () => updateMember(row, { role: isAdmin ? 'org_member' : 'org_admin' })
+      }),
+      el('button', { className: 'danger', text: '吊销', onclick: () => revokeOne(row) })
+    ];
+    if (canReissue) actions.unshift(el('button', { className: 'outline', text: '重发密钥', onclick: () => reissueOne(row) }));
     body.appendChild(el('tr', {}, [
       el('td', {}, [checkbox]), el('td', { text: row.name || '—' }), el('td', { text: row.studentId || '—' }),
-      el('td', {}, [UI.RoleBadge(row, orgLabels)]), el('td', { text: fmt(row.balance) }),
-      el('td', { text: fmt(row.spent) }), el('td', {}, [el('code', { text: row.keyHint || '无有效密钥' })]),
+      el('td', {}, [UI.RoleBadge(row, orgLabels)]), el('td', { text: quota.remainingQuota == null ? '—' : fmt(quota.remainingQuota) }),
+      el('td', { text: quota.usedQuota == null ? '—' : fmt(quota.usedQuota) }), el('td', {}, [el('code', { text: row.keyHint || '无有效密钥' })]),
       el('td', {}, [status]), el('td', {}, [
-        el('div', { className: 'inline-actions' }, [
-          el('button', {
-            className: 'ghost',
-            text: isAdmin ? '设为学生' : '设为教师',
-            onclick: () => updateMember(row, { role: isAdmin ? 'org_member' : 'org_admin' })
-          }),
-          el('button', { className: 'danger', text: '吊销', onclick: () => revokeOne(row) })
-        ])
+        el('div', { className: 'inline-actions' }, actions)
       ])
     ]));
   }
@@ -204,6 +217,15 @@ async function revokeOne(row) {
     await selectOrg(selectedOrg);
     toast('已吊销');
   } catch (error) { toast(error.message || '操作失败'); }
+}
+
+async function reissueOne(row) {
+  if (!confirm('确认让服务端立即重发 ' + (row.name || row.studentId) + ' 的密钥？')) return;
+  try {
+    const result = await api('/api/orgs/' + encodeURIComponent(selectedOrg) + '/members/' + encodeURIComponent(row.userId) + '/reissue-key', { method: 'POST', body: '{}' });
+    await selectOrg(selectedOrg);
+    toast(result.statuses && result.statuses[0] === 'active' ? '密钥已补发' : '已触发重发，状态：' + (result.statuses || []).join(', '));
+  } catch (error) { toast(error.message || '重发失败'); }
 }
 
 function selectedUsers() {
@@ -407,4 +429,5 @@ $('bulkGrantBtn').onclick = () => bulk('grant');
 $('bulkRevokeBtn').onclick = () => bulk('revoke');
 $('refreshOrgWorks').onclick = () => selectedOrg && selectOrg(selectedOrg);
 
+loadDemoGate();
 if (adminToken) showAdmin(); else showLogin();

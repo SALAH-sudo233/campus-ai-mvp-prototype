@@ -14,7 +14,7 @@ class AuthzMatrixTests(unittest.TestCase):
         member = {"role": authz.ORG_MEMBER, "user_id": "u-member", "org_id": "org-a"}
         self.assertTrue(authz.allowed(platform, "organizations", "create"))
         self.assertFalse(authz.allowed(admin, "organizations", "create"))
-        self.assertTrue(authz.allowed(admin, "members", "import", org_id="org-a"))
+        self.assertFalse(authz.allowed(admin, "members", "import", org_id="org-a"))
         self.assertFalse(authz.allowed(admin, "members", "import", org_id="org-b"))
         self.assertFalse(authz.allowed(member, "members", "list", org_id="org-a"))
         self.assertTrue(authz.allowed(member, "works", "submit", owner_user_id="u-member"))

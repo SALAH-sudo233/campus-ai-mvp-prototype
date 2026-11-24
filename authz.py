@@ -38,6 +38,7 @@ _RULES = {
         ("members", "import"): "all",
         ("members", "bulk"): "all",
         ("members", "revoke_key"): "all",
+        ("members", "reissue_key"): "all",
         ("usage", "read_org"): "all",
         ("usage", "read_self"): "self",
         ("works", "read_gallery"): "all",
@@ -53,6 +54,7 @@ _RULES = {
         ("sessions", "revoke_self"): "self",
         ("accounts", "list"): "all",
         ("accounts", "revoke_key"): "all",
+        ("accounts", "reissue_key"): "all",
         ("works", "read_any"): "all",
     },
     ORG_ADMIN: {
@@ -73,6 +75,10 @@ _RULES = {
         ("usage", "consume_self"): "self",
         ("sessions", "revoke_self"): "self",
         ("accounts", "list"): "org",
+        ("accounts", "revoke_key"): "org",
+        ("accounts", "reissue_key"): "org",
+        ("members", "revoke_key"): "org",
+        ("members", "reissue_key"): "org",
     },
     ORG_MEMBER: {
         ("organizations", "read"): "org",

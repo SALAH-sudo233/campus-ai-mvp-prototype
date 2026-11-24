@@ -80,8 +80,9 @@ class OrgDashboardScopeTests(unittest.TestCase):
             self.assertEqual(code, 200, dash)
             summary = dash["summary"]
             self.assertEqual(summary["totalConsumed"], 0, dash)
-            # 乙组织自己的教师账户有 100000 余额；串账时会再多出该用户的 99990。
             self.assertEqual(summary["remainingQuota"], 100000, dash)
+            self.assertEqual(summary["quotaSource"], "newapi", dash)
+            self.assertEqual(summary["activeTokenCount"], 1, dash)
             self.assertEqual(summary["activeMemberCount"], 0, dash)
             self.assertEqual(dash["ranking"], [])
             buckets = {item["label"]: item["count"] for item in dash["activity"]["buckets"]}
@@ -95,8 +96,10 @@ class OrgDashboardScopeTests(unittest.TestCase):
             code, dash = server.get("/api/orgs/%s/dashboard" % PILOT, admin)
             self.assertEqual(code, 200, dash)
             summary = dash["summary"]
-            self.assertEqual(summary["totalConsumed"], 10, dash)
-            self.assertEqual(summary["remainingQuota"], 99990, dash)
+            self.assertEqual(summary["totalConsumed"], 0, dash)
+            self.assertEqual(summary["remainingQuota"], 100000, dash)
+            self.assertEqual(summary["totalQuota"], config.PILOT_TOTAL_QUOTA, dash)
+            self.assertEqual(summary["quotaSource"], "newapi", dash)
             self.assertEqual(summary["activeMemberCount"], 1, dash)
             ranked = {item["studentId"]: item["consumed"] for item in dash["ranking"]}
             self.assertEqual(ranked.get("2024001091"), 10, dash["ranking"])

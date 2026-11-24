@@ -1,6 +1,8 @@
-"""组织用量汇总。数据来自现有 students 与 ledger，不新增埋点。"""
+"""组织用量汇总。真实额度来自 New-API，students/ledger 只作演示账面。"""
 import datetime
 import time
+
+import config
 
 MAX_TREND_DAYS = 90
 
@@ -9,8 +11,22 @@ def _day(ts):
     return datetime.datetime.fromtimestamp(ts, datetime.timezone.utc).strftime("%Y-%m-%d")
 
 
-def summary(conn, org_id, now=None):
+def _quota_meta(conn, org_id):
+    total = None
+    try:
+        row = conn.execute("SELECT quota_limit FROM organizations WHERE id = ?", (org_id,)).fetchone()
+        total = int(row["quota_limit"]) if row and row["quota_limit"] is not None else None
+    except (IndexError, KeyError, TypeError, ValueError):
+        total = None
+    roster = conn.execute("SELECT COUNT(*) AS n FROM org_memberships WHERE org_id = ?", (org_id,)).fetchone()["n"]
+    roster = max(int(roster or 0), 1)
+    member_quota = total // roster if total else config.DEFAULT_MEMBER_QUOTA
+    return total, member_quota
+
+
+def summary(conn, org_id, now=None, provider_quota=None):
     now = now or time.time()
+    total_quota, member_quota = _quota_meta(conn, org_id)
     active = conn.execute("SELECT COUNT(*) AS n FROM org_memberships WHERE org_id = ? AND admission_status = 'active'",
                           (org_id,)).fetchone()["n"]
     balances = conn.execute(
@@ -24,11 +40,22 @@ def summary(conn, org_id, now=None):
         "JOIN org_memberships m ON m.user_id = l.user_id AND m.org_id = ? AND m.admission_status = 'active' "
         "WHERE l.org_id = m.org_id AND l.kind = 'use' AND l.created_at >= ?",
         (org_id, now - 30 * 86400)).fetchone()["n"]
+    remaining = int(balances["balance"])
+    consumed = int(balances["spent"])
+    source = "display_ledger"
+    if provider_quota and provider_quota.get("available"):
+        remaining = int(provider_quota.get("remainingQuota") or 0)
+        consumed = int(provider_quota.get("usedQuota") or 0)
+        source = "newapi"
     return {
         "memberCount": active,
         "activeMemberCount": active_members,
-        "totalConsumed": int(balances["spent"]),
-        "remainingQuota": int(balances["balance"]),
+        "totalQuota": total_quota,
+        "memberQuota": member_quota,
+        "totalConsumed": consumed,
+        "remainingQuota": remaining,
+        "quotaSource": source,
+        "activeTokenCount": int((provider_quota or {}).get("activeTokens") or 0),
         "range": {"from": _day(now - 30 * 86400), "to": _day(now), "days": 30},
         "available": True,
     }
@@ -98,10 +125,10 @@ def heatmap(conn, org_id, now=None):
             "range": data["range"], "unit": "Token"}
 
 
-def dashboard(conn, org_id, days=90, now=None):
+def dashboard(conn, org_id, days=90, now=None, provider_quota=None):
     now = now or time.time()
     return {
-        "summary": summary(conn, org_id, now),
+        "summary": summary(conn, org_id, now, provider_quota),
         "trend": trend(conn, org_id, days, now),
         "heatmap": heatmap(conn, org_id, now),
         "activity": activity(conn, org_id, now),

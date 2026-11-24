@@ -21,15 +21,14 @@ class WorkLifecycleTests(unittest.TestCase):
             teacher_token = teacher["token"]
             code, work = server.post("/api/works", {"title": "课程表小工具", "summary": "按周查看课程。", "category": "学习"}, student_token)
             self.assertEqual(code, 201, work)
-            self.assertEqual(work["status"], "pending_review")
-            self.assertNotIn(work["workId"], [item["workId"] for item in server.get("/api/works", student_token)[1]["items"]])
+            self.assertEqual(work["status"], "published")
+            self.assertIn(work["workId"], [item["workId"] for item in server.get("/api/works", student_token)[1]["items"]])
             code, denied_review = server.post("/api/orgs/%s/works/%s/review" % (config.PILOT_ORG["id"], work["workId"]),
                                               {"decision": "approve"}, student_token)
             self.assertEqual(code, 403, denied_review)
             code, reviewed = server.post("/api/orgs/%s/works/%s/review" % (config.PILOT_ORG["id"], work["workId"]),
                                          {"decision": "approve"}, teacher_token)
-            self.assertEqual(code, 200, reviewed)
-            self.assertEqual(reviewed["status"], "published")
+            self.assertEqual(code, 409, reviewed)
             self.assertIn(work["workId"], [item["workId"] for item in server.get("/api/works", student_token)[1]["items"]])
             code, featured = server.post("/api/orgs/%s/works/%s/feature" % (config.PILOT_ORG["id"], work["workId"]),
                                          {"featured": True}, teacher_token)

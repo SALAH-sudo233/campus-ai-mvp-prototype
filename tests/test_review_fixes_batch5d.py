@@ -4,7 +4,6 @@ import unittest
 
 import app_server
 import authz
-import relay
 import config
 from identity import owner_ref_of
 from tests.support import register
@@ -14,7 +13,7 @@ PILOT = config.PILOT_ORG["id"]
 
 
 class RotateIssuanceRaceTests(unittest.TestCase):
-    def test_rotate_holds_lock_so_pending_review_revocation_wins(self):
+    def test_rotate_network_phase_rechecks_admission_and_leaves_no_active_key(self):
         with InProcessServer() as server:
             admin = server.admin_token()
             code, student = register(server, "2024001197")
@@ -26,12 +25,12 @@ class RotateIssuanceRaceTests(unittest.TestCase):
             release = threading.Event()
             patch_done = threading.Event()
             responses = {}
-            original_rotate = relay.rotate_key
+            original_finish = app_server._finish_key_issue
 
-            def gated_rotate(path, owner_ref, request_id):
+            def gated_finish(job, user_id=None):
                 entered.set()
-                self.assertTrue(release.wait(5), "测试未释放轮换窗口")
-                return original_rotate(path, owner_ref, request_id)
+                self.assertTrue(release.wait(5), "测试未释放网络窗口")
+                return original_finish(job, user_id)
 
             def rotate_request():
                 responses["rotate"] = server.post("/api/key/rotate", {"requestId": "race-rotate"},
@@ -45,25 +44,25 @@ class RotateIssuanceRaceTests(unittest.TestCase):
 
             rotate_thread = threading.Thread(target=rotate_request)
             patch_thread = None
-            relay.rotate_key = gated_rotate
+            app_server._finish_key_issue = gated_finish
             try:
                 rotate_thread.start()
                 self.assertTrue(entered.wait(5), "轮换未进入发钥窗口")
                 patch_thread = threading.Thread(target=pending_review_request)
                 patch_thread.start()
-                self.assertFalse(patch_done.wait(0.5), "成员吊销未等待同一账户的在途轮换")
+                self.assertTrue(patch_done.wait(2), "网络阶段不应持有全局 LOCK")
             finally:
                 release.set()
                 rotate_thread.join(timeout=10)
                 if patch_thread is not None:
                     patch_thread.join(timeout=10)
-                relay.rotate_key = original_rotate
+                app_server._finish_key_issue = original_finish
 
             self.assertFalse(rotate_thread.is_alive())
             self.assertTrue(patch_thread is not None and not patch_thread.is_alive())
             code, rotated = responses["rotate"]
-            self.assertEqual(code, 200, rotated)
-            self.assertIsNotNone(rotated["plaintext"])
+            self.assertEqual(code, 403, rotated)
+            self.assertIsNone(rotated.get("plaintext"))
             code, updated = responses["patch"]
             self.assertEqual(code, 200, updated)
             self.assertEqual(updated["admissionStatus"], "pending_review")
@@ -101,14 +100,11 @@ class RegisterIssuanceRaceTests(unittest.TestCase):
             release = threading.Event()
             patch_done = threading.Event()
             responses = {}
-            original_ensure_key = app_server.ensure_key
-            target = owner_ref_of("student", "2024001199")
-
-            def gated_ensure_key(owner_ref, *args, **kwargs):
-                if owner_ref == target:
-                    entered.set()
-                    self.assertTrue(release.wait(5), "测试未释放发钥窗口")
-                return original_ensure_key(owner_ref, *args, **kwargs)
+            original_finish = app_server._finish_key_issue
+            def gated_finish(job, user_id=None):
+                entered.set()
+                self.assertTrue(release.wait(5), "测试未释放网络窗口")
+                return original_finish(job, user_id)
 
             def register_request():
                 responses["register"] = register(server, "2024001199")
@@ -122,24 +118,26 @@ class RegisterIssuanceRaceTests(unittest.TestCase):
 
             register_thread = threading.Thread(target=register_request)
             patch_thread = None
-            app_server.ensure_key = gated_ensure_key
+            app_server._finish_key_issue = gated_finish
             try:
                 register_thread.start()
                 self.assertTrue(entered.wait(10), "注册未进入发钥窗口")
                 patch_thread = threading.Thread(target=pending_review_request)
                 patch_thread.start()
-                self.assertFalse(patch_done.wait(0.5), "成员吊销未等待同一账户的在途注册")
+                self.assertTrue(patch_done.wait(2), "网络阶段不应持有全局 LOCK")
             finally:
                 release.set()
                 register_thread.join(timeout=10)
                 if patch_thread is not None:
                     patch_thread.join(timeout=10)
-                app_server.ensure_key = original_ensure_key
+                app_server._finish_key_issue = original_finish
 
             self.assertFalse(register_thread.is_alive())
             self.assertTrue(patch_thread is not None and not patch_thread.is_alive())
             code, registered = responses["register"]
             self.assertEqual(code, 201, registered)
+            self.assertEqual(registered["relayKey"]["status"], "none")
+            self.assertIsNone(registered["relayKey"]["plaintext"])
             code, updated = responses["patch"]
             self.assertEqual(code, 200, updated)
             self.assertEqual(updated["admissionStatus"], "pending_review")
