@@ -282,4 +282,4 @@ a.is-disabled{opacity:.55;cursor:not-allowed}
 .work-cover{overflow:hidden}.work-cover-img{width:100%;height:100%;object-fit:cover;display:block}
 .teacher-works-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
 
-.is-busy{cursor:progress;pointer-events:none}
+button.is-busy,.is-busy{cursor:progress!important;pointer-events:none}

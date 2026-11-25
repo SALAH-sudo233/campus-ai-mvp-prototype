@@ -759,7 +759,10 @@ $('submitWorkConfirm').onclick = UI.guard(submitWorkForm);
 
 $('commentSubmitBtn').onclick = UI.guard(submitComment);
 $('commentInput').addEventListener('keydown', event => {
-  if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') submitComment();
+  if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+    event.preventDefault();
+    $('commentSubmitBtn').click();
+  }
 });
 
 document.querySelectorAll('[data-close-modal]').forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.closeModal)));

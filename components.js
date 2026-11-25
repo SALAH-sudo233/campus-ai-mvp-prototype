@@ -261,13 +261,14 @@
       busy = true;
       const target = event && event.currentTarget;
       const canDisable = target && 'disabled' in target;
+      const wasDisabled = canDisable ? target.disabled : false;
       if (canDisable) target.disabled = true;
       if (target && target.classList) target.classList.add('is-busy');
       try {
         return await handler.call(this, event);
       } finally {
         busy = false;
-        if (canDisable) target.disabled = false;
+        if (canDisable) target.disabled = wasDisabled;
         if (target && target.classList) target.classList.remove('is-busy');
       }
     };
