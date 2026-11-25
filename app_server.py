@@ -29,7 +29,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.environ.get("DEMO_DB", os.path.join(ROOT, "demo-backend.sqlite"))
 DATA_DIR = os.path.dirname(os.path.abspath(DB_PATH))
 RELAY_DB = os.environ.get("DEMO_RELAY_DB", os.path.join(ROOT, "demo-relay.sqlite"))
-INITIAL_GRANT = 100000
+INITIAL_GRANT = config.DEFAULT_MEMBER_QUOTA
 MIN_PASSWORD = 8
 MAX_FAILURES = 5
 FAILURE_TTL = 900
@@ -61,6 +61,7 @@ def setup():
     relay.init(RELAY_DB)
     migrations.fold_relay_email_case(RELAY_DB)
     migrations.backfill_relay(RELAY_DB, DB_PATH)
+    relay.backfill_legacy(RELAY_DB, quota_lookup=_quota_for_owner)
     conn = db()
     try:
         conn.execute("BEGIN IMMEDIATE")
@@ -121,34 +122,41 @@ def ledger_rows(conn, owner_ref):
              "time": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(r["created_at"]))} for r in rows]
 
 
-def new_session(conn, owner_ref, user_id=None, org_id=None):
+def new_session(conn, owner_ref, user_id=None, org_id=None, demo=False):
     token = secrets.token_urlsafe(32)
     now = time.time()
     conn.execute("DELETE FROM sessions WHERE expires_at < ?", (now,))
-    conn.execute("INSERT INTO sessions (token_hash, owner_ref, user_id, org_id, expires_at) VALUES (?, ?, ?, ?, ?)",
-                 (token_digest(token), owner_ref, user_id, org_id, now + SESSION_SECONDS))
+    conn.execute("INSERT INTO sessions (token_hash, owner_ref, user_id, org_id, expires_at, demo) "
+                 "VALUES (?, ?, ?, ?, ?, ?)",
+                 (token_digest(token), owner_ref, user_id, org_id, now + SESSION_SECONDS, 1 if demo else 0))
     return token
 
 
-def new_admin_session(conn):
+def new_admin_session(conn, demo=False):
     token = secrets.token_urlsafe(32)
     now = time.time()
     conn.execute("DELETE FROM admin_sessions WHERE expires_at < ?", (now,))
-    conn.execute("INSERT INTO admin_sessions (token_hash, user_id, role, expires_at) VALUES (?, NULL, ?, ?)",
-                 (token_digest(token), authz.PLATFORM_ADMIN, now + ADMIN_SESSION_SECONDS))
+    conn.execute("INSERT INTO admin_sessions (token_hash, user_id, role, expires_at, demo) VALUES (?, NULL, ?, ?, ?)",
+                 (token_digest(token), authz.PLATFORM_ADMIN, now + ADMIN_SESSION_SECONDS, 1 if demo else 0))
     return token
 
 
-def is_admin_token(token):
+def admin_session_info(token):
     if not token:
-        return False
+        return None
     conn = db()
     try:
-        row = conn.execute("SELECT expires_at FROM admin_sessions WHERE token_hash = ?",
+        row = conn.execute("SELECT expires_at, demo FROM admin_sessions WHERE token_hash = ?",
                            (token_digest(token),)).fetchone()
     finally:
         conn.close()
-    return row is not None and row["expires_at"] >= time.time()
+    if row is None or row["expires_at"] < time.time():
+        return None
+    return {"demo": bool(row["demo"])}
+
+
+def is_admin_token(token):
+    return admin_session_info(token) is not None
 
 
 def _membership(conn, user_id, org_id=None):
@@ -194,13 +202,46 @@ def _principal_for(conn, user_id, org_id=None):
     }
 
 
+def _org_quota(conn, org_id):
+    if not org_id:
+        return None, INITIAL_GRANT
+    row = conn.execute("SELECT quota_limit FROM organizations WHERE id = ?", (org_id,)).fetchone()
+    total = int(row["quota_limit"]) if row and row["quota_limit"] is not None else None
+    roster = conn.execute("SELECT COUNT(*) AS n FROM org_memberships WHERE org_id = ?", (org_id,)).fetchone()["n"]
+    roster = max(int(roster or 0), 1)
+    return total, (total // roster if total else INITIAL_GRANT)
+
+
+def _active_owner_refs(conn, org_id=None, owner_ref=None):
+    sql = ("SELECT s.owner_ref FROM students s JOIN org_memberships m "
+           "ON m.user_id = s.user_id AND m.org_id = s.org_id "
+           "WHERE m.admission_status = 'active' ")
+    params = []
+    if org_id:
+        sql += "AND m.org_id = ? "
+        params.append(org_id)
+    if owner_ref:
+        sql += "AND s.owner_ref = ? "
+        params.append(owner_ref)
+    return [row["owner_ref"] for row in conn.execute(sql, tuple(params)).fetchall()]
+
+
+def _quota_for_owner(owner_ref):
+    conn = db()
+    try:
+        row = conn.execute("SELECT org_id FROM students WHERE owner_ref = ?", (owner_ref,)).fetchone()
+        return _org_quota(conn, row["org_id"] if row else None)[1]
+    finally:
+        conn.close()
+
+
 def principal_from_token(token, conn=None):
     if not token:
         return None
     own = conn is None
     conn = conn or db()
     try:
-        row = conn.execute("SELECT owner_ref, user_id, org_id, expires_at FROM sessions WHERE token_hash = ?",
+        row = conn.execute("SELECT owner_ref, user_id, org_id, expires_at, demo FROM sessions WHERE token_hash = ?",
                            (token_digest(token),)).fetchone()
         if row is None or row["expires_at"] < time.time():
             return None
@@ -211,6 +252,7 @@ def principal_from_token(token, conn=None):
         principal = _principal_for(conn, user_id, row["org_id"])
         if principal:
             principal["owner_ref"] = row["owner_ref"]
+            principal["demo"] = bool(row["demo"])
         return principal
     finally:
         if own:
@@ -223,41 +265,62 @@ def _bearer(headers):
 
 
 def key_block(result):
-    return {"status": result["status"], "plaintext": result["plaintext"], "hint": result["hint"]}
+    return {"status": result["status"], "plaintext": result.get("plaintext"), "hint": result.get("hint"),
+            "nextRetryAt": result.get("next_retry_at"), "lastError": result.get("last_error")}
 
 
-def ensure_key(owner_ref, request_id, mode=None, identity=None, user_id=None, org_id=None):
+def _prepare_key_issue(owner_ref, request_id, mode=None, identity=None, user_id=None, org_id=None,
+                       rotate=False):
+    if mode and identity:
+        relay.upsert_account(RELAY_DB, owner_ref, mode, identity, roster.name_for(mode, identity),
+                             user_id=user_id, org_id=org_id)
+    conn = db()
     try:
-        if mode and identity:
-            relay.upsert_account(RELAY_DB, owner_ref, mode, identity, roster.name_for(mode, identity),
-                                 user_id=user_id, org_id=org_id)
-        result = relay.issue_key(RELAY_DB, owner_ref, "issue:" + request_id)
+        _, quota = _org_quota(conn, org_id)
+    finally:
+        conn.close()
+    issue_request_id = ("rotate:" if rotate else "issue:") + request_id
+    job = relay.prepare_issue(RELAY_DB, owner_ref, issue_request_id, quota=quota, rotate=rotate)
+    job["_path"] = RELAY_DB
+    return job
+
+
+def _finish_key_issue(job, user_id=None):
+    try:
+        result = relay.finish_issue(job, deliver_plaintext=True)
         if user_id:
             conn = relay.connect(RELAY_DB)
             try:
-                conn.execute("UPDATE relay_keys SET user_id = ? WHERE owner_ref = ?", (user_id, owner_ref))
+                conn.execute("UPDATE relay_keys SET user_id = ? WHERE id = ?", (user_id, result.get("key_id")))
             finally:
                 conn.close()
         return key_block(result)
     except relay.AlreadyIssued:
+        return {"status": "active", "plaintext": None, "hint": None}
+
+
+def ensure_key(owner_ref, request_id, mode=None, identity=None, user_id=None, org_id=None):
+    try:
+        job = _prepare_key_issue(owner_ref, request_id, mode, identity, user_id, org_id)
+    except relay.AlreadyIssued:
         return {"status": "active", "plaintext": None, "hint": relay.active_hint(RELAY_DB, owner_ref)}
-    except relay.RelayUnavailable as exc:
-        return {"status": "unavailable", "plaintext": None, "hint": None, "note": str(exc)}
+    return _finish_key_issue(job, user_id)
 
 
 def inactive_key_block(owner_ref):
     """非准入成员的发钥回执：不给明文，只回状态与掩码，口径与 /api/me 一致。"""
-    hint = relay.active_hint(RELAY_DB, owner_ref)
-    return {"status": "active" if hint else "none", "plaintext": None, "hint": hint}
+    view = relay.key_view(RELAY_DB, owner_ref)
+    return {"status": view["state"], "plaintext": None, "hint": view["hint"],
+            "nextRetryAt": view["nextRetryAt"], "lastError": view["lastError"]}
 
 
 def issue_key_for_member(owner_ref, request_id, mode=None, identity=None, user_id=None, org_id=None,
                          rotate=False):
     """发钥的唯一入口：持 LOCK 重读准入，只有 active 成员才发/轮换明文密钥。
 
-    登录、注册、主动轮换都走这里。判权与发钥之间若准入被改成 pending_review/disabled，
-    吊销与发钥由同一把 LOCK 串行化，锁内重读到非 active 就不发；轮换路径还会幂等吊销
-    残留的 active 密钥，避免「吊销后又补发」。非 active 只回状态与掩码，与 /api/me 同口径。
+    登录、注册、主动轮换都走这里。锁内只做准入重读与影子预占，网络调用在锁外；
+    网络返回后再读一次准入，期间被改成 pending_review/disabled 就丢弃明文并吊销残留。
+    非 active 只回状态与掩码，与 /api/me 同口径。
 
     返回 (密钥块, 是否已准入)。调用方不得在持有 LOCK 时调用本函数。
     """
@@ -270,24 +333,43 @@ def issue_key_for_member(owner_ref, request_id, mode=None, identity=None, user_i
             membership = _membership(conn, member_id, member_org)
             active = membership is not None and membership["admission_status"] == "active"
             admitted_org = membership["org_id"] if membership else member_org
+            _, quota = _org_quota(conn, admitted_org)
         finally:
             conn.close()
         if not active:
+            key_ids = []
             if rotate:
                 # 非 active 时不仅不发，还要顺手吊销残留的 active 密钥；没有有效密钥时也是空操作。
-                relay.revoke_by_owner(RELAY_DB, owner_ref)
-            return inactive_key_block(owner_ref), False
-        if rotate:
-            result = relay.rotate_key(RELAY_DB, owner_ref, "rotate:" + request_id)
-            if member_id:
-                relay_conn = relay.connect(RELAY_DB)
-                try:
-                    relay_conn.execute("UPDATE relay_keys SET user_id = ? WHERE owner_ref = ?",
-                                       (member_id, owner_ref))
-                finally:
-                    relay_conn.close()
-            return key_block(result), True
-        return ensure_key(owner_ref, request_id, mode, identity, member_id, admitted_org), True
+                key_ids = relay.prepare_revoke(RELAY_DB, owner_ref)
+        else:
+            try:
+                job = _prepare_key_issue(owner_ref, request_id, mode, identity, member_id, admitted_org, rotate=rotate)
+            except relay.AlreadyIssued:
+                job = None
+    if not active:
+        if key_ids:
+            relay.finish_revocations(key_ids, RELAY_DB)
+        return inactive_key_block(owner_ref), False
+    if job is None:
+        return {"status": "active", "plaintext": None, "hint": relay.active_hint(RELAY_DB, owner_ref)}, True
+    result = _finish_key_issue(job, member_id)
+
+    # 网络阶段不持全局 LOCK；回来后再读一次准入。成员若已被停用/待复核，
+    # 必须丢弃刚取到的明文并吊销残留，保证最终不留 active 密钥。
+    revoke_ids = []
+    with LOCK:
+        conn = db()
+        try:
+            still_active = owner_ref in set(_active_owner_refs(conn, org_id=admitted_org, owner_ref=owner_ref))
+        finally:
+            conn.close()
+        if not still_active:
+            revoke_ids = relay.prepare_revoke(RELAY_DB, owner_ref)
+    if revoke_ids:
+        relay.finish_revocations(revoke_ids, RELAY_DB)
+    if not still_active:
+        return inactive_key_block(owner_ref), False
+    return result, True
 
 
 def _student_row(conn, owner_ref):
@@ -300,6 +382,17 @@ def profile(conn, owner_ref):
                                row["org_id"] if row else None)
     view = {"mode": row["mode"], "identity": row["identity"], "balance": row["balance"],
             "spent": row["spent"], "ledger": ledger_rows(conn, owner_ref)}
+    total_quota, member_quota = _org_quota(conn, row["org_id"] if row else None)
+    key_state = relay.key_view(RELAY_DB, owner_ref)
+    view["quota"] = {
+        "totalQuota": total_quota,
+        "memberQuota": member_quota,
+        "remainingQuota": int(row["balance"] or 0),
+        "usedQuota": int(row["spent"] or 0),
+        "state": key_state["state"],
+        "source": "platform_ledger",
+        "displayBalance": row["balance"],
+    }
     if principal:
         view.update({"org": principal.get("org"), "role": principal.get("role"),
                      "admissionStatus": principal.get("admission_status"),
@@ -378,13 +471,14 @@ def do_register(mode, identity, password, request_id, org_id=None):
                 conn.execute("ROLLBACK")
                 return 403, {"error": "该身份尚未获得组织准入"}
             now = time.time()
+            _, grant = _org_quota(conn, membership["org_id"])
             conn.execute("INSERT INTO students (owner_ref, mode, identity, pw_salt, pw_hash, balance, spent, created_at, "
                          "user_id, org_id) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)",
-                         (owner_ref, mode, identity, salt.hex(), pw_hash, INITIAL_GRANT, now, user_id,
+                         (owner_ref, mode, identity, salt.hex(), pw_hash, grant, now, user_id,
                           membership["org_id"]))
             conn.execute("INSERT INTO ledger (owner_ref, user_id, org_id, title, amount, kind, request_id, created_at) "
                          "VALUES (?, ?, ?, '新用户注册赠送', ?, 'grant', ?, ?)",
-                         (owner_ref, user_id, membership["org_id"], INITIAL_GRANT, "grant:" + owner_ref, now))
+                         (owner_ref, user_id, membership["org_id"], grant, "grant:" + owner_ref, now))
             onboarding.ensure(conn, user_id, auto_pending=1)
             token = new_session(conn, owner_ref, user_id, membership["org_id"])
             conn.execute("COMMIT")
@@ -465,22 +559,38 @@ def do_login(mode, identity, password, request_id, org_id=None):
     return 200, view
 
 
-def do_me(owner_ref):
+def do_me(owner_ref, demo=False):
+    delivered = {"plaintext": None}
+    if not demo:
+        conn = db()
+        try:
+            active = bool(_active_owner_refs(conn, owner_ref=owner_ref))
+        finally:
+            conn.close()
+        delivered = relay.retry_due(
+            RELAY_DB, owner_ref=owner_ref, limit_pending=1 if active else 0,
+            quota_lookup=_quota_for_owner, allow_delivery_for=owner_ref if active else None,
+            owner_refs=[owner_ref] if active else None)
+        relay.sync_provider_quotas(RELAY_DB)
     conn = db()
     try:
         view = profile(conn, owner_ref)
     finally:
         conn.close()
-    hint = relay.active_hint(RELAY_DB, owner_ref)
-    view["relayKey"] = {"status": "active" if hint else "none", "plaintext": None, "hint": hint}
+    if demo:
+        view["relayKey"] = {"status": "demo", "plaintext": None, "hint": None,
+                            "note": "演示账号只用于界面演示，不发放真实成员 token"}
+        view["demo"] = True
+        return 200, view
+    key_state = relay.key_view(RELAY_DB, owner_ref)
+    view["relayKey"] = {"status": key_state["state"], "plaintext": delivered.get("plaintext"),
+                        "hint": key_state["hint"], "nextRetryAt": key_state["nextRetryAt"],
+                        "lastError": key_state["lastError"]}
     return 200, view
 
 
 def do_rotate(owner_ref, request_id):
-    try:
-        block, admitted = issue_key_for_member(owner_ref, request_id, rotate=True)
-    except relay.RelayUnavailable as exc:
-        return 503, {"error": str(exc)}
+    block, admitted = issue_key_for_member(owner_ref, request_id, rotate=True)
     if not admitted:
         # 与 authz 的待复核口径一致：轮换被拒绝，已吊销的旧密钥不会因此复活。
         return 403, {"error": authz.PENDING_REVIEW_MESSAGE}
@@ -488,6 +598,7 @@ def do_rotate(owner_ref, request_id):
 
 
 def do_consume(owner_ref, amount, request_id):
+    """仅演示：只改平台分摊账面；New-API token 不设硬限额，不做同步扣减。"""
     if not isinstance(amount, int) or isinstance(amount, bool) or amount <= 0 or amount > 10 ** 7:
         return 400, {"error": "消耗数量必须是正整数"}
     # 客户端请求编号只在本接口内解释，避免与赠送等其他流水的 request_id 撞号。
@@ -518,7 +629,10 @@ def do_consume(owner_ref, amount, request_id):
             conn.close()
     conn = db()
     try:
-        return 200, profile(conn, owner_ref)
+        view = profile(conn, owner_ref)
+        view["demoOnly"] = True
+        view["notice"] = "平台消费仅用于演示账面，不代表 New-API 实际扣减"
+        return 200, view
     finally:
         conn.close()
 
@@ -540,8 +654,17 @@ def do_admin_login(username, password):
 
 def do_demo_login(role):
     """演示快捷登录使用服务端配置的管理员凭据映射到目标端身份。"""
+    if not _demo_login_enabled():
+        return 404, {"error": "演示登录未启用"}
     if role == "admin":
-        return do_admin_login(ADMIN_USERNAME, ADMIN_PASSWORD)
+        if not ADMIN_USERNAME or not ADMIN_PASSWORD:
+            return 404, {"error": "管理功能未启用"}
+        conn = db()
+        try:
+            token = new_admin_session(conn, demo=True)
+        finally:
+            conn.close()
+        return 200, {"token": token, "role": authz.PLATFORM_ADMIN, "demo": True}
     if role not in ("student", "teacher"):
         return 400, {"error": "不支持的演示身份"}
     if not ADMIN_USERNAME or not ADMIN_PASSWORD:
@@ -559,20 +682,27 @@ def do_demo_login(role):
         ).fetchone()
         if not row:
             return 503, {"error": "暂无可用的演示身份"}
-        token = new_session(conn, row["owner_ref"], row["user_id"], row["org_id"])
+        token = new_session(conn, row["owner_ref"], row["user_id"], row["org_id"], demo=True)
         view = profile(conn, row["owner_ref"])
     finally:
         conn.close()
-    view.update({"token": token, "firstLogin": False})
+    view["relayKey"] = {"status": "demo", "plaintext": None, "hint": None,
+                        "note": "演示账号只用于界面演示，不发放真实成员 token"}
+    view.update({"token": token, "firstLogin": False, "demo": True})
     return 200, view
+
+
+def _demo_login_enabled():
+    return os.environ.get("DEMO_ALLOW_LOGIN") == "1"
 
 
 def _admin_principal(token):
     if not token:
         return None
-    if is_admin_token(token):
+    info = admin_session_info(token)
+    if info is not None:
         return {"kind": "platform", "user_id": None, "role": authz.PLATFORM_ADMIN, "org_id": None,
-                "org": None, "admission_status": None}
+                "org": None, "admission_status": None, "demo": info["demo"]}
     principal = principal_from_token(token)
     if principal and principal["role"] in (authz.PLATFORM_ADMIN, authz.ORG_ADMIN):
         return principal
@@ -592,7 +722,11 @@ def _org_exists(conn, org_id):
 def org_dashboard(org_id, days=90):
     conn = db()
     try:
-        data = analytics.dashboard(conn, org_id, days)
+        if relay.sync_provider_quotas(RELAY_DB):
+            provider_quota = relay.quota_overview(RELAY_DB, org_id)
+        else:
+            provider_quota = None
+        data = analytics.dashboard(conn, org_id, days, provider_quota=provider_quota)
         data["organization"] = org_service.org(conn, org_id)
         data["featuredWorks"] = works_service.featured(conn, org_id)
         return 200, data
@@ -600,28 +734,79 @@ def org_dashboard(org_id, days=90):
         conn.close()
 
 
-def _merge_key_hints(conn, rows):
+def _merge_key_hints(conn, rows, org_id=None):
     for item in rows:
-        hints = [relay.active_hint(RELAY_DB, ref) for ref in item.get("ownerRefs", [])]
-        hints = [hint for hint in hints if hint]
-        item["keyHint"] = hints[0] if hints else None
-        item["keyStatus"] = "active" if hints else "none"
+        views = [relay.key_view(RELAY_DB, ref) for ref in item.get("ownerRefs", [])]
+        active = next((view for view in views if view["state"] == "active"), None)
+        current = active or next((view for view in views if view["state"] != "none"), None)
+        item["keyHint"] = active["hint"] if active else None
+        item["keyStatus"] = current["state"] if current else "none"
+        item["attempts"] = 0
+        item["lastError"] = current["lastError"] if current else None
+        item["nextRetryAt"] = current["nextRetryAt"] if current else None
+        resolved_org = org_id or (conn.execute("SELECT org_id FROM students WHERE owner_ref = ?",
+                                               (item["ownerRefs"][0],)).fetchone()["org_id"]
+                                  if item.get("ownerRefs") else None)
+        total_quota, member_quota = _org_quota(conn, resolved_org)
+        remaining = int(item.get("balance") or 0)
+        used = int(item.get("spent") or 0)
+        item["quota"] = {"totalQuota": total_quota, "memberQuota": member_quota,
+                         "remainingQuota": remaining, "usedQuota": used,
+                         "source": "platform_ledger"}
+        item["remainingQuota"] = remaining
+        item["usedQuota"] = used
     return rows
+
+
+def _enrich_account_quotas(conn, accounts):
+    refs = [item.get("owner_ref") for item in accounts if item.get("owner_ref")]
+    balances = {}
+    if refs:
+        placeholders = ",".join("?" for _ in refs)
+        rows = conn.execute("SELECT owner_ref, COALESCE(balance, 0) AS balance, COALESCE(spent, 0) AS spent "
+                            "FROM students WHERE owner_ref IN (%s)" % placeholders, tuple(refs)).fetchall()
+        balances = {row["owner_ref"]: (int(row["balance"]), int(row["spent"])) for row in rows}
+    shares = {}
+    for item in accounts:
+        org_id = item.get("org_id")
+        if org_id not in shares:
+            shares[org_id] = _org_quota(conn, org_id)
+        total_quota, member_quota = shares[org_id]
+        remaining, used = balances.get(item.get("owner_ref"), (None, None))
+        item["quota"] = {"totalQuota": total_quota, "memberQuota": member_quota,
+                         "remainingQuota": remaining, "usedQuota": used,
+                         "source": "platform_ledger"}
+        item["remainingQuota"] = remaining
+        item["usedQuota"] = used
+    return accounts
+
+
+def _prepare_user_revocations(conn, user_id, org_id):
+    """锁内只预占吊销状态；网络删除必须在释放全局 LOCK 后执行。"""
+    refs = [row["owner_ref"] for row in conn.execute(
+        "SELECT owner_ref FROM students WHERE user_id = ? AND org_id = ?", (user_id, org_id)).fetchall()]
+    key_ids = []
+    for ref in refs:
+        key_ids.extend(relay.prepare_revoke(RELAY_DB, ref))
+    return refs, key_ids
 
 
 def _revoke_user_keys(conn, user_id, org_id):
     """只吊销该用户在本组织成员关系下的账户（owner_ref）密钥，不碰其他组织的账户。"""
-    refs = [row["owner_ref"] for row in conn.execute(
-        "SELECT owner_ref FROM students WHERE user_id = ? AND org_id = ?", (user_id, org_id)).fetchall()]
-    for ref in refs:
-        relay.revoke_by_owner(RELAY_DB, ref)
+    refs, key_ids = _prepare_user_revocations(conn, user_id, org_id)
+    relay.finish_revocations(key_ids, RELAY_DB)
     return refs
 
 
 def org_members(org_id, query=None):
     conn = db()
     try:
-        return 200, {"members": _merge_key_hints(conn, org_service.members(conn, org_id, query))}
+        active_refs = _active_owner_refs(conn, org_id=org_id)
+        relay.retry_due(RELAY_DB, org_id=org_id, limit_pending=1, quota_lookup=_quota_for_owner,
+                        allow_delivery_for=None, owner_refs=active_refs)
+        relay.sync_provider_quotas(RELAY_DB)
+        members = org_service.members(conn, org_id, query)
+        return 200, {"members": _merge_key_hints(conn, members, org_id)}
     finally:
         conn.close()
 
@@ -929,9 +1114,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def _require_admin(self):
         token = _bearer(self.headers)
-        if is_admin_token(token):
+        info = admin_session_info(token)
+        if info is not None:
             return {"kind": "platform", "user_id": None, "role": authz.PLATFORM_ADMIN, "org_id": None,
-                    "org": None, "admission_status": None}
+                    "org": None, "admission_status": None, "demo": info["demo"]}
         principal = principal_from_token(token)
         if principal:
             if principal["role"] not in (authz.PLATFORM_ADMIN, authz.ORG_ADMIN):
@@ -963,11 +1149,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return self._send(200, {"ok": True})
             if path == "/api/config":
                 return self._send(200, {"productName": config.PRODUCT_NAME, "pilotOrgId": config.PILOT_ORG["id"],
+                                        "demoLoginEnabled": _demo_login_enabled(),
                                         "onboarding": onboarding.public_config()})
             if path == "/api/me":
                 principal = self._require_user()
                 authz.require(principal, "profile", "read_self", owner_user_id=principal["user_id"])
-                return self._send(*do_me(principal["owner_ref"]))
+                return self._send(*do_me(principal["owner_ref"], principal.get("demo", False)))
             if path == "/api/onboarding":
                 principal = self._require_user()
                 authz.require(principal, "onboarding", "read", owner_user_id=principal["user_id"])
@@ -1101,7 +1288,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 authz.require(principal, "accounts", "list", org_id=principal.get("org_id"))
                 q = query.get("q", [None])[0]
                 org_filter = query.get("orgId", [None])[0] if principal["role"] == authz.PLATFORM_ADMIN else principal.get("org_id")
-                return self._send(200, {"accounts": relay.list_accounts(RELAY_DB, q, org_filter)})
+                conn = db()
+                try:
+                    active_refs = _active_owner_refs(conn, org_id=org_filter)
+                finally:
+                    conn.close()
+                relay.retry_due(RELAY_DB, org_id=org_filter, limit_pending=1, quota_lookup=_quota_for_owner,
+                                allow_delivery_for=None, owner_refs=active_refs)
+                relay.sync_provider_quotas(RELAY_DB)
+                accounts = relay.list_accounts(RELAY_DB, q, org_filter)
+                conn = db()
+                try:
+                    accounts = _enrich_account_quotas(conn, accounts)
+                finally:
+                    conn.close()
+                return self._send(200, {"accounts": accounts})
             match = re.match(r"^/api/orgs/([^/]+)/(tree|summary|trends|dashboard|members|featured|audit|imports/template)$", path)
             if match:
                 principal = self._require_admin()
@@ -1112,14 +1313,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     authz.require(principal, "organizations", "read", org_id=org_id)
                     conn = db()
                     try:
+                        active_refs = _active_owner_refs(conn, org_id=org_id)
+                        relay.retry_due(RELAY_DB, org_id=org_id, limit_pending=1, quota_lookup=_quota_for_owner,
+                                        allow_delivery_for=None, owner_refs=active_refs)
+                        relay.sync_provider_quotas(RELAY_DB)
                         tree = org_service.tree(conn, org_id)
                         items = {item["userId"]: item for item in _merge_key_hints(
-                            conn, org_service.members(conn, org_id))}
+                            conn, org_service.members(conn, org_id), org_id)}
                         for child in tree.get("children", []):
                             rich = items.get(child["id"])
                             if rich:
                                 child["keyHint"] = rich.get("keyHint")
                                 child["keyStatus"] = rich.get("keyStatus")
+                                child["remainingQuota"] = rich.get("remainingQuota")
+                                child["quota"] = rich.get("quota")
                         return self._send(200, tree)
                     finally:
                         conn.close()
@@ -1129,7 +1336,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     if action == "summary":
                         conn = db()
                         try:
-                            return self._send(200, analytics.summary(conn, org_id))
+                            provider_quota = (relay.quota_overview(RELAY_DB, org_id)
+                                              if relay.sync_provider_quotas(RELAY_DB) else None)
+                            return self._send(200, analytics.summary(conn, org_id, provider_quota=provider_quota))
                         finally:
                             conn.close()
                     if action == "trends":
@@ -1188,10 +1397,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 authz.require(principal, "members", "read", org_id=org_id)
                 conn = db()
                 try:
+                    active_refs = _active_owner_refs(conn, org_id=org_id)
+                    relay.retry_due(RELAY_DB, org_id=org_id, limit_pending=1, quota_lookup=_quota_for_owner,
+                                    allow_delivery_for=None, owner_refs=active_refs)
+                    relay.sync_provider_quotas(RELAY_DB)
                     item = org_service.member(conn, org_id, match.group(2))
                     if not item:
                         return self._send(403, {"error": "无权访问该资源"})
-                    _merge_key_hints(conn, [item])
+                    _merge_key_hints(conn, [item], org_id)
                     return self._send(200, item)
                 finally:
                     conn.close()
@@ -1286,6 +1499,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             authz.require(principal, "members", "update_status", org_id=org_id)
             if data.get("role") is not None:
                 authz.require(principal, "members", "update_role", org_id=org_id)
+            revoke_key_ids = []
             with LOCK:
                 conn = db()
                 try:
@@ -1296,7 +1510,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         conn.execute("ROLLBACK")
                         return self._send(403, {"error": "无权访问该资源"})
                     if revoke_keys:
-                        refs = _revoke_user_keys(conn, match.group(2), org_id)
+                        refs, revoke_key_ids = _prepare_user_revocations(conn, match.group(2), org_id)
                         if data.get("admissionStatus") == "pending_review":
                             reason = "admission_pending_review"
                         else:
@@ -1305,13 +1519,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                                           "member.key_revoked", "member", match.group(2),
                                           metadata={"reason": reason, "keys": len(refs)})
                     conn.execute("COMMIT")
-                    return self._send(200, item)
                 except BaseException:
                     if conn.in_transaction:
                         conn.execute("ROLLBACK")
                     raise
                 finally:
                     conn.close()
+            if revoke_key_ids:
+                relay.finish_revocations(revoke_key_ids, RELAY_DB)
+            return self._send(200, item)
         except (authz.AuthzError, ValueError) as exc:
             return self._error(exc)
         except relay.RelayUnavailable as exc:
@@ -1442,56 +1658,104 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     return self._send(400, {"error": "请选择 1 到 200 名成员"})
                 action = data.get("action")
                 rid = str(data.get("requestId") or secrets.token_hex(8))[:64]
-                conn = db()
-                try:
-                    conn.execute("BEGIN IMMEDIATE")
-                    if org_service.users_outside_org(conn, org_id, user_ids):
-                        conn.execute("ROLLBACK")
-                        return self._send(403, {"error": "无权访问该资源"})
-                    if action == "grant":
-                        amount = data.get("amount")
-                        if not isinstance(amount, int) or amount <= 0 or amount > 10 ** 7:
+                revoke_key_ids = []
+                with LOCK:
+                    conn = db()
+                    try:
+                        conn.execute("BEGIN IMMEDIATE")
+                        if org_service.users_outside_org(conn, org_id, user_ids):
                             conn.execute("ROLLBACK")
-                            return self._send(400, {"error": "赠送额度必须是正整数"})
-                        results = org_service.bulk_grant(conn, org_id, user_ids, amount, rid,
-                                                         principal.get("user_id"), principal["role"])
-                    elif action == "revoke":
-                        results = []
-                        for user_id in user_ids:
-                            refs = _revoke_user_keys(conn, user_id, org_id)
-                            results.append({"userId": user_id, "status": "revoked", "keys": len(refs)})
-                        org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
-                                          "member.bulk_revoke", "organization", org_id, rid,
-                                          {"userCount": len(user_ids)})
-                    else:
-                        conn.execute("ROLLBACK")
-                        return self._send(400, {"error": "动作只能是 grant 或 revoke"})
-                    conn.execute("COMMIT")
-                    return self._send(200, {"results": results})
-                except BaseException:
-                    if conn.in_transaction:
-                        conn.execute("ROLLBACK")
-                    raise
-                finally:
-                    conn.close()
+                            return self._send(403, {"error": "无权访问该资源"})
+                        if action == "grant":
+                            amount = data.get("amount")
+                            if not isinstance(amount, int) or amount <= 0 or amount > 10 ** 7:
+                                conn.execute("ROLLBACK")
+                                return self._send(400, {"error": "赠送额度必须是正整数"})
+                            results = org_service.bulk_grant(conn, org_id, user_ids, amount, rid,
+                                                             principal.get("user_id"), principal["role"])
+                        elif action == "revoke":
+                            if principal.get("demo"):
+                                conn.execute("ROLLBACK")
+                                return self._send(403, {"error": "演示账号不能吊销真实密钥"})
+                            results = []
+                            for user_id in user_ids:
+                                refs, key_ids = _prepare_user_revocations(conn, user_id, org_id)
+                                revoke_key_ids.extend(key_ids)
+                                results.append({"userId": user_id, "status": "revoked", "keys": len(refs)})
+                            org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
+                                              "member.bulk_revoke", "organization", org_id, rid,
+                                              {"userCount": len(user_ids)})
+                        else:
+                            conn.execute("ROLLBACK")
+                            return self._send(400, {"error": "动作只能是 grant 或 revoke"})
+                        conn.execute("COMMIT")
+                    except BaseException:
+                        if conn.in_transaction:
+                            conn.execute("ROLLBACK")
+                        raise
+                    finally:
+                        conn.close()
+                if revoke_key_ids:
+                    relay.finish_revocations(revoke_key_ids, RELAY_DB)
+                return self._send(200, {"results": results})
             match = re.match(r"^/api/orgs/([^/]+)/members/([^/]+)/revoke-key$", path)
             if match:
                 principal = self._require_admin()
+                if principal.get("demo"):
+                    return self._send(403, {"error": "演示账号不能吊销真实密钥"})
                 org_id = self._org_allowed(principal, match.group(1))
                 self._require_org(org_id)
                 authz.require(principal, "members", "revoke_key", org_id=org_id)
+                key_ids = []
+                with LOCK:
+                    conn = db()
+                    try:
+                        if org_service.users_outside_org(conn, org_id, [match.group(2)]):
+                            return self._send(403, {"error": "无权访问该资源"})
+                        refs, key_ids = _prepare_user_revocations(conn, match.group(2), org_id)
+                        if not refs:
+                            return self._send(403, {"error": "无权访问该资源"})
+                        conn.execute("BEGIN IMMEDIATE")
+                        org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
+                                          "member.key_revoked", "member", match.group(2))
+                        conn.execute("COMMIT")
+                    except BaseException:
+                        if conn.in_transaction:
+                            conn.execute("ROLLBACK")
+                        raise
+                    finally:
+                        conn.close()
+                relay.finish_revocations(key_ids, RELAY_DB)
+                return self._send(200, {"ok": True})
+            match = re.match(r"^/api/orgs/([^/]+)/members/([^/]+)/reissue-key$", path)
+            if match:
+                principal = self._require_admin()
+                if principal.get("demo"):
+                    return self._send(403, {"error": "演示账号不能操作真实密钥"})
+                org_id = self._org_allowed(principal, match.group(1))
+                self._require_org(org_id)
+                authz.require(principal, "accounts", "reissue_key", org_id=org_id)
                 conn = db()
                 try:
                     if org_service.users_outside_org(conn, org_id, [match.group(2)]):
                         return self._send(403, {"error": "无权访问该资源"})
-                    refs = _revoke_user_keys(conn, match.group(2), org_id)
+                    admitted = conn.execute(
+                        "SELECT 1 FROM org_memberships WHERE org_id = ? AND user_id = ? AND admission_status = 'active'",
+                        (org_id, match.group(2))).fetchone()
+                    if not admitted:
+                        return self._send(409, {"error": "成员未处于 active 状态，不能重发密钥"})
+                    refs = [row["owner_ref"] for row in conn.execute(
+                        "SELECT owner_ref FROM students WHERE user_id = ? AND org_id = ?",
+                        (match.group(2), org_id)).fetchall()]
                     if not refs:
                         return self._send(403, {"error": "无权访问该资源"})
+                    statuses = [relay.manual_reissue(RELAY_DB, ref, quota_lookup=_quota_for_owner) for ref in refs]
                     conn.execute("BEGIN IMMEDIATE")
                     org_service.audit(conn, principal.get("user_id"), principal["role"], org_id,
-                                      "member.key_revoked", "member", match.group(2))
+                                      "member.key_reissued", "member", match.group(2),
+                                      metadata={"statuses": statuses})
                     conn.execute("COMMIT")
-                    return self._send(200, {"ok": True})
+                    return self._send(200, {"statuses": statuses})
                 except BaseException:
                     if conn.in_transaction:
                         conn.execute("ROLLBACK")
@@ -1659,6 +1923,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if path in ("/api/key/rotate", "/api/consume", "/api/logout"):
                 principal = self._require_user()
                 if path == "/api/key/rotate":
+                    if principal.get("demo"):
+                        return self._send(403, {"error": "演示账号不发放真实成员 token"})
                     authz.require(principal, "keys", "rotate_self", owner_user_id=principal["user_id"])
                     return self._send(*do_rotate(principal["owner_ref"], rid))
                 if path == "/api/consume":
@@ -1676,6 +1942,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return self._send(*do_admin_login(data.get("username"), data.get("password")))
             if path == "/api/admin/revoke":
                 principal = self._require_admin()
+                if principal.get("demo"):
+                    return self._send(403, {"error": "演示账号不能修改真实密钥"})
                 owner_ref = str(data.get("owner_ref") or "").strip()
                 if not owner_ref:
                     return self._send(400, {"error": "缺少 owner_ref"})
@@ -1688,14 +1956,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         if not row:
                             return self._send(403, {"error": "无权访问该资源"})
                         authz.require(principal, "accounts", "revoke_key", org_id=row["org_id"])
-                        relay.revoke_by_owner(RELAY_DB, owner_ref)
+                        key_ids = relay.prepare_revoke(RELAY_DB, owner_ref)
                         conn.execute("BEGIN IMMEDIATE")
                         org_service.audit(conn, principal.get("user_id"), principal["role"], row["org_id"],
                                           "admin.key_revoked", "account", owner_ref)
                         conn.execute("COMMIT")
-                        return self._send(200, {"ok": True})
                     finally:
                         conn.close()
+                relay.finish_revocations(key_ids, RELAY_DB)
+                return self._send(200, {"ok": True})
             if path == "/api/reset" and os.environ.get("DEMO_ALLOW_RESET") == "1":
                 return self._send(*do_reset())
             return self._send(404, {"error": "未知接口"})

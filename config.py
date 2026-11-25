@@ -2,6 +2,9 @@
 
 PRODUCT_NAME = "校园 AI 创作平台"
 
+PILOT_TOTAL_QUOTA = 20_000_000
+DEFAULT_MEMBER_QUOTA = 100_000
+
 PILOT_ORG = {
     "id": "org_hust_software",
     "slug": "hust-software",

@@ -72,7 +72,9 @@ async function loadProductConfig() {
     productConfig = await fetch(API + '/api/config').then(resp => resp.json());
     for (const node of document.querySelectorAll('[data-product-name]')) node.textContent = productConfig.productName;
     document.title = productConfig.productName + ' · 我的作品';
-  } catch (error) { productConfig = { productName: '创作平台' }; }
+  } catch (error) { productConfig = { productName: '创作平台', demoLoginEnabled: false }; }
+  const quick = $('quickLoginBtn');
+  if (quick) quick.classList.toggle('hidden', !productConfig.demoLoginEnabled);
 }
 
 function renderPublishPrompt() {
@@ -92,10 +94,20 @@ function renderKey(relayKey) {
     $('keyNote').textContent = '完整密钥只在本次显示，刷新页面后只能看到掩码。请立即复制保存。';
   } else {
     revealedKey = '';
-    $('relayKey').textContent = relayKey.hint || '尚未发放';
-    $('keyNote').textContent = relayKey.status === 'unavailable'
-      ? '中转站暂时不可用，稍后点击“重新生成密钥”重试。'
-      : '完整密钥只在发放时显示一次，平台与学院看不到密钥明文。';
+    const status = relayKey.status;
+    $('relayKey').textContent = relayKey.hint || (status === 'pending' ? '密钥待补发' : status === 'failed' ? '补发失败' : '尚未发放');
+    if (status === 'demo') {
+      $('relayKey').textContent = '演示模式不发真实密钥';
+      $('keyNote').textContent = '演示账号只用于界面演示，不发放真实成员 token。';
+    } else if (status === 'pending') {
+      $('keyNote').textContent = 'New-API 暂时不可用，密钥已进入待补发队列；稍后刷新或点“重新生成密钥”重试。';
+    } else if (status === 'failed') {
+      $('keyNote').textContent = '自动补发多次失败，请联系组织管理员手动重发密钥。';
+    } else if (status === 'revoking') {
+      $('keyNote').textContent = '旧密钥正在回收，完成后可重新生成。';
+    } else {
+      $('keyNote').textContent = '完整密钥只在发放时显示一次，平台与学院看不到密钥明文；额度按组织总额分摊展示。';
+    }
   }
 }
 
@@ -121,9 +133,11 @@ function renderAccount(next) {
   $('loginView').classList.add('hidden');
   $('appView').classList.remove('hidden');
   $('userIdentity').textContent = next.identity;
+  const quota = next.quota || {};
   $('studentStats').replaceChildren(
-    UI.MetricCard({ label: '可用 Token', value: next.balance, tone: 'accent', hint: '本期可使用额度' }),
-    UI.MetricCard({ label: '累计消耗', value: next.spent, hint: '从领取以来的使用量' }),
+    UI.MetricCard({ label: '可用 Token', value: quota.remainingQuota == null ? '—' : quota.remainingQuota, tone: 'accent',
+      hint: '平台账面剩余 · 人均 ' + fmt(quota.memberQuota) }),
+    UI.MetricCard({ label: '累计消耗', value: quota.usedQuota == null ? '—' : quota.usedQuota, hint: '平台记账消耗' }),
     UI.MetricCard({ label: '所属组织', value: (next.org && next.org.name) || '试点组织', hint: '组织是权限与可见范围' })
   );
   const rows = next.ledger || [];
@@ -249,7 +263,13 @@ $('logoutBtn').onclick = UI.guard(async () => {
   token = ''; revealedKey = ''; localStorage.removeItem(STORE_KEY); showLogin();
 });
 $('rotateKeyBtn').onclick = UI.guard(async () => {
-  try { const relayKey = await api('/api/key/rotate', { method: 'POST', body: '{}' }); renderKey(relayKey); toast('已重新生成密钥，旧密钥已失效'); }
+  try {
+    const relayKey = await api('/api/key/rotate', { method: 'POST', body: '{}' });
+    renderKey(relayKey);
+    toast(relayKey.status === 'active' ? '已重新生成密钥，旧密钥已失效'
+      : relayKey.status === 'pending' ? 'New-API 暂不可用，密钥待补发'
+      : '密钥状态已更新，请查看说明');
+  }
   catch (error) { toast(error.message || '重新生成失败'); }
 });
 $('copyBaseBtn').onclick = async () => {
@@ -285,7 +305,7 @@ $('demoUseBtn').onclick = UI.guard(async () => {
     const next = await api('/api/consume', { method: 'POST', body: JSON.stringify({ amount: 1200, requestId: 'ui-' + Date.now() }) });
     renderAccount(next);
     $('ledgerFold').open = true;
-    toast('已模拟消耗 1,200 Token');
+    toast('已模拟消耗 1,200 Token（仅演示账面，不改 New-API token）');
   } catch (error) { toast(error.status === 409 ? 'Token 余额不足' : (error.message || '操作失败')); }
 });
 $('galleryNav').addEventListener('click', event => {

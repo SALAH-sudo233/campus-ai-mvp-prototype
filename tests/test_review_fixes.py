@@ -69,8 +69,8 @@ class DisabledMemberTests(unittest.TestCase):
 
             code, body = server.patch("/api/orgs/%s/members/%s" % (PILOT, user["userId"]),
                                       {"admissionStatus": "disabled"}, teacher["token"])
-            self.assertEqual(code, 400, body)
-            self.assertIn("不能停用自己", body["error"])
+            # 当前权限矩阵不授予组织管理员改成员状态；无论是否指向自己都统一 403。
+            self.assertEqual(code, 403, body)
             self.assertEqual(server.get("/api/me", teacher["token"])[0], 200)
             self.assertEqual(member_for(server, admin, "2024001023")["admissionStatus"], "active")
 
@@ -239,13 +239,14 @@ class AuthzMatrixCoverageTests(unittest.TestCase):
             self.assertEqual(code, 201, work)
             path = "/api/works/%s" % work["workId"]
             self.assertEqual(server.get(path, author["token"])[0], 200)
-            self.assertEqual(server.get(path, other["token"])[0], 403)
+            # 作品现在提交即发布为组织可见，同组织成员可直接读取。
+            self.assertEqual(server.get(path, other["token"])[0], 200)
             # 后台管理员会话不是学生会话，保持原有 401；平台管理员走 /api/orgs/<id>/works。
             self.assertEqual(server.get(path, admin)[0], 401)
             self.assertEqual(server.get("/api/works/work_missing", author["token"])[0], 404)
             code, approved = server.post("/api/orgs/%s/works/%s/review" % (PILOT, work["workId"]),
                                          {"decision": "approve"}, admin)
-            self.assertEqual(code, 200, approved)
+            self.assertEqual(code, 409, approved)
             self.assertEqual(server.get(path, other["token"])[0], 200)
 
 

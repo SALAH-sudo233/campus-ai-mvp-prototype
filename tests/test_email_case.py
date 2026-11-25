@@ -207,14 +207,14 @@ class EmailCaseMigrationTests(unittest.TestCase):
             finally:
                 conn.close()
 
-            self.assertEqual(migrations.migrate(db_path), [1, 2, 3, 4, 5, 6, 7])
+            self.assertEqual(migrations.migrate(db_path), [1, 2, 3, 4, 5, 6, 7, 8, 9])
 
             conn = sqlite3.connect(db_path)
             conn.row_factory = sqlite3.Row
             try:
                 versions = [row[0] for row in conn.execute(
                     "SELECT version FROM schema_migrations ORDER BY version").fetchall()]
-                self.assertEqual(versions, [1, 2, 3, 4, 5, 6, 7])
+                self.assertEqual(versions, [1, 2, 3, 4, 5, 6, 7, 8, 9])
                 failures = conn.execute("SELECT owner_ref, failures FROM login_failures").fetchall()
                 self.assertEqual([(row["owner_ref"], row["failures"]) for row in failures], [(new_ref, 3)])
                 student = conn.execute("SELECT owner_ref, identity FROM students").fetchone()

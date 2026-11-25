@@ -186,7 +186,9 @@
         el('span', { className: 'tree-name', text: child.name || '未命名成员' }),
         el('code', { text: child.studentId || '—' }),
         RoleBadge(child, labels),
-        el('span', { className: 'muted', text: '余额 ' + Number(child.balance || 0).toLocaleString('zh-CN') }),
+        el('span', { className: 'muted', text: child.remainingQuota == null
+          ? ('人均 ' + Number((child.quota && child.quota.memberQuota) || 0).toLocaleString('zh-CN'))
+          : ('剩余 ' + Number(child.remainingQuota).toLocaleString('zh-CN')) }),
         el('span', { className: 'muted', text: child.keyHint || '无密钥' })
       ]);
     }

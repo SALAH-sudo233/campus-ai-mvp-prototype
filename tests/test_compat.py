@@ -39,7 +39,7 @@ class LegacyCompatibilityTests(unittest.TestCase):
 
             code, rotated = server.post("/api/key/rotate", {"requestId": "compat-rotate-1"}, token)
             self.assertEqual(code, 200, rotated)
-            self.assertEqual(set(rotated), {"status", "plaintext", "hint"})
+            self.assertTrue({"status", "plaintext", "hint"}.issubset(rotated))
             self.assertIsNotNone(rotated["plaintext"])
 
             admin = server.admin_token()

@@ -341,6 +341,15 @@ def _migration_7(conn):
     _fold_email_case(conn)
 
 
+def _migration_9(conn):
+    """演示会话标记与试点组织总额度；额度字段复用 organizations.quota_limit。"""
+    for table in ("sessions", "admin_sessions"):
+        if "demo" not in _columns(conn, table):
+            conn.execute("ALTER TABLE %s ADD COLUMN demo INTEGER NOT NULL DEFAULT 0" % table)
+    conn.execute("UPDATE organizations SET quota_limit = ? WHERE id = ? AND quota_limit IS NULL",
+                 (config.PILOT_TOTAL_QUOTA, config.PILOT_ORG["id"]))
+
+
 MIGRATIONS = [
     (1, "legacy-schema", _migration_1),
     (2, "org-schema", _migration_2),
@@ -353,6 +362,7 @@ MIGRATIONS = [
         None if "quota_limit" in _columns(conn, "organizations")
         else conn.execute("ALTER TABLE organizations ADD COLUMN quota_limit INTEGER")
     )),
+    (9, "demo-login-and-pilot-quota", _migration_9),
 ]
 
 
