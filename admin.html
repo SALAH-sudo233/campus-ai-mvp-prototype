@@ -30,72 +30,47 @@
       <header class="topbar">
         <div class="wordmark"><span class="brand-mark small">AD</span><span>平台管理</span></div>
         <nav class="topnav">
-          <button class="navbtn active" data-admin-tab="orgs">组织管理</button>
-          <button class="navbtn" data-admin-tab="rewards">作品奖励</button>
+          <button class="navbtn active" data-admin-tab="tokens">Token 管理</button>
+          <button class="navbtn" data-admin-tab="members">成员管理</button>
+          <button class="navbtn" data-admin-tab="works">作品管理</button>
         </nav>
         <div class="user-menu">
           <select id="orgSwitcher" class="compact-select org-switcher" aria-label="切换当前组织"></select>
+          <button class="primary compact-primary" id="openCreateOrgBtn">＋ 创建组织</button>
           <a class="ghost link-btn" href="index.html">返回产品</a>
           <button id="adminLogoutBtn" class="ghost">退出</button>
         </div>
       </header>
       <div class="content admin-content">
-        <section id="tab-orgs" class="admin-tab active">
-          <div class="page-head">
-            <div><p class="eyebrow">ORGANIZATIONS</p><h2>组织管理</h2><p class="muted">通过顶部切换组织查看总览，录入学生/老师信息，或批量管理额度与密钥。</p></div>
-            <button class="primary" id="openCreateOrgBtn">＋ 创建组织</button>
-          </div>
-          <section class="panel">
-            <div class="panel-head"><div><h3>组织总览</h3><p class="muted" id="selectedOrgLabel">请选择组织</p></div></div>
-            <div id="adminOrgStats" class="stats admin-overview-stats"></div>
-          </section>
-          <section class="panel">
-            <div class="panel-head">
-              <div><h3>成员管理与批量操作</h3><p class="muted" id="memberOrgHint">支持录入学生/老师、CSV 批量导入、批量赠送额度与吊销密钥。</p></div>
-              <div class="inline-actions">
-                <button class="primary compact-primary" id="openAddMemberBtn">＋ 录入成员</button>
-                <button class="outline compact-btn" id="openImportModalBtn">CSV 批量导入</button>
-              </div>
-            </div>
-            <div class="member-toolbar">
-              <div class="inline-actions">
-                <input id="adminMemberSearch" placeholder="搜索姓名 / 学号 / 邮箱" />
-                <button class="outline" id="adminMemberSearchBtn">搜索</button>
-              </div>
-              <div class="inline-actions">
-                <input id="bulkAmount" type="number" min="1" value="5000" aria-label="批量赠送额度" class="compact-num" />
-                <button class="outline" id="bulkGrantBtn">批量赠送</button>
-                <button class="danger" id="bulkRevokeBtn">批量吊销</button>
-              </div>
-            </div>
-            <div class="table-scroll"><table class="data-table" id="adminMemberTable"></table></div>
-          </section>
-          <section class="panel">
-            <div class="panel-head"><div><h3>组织作品</h3><p class="muted" id="worksOrgHint">平台管理员可全局下架。</p></div><button class="ghost" id="refreshOrgWorks">刷新</button></div>
-            <div id="adminWorks" class="work-grid"></div>
-          </section>
-        </section>
-
-        <section id="tab-rewards" class="admin-tab">
+        <section id="tab-tokens" class="admin-tab active">
           <div class="page-head">
             <div>
-              <p class="eyebrow">WORK REWARDS</p>
-              <h2>作品奖励统一结算</h2>
-              <p class="muted" id="rewardsOrgHint">每两周评审一次 · 平台额外激励（不扣减组织原定额度）· 纯按有效点赞排序（排除自赞、单件作品不重复获奖）。</p>
+              <p class="eyebrow">TOKEN MANAGEMENT</p>
+              <h2>Token 管理</h2>
+              <p class="muted" id="selectedOrgLabel">请选择组织</p>
             </div>
-            <button class="outline" id="refreshRewardPreview">刷新候选榜</button>
+            <button class="outline" id="refreshRewardPreview">刷新数据</button>
           </div>
 
-          <div id="rewardOverviewStats" class="stats admin-overview-stats"></div>
+          <section class="panel">
+            <div class="panel-head">
+              <div><h3>组织额度总览</h3><p class="muted">本组织基础额度消耗与剩余概览；如需给指定成员手动补发或吊销密钥，可前往「成员管理」。</p></div>
+            </div>
+            <div id="adminOrgStats" class="stats admin-overview-stats"></div>
+          </section>
 
           <section class="panel">
             <div class="panel-head">
               <div>
-                <h3>本期结算配置与候选预览</h3>
-                <p class="muted" id="rewardBaseHint">按组织成员初始额度的 10× / 5× / 1× 三档发放，可按需微调各档名额或勾选排除异常作品。</p>
+                <h3>作品奖励统一结算</h3>
+                <p class="muted" id="rewardsOrgHint">每两周评审一次 · 平台额外激励（不扣减组织原定额度）· 纯按有效点赞排序（排除自赞、单件作品不重复获奖）。</p>
               </div>
               <button class="primary" id="settleRewardsBtn">确认统一结算发奖</button>
             </div>
+
+            <div id="rewardOverviewStats" class="stats admin-overview-stats"></div>
+
+            <p class="muted" id="rewardBaseHint" style="margin:0 0 12px;font-size:12px">按组织成员初始额度的 10× / 5× / 1× 三档发放，可按需微调各档名额或勾选排除异常作品。</p>
 
             <div class="reward-config-bar">
               <label class="reward-field period-field">
@@ -128,6 +103,50 @@
               <div><h3>历史结算与发奖记录</h3><p class="muted">每期结算批次与获奖作品明细，发奖后自动写入作者账本并公示于作品广场。</p></div>
             </div>
             <div id="rewardHistoryList" class="reward-history-list"></div>
+          </section>
+        </section>
+
+        <section id="tab-members" class="admin-tab">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">MEMBERS</p>
+              <h2>成员管理</h2>
+              <p class="muted" id="memberOrgHint">支持录入学生/老师、CSV 批量导入、批量赠送额度与吊销密钥。</p>
+            </div>
+            <div class="inline-actions">
+              <button class="primary compact-primary" id="openAddMemberBtn">＋ 录入成员</button>
+              <button class="outline compact-btn" id="openImportModalBtn">CSV 批量导入</button>
+            </div>
+          </div>
+
+          <section class="panel">
+            <div class="member-toolbar">
+              <div class="inline-actions">
+                <input id="adminMemberSearch" placeholder="搜索姓名 / 学号 / 邮箱" />
+                <button class="outline" id="adminMemberSearchBtn">搜索</button>
+              </div>
+              <div class="inline-actions">
+                <input id="bulkAmount" type="number" min="1" value="5000" aria-label="批量赠送额度" class="compact-num" />
+                <button class="outline" id="bulkGrantBtn">批量赠送</button>
+                <button class="danger" id="bulkRevokeBtn">批量吊销</button>
+              </div>
+            </div>
+            <div class="table-scroll"><table class="data-table" id="adminMemberTable"></table></div>
+          </section>
+        </section>
+
+        <section id="tab-works" class="admin-tab">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">WORKS</p>
+              <h2>作品管理</h2>
+              <p class="muted" id="worksOrgHint">平台管理员可查看本组织全部作品并执行全局下架。</p>
+            </div>
+            <button class="outline" id="refreshOrgWorks">刷新</button>
+          </div>
+
+          <section class="panel">
+            <div id="adminWorks" class="work-grid"></div>
           </section>
         </section>
       </div>

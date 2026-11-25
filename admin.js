@@ -7,7 +7,7 @@ let selectedOrg = sessionStorage.getItem(SELECTED_ORG_KEY) || null;
 let memberRows = [];
 let orgLabels = { admin: '教师', member: '学生' };
 let selectSeq = 0;
-let activeAdminTab = 'orgs';
+let activeAdminTab = 'tokens';
 let rewardPreview = null;
 let rewardSummary = null;
 let rewardExcluded = new Set();
@@ -157,7 +157,7 @@ async function selectOrg(orgId) {
     memberRows = members.members || [];
     renderMembers();
     renderWorks(works.items || []);
-    if (activeAdminTab === 'rewards') await loadRewards();
+    if (activeAdminTab === 'tokens') await loadRewards();
   } catch (error) {
     if (seq === selectSeq) toast(error.message || '组织数据暂时不可用');
   }
@@ -258,6 +258,12 @@ async function bulk(action) {
   } catch (error) { toast(error.message || '批量操作失败'); }
 }
 
+function openAdminWork(item) {
+  if (item.hostedUrl) { window.open(API + '/' + item.hostedUrl, '_blank', 'noopener,noreferrer'); return; }
+  if (item.externalUrl) { window.open(item.externalUrl, '_blank', 'noopener,noreferrer'); return; }
+  toast(item.title + '：可前往作品广场查看详情或下载安装包。');
+}
+
 function renderWorks(items) {
   const wrap = $('adminWorks');
   wrap.replaceChildren();
@@ -265,8 +271,7 @@ function renderWorks(items) {
   for (const work of items) {
     const actions = work.status === 'published' || work.status === 'pending_review'
       ? [{ label: '全局下架', tone: 'danger', onClick: () => globalUnpublish(work) }] : [];
-    wrap.appendChild(UI.WorkCard(work, { density: 'compact', showStatus: true, actions,
-      onOpen: item => toast(item.title + '：演示作品仅展示卡片与预览说明。') }));
+    wrap.appendChild(UI.WorkCard(work, { density: 'compact', showStatus: true, actions, onOpen: openAdminWork }));
   }
 }
 
@@ -400,7 +405,7 @@ function switchAdminTab(tab) {
   document.querySelectorAll('.admin-tab').forEach(section => {
     section.classList.toggle('active', section.id === 'tab-' + tab);
   });
-  if (tab === 'rewards' && selectedOrg) loadRewards();
+  if (tab === 'tokens' && selectedOrg) loadRewards();
 }
 
 function readRewardSlots() {
@@ -571,7 +576,7 @@ async function settleRewards() {
 
 // Event bindings
 document.querySelectorAll('[data-admin-tab]').forEach(btn => btn.addEventListener('click', () => switchAdminTab(btn.dataset.adminTab)));
-$('refreshRewardPreview').onclick = loadRewards;
+$('refreshRewardPreview').onclick = () => selectedOrg && selectOrg(selectedOrg);
 $('settleRewardsBtn').onclick = UI.guard(settleRewards);
 $('rewardPeriodInput').addEventListener('input', () => { rewardPeriodDirty = true; });
 ['tierSlot10x', 'tierSlot5x', 'tierSlot1x'].forEach(id => $(id).addEventListener('change', loadRewards));
