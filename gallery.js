@@ -755,9 +755,9 @@ $('previewImageInput').addEventListener('change', event => handlePreviewImageFil
 ['workTitle', 'workSummary', 'workVersion', 'workPlatform', 'workExternalUrl'].forEach(id => {
   $(id).addEventListener('input', renderLivePreview);
 });
-$('submitWorkConfirm').onclick = submitWorkForm;
+$('submitWorkConfirm').onclick = UI.guard(submitWorkForm);
 
-$('commentSubmitBtn').onclick = submitComment;
+$('commentSubmitBtn').onclick = UI.guard(submitComment);
 $('commentInput').addEventListener('keydown', event => {
   if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') submitComment();
 });

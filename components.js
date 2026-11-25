@@ -250,5 +250,28 @@
     return wrap;
   }
 
-  window.UI = { el, svg, MetricCard, RoleBadge, WorkCard, TrendChart, Heatmap, OrgTree, ImportPreview, numberTicker };
+
+  function guard(handler) {
+    let busy = false;
+    return async function (event) {
+      if (busy) {
+        if (event && typeof event.preventDefault === 'function') event.preventDefault();
+        return;
+      }
+      busy = true;
+      const target = event && event.currentTarget;
+      const canDisable = target && 'disabled' in target;
+      if (canDisable) target.disabled = true;
+      if (target && target.classList) target.classList.add('is-busy');
+      try {
+        return await handler.call(this, event);
+      } finally {
+        busy = false;
+        if (canDisable) target.disabled = false;
+        if (target && target.classList) target.classList.remove('is-busy');
+      }
+    };
+  }
+
+  window.UI = { el, svg, MetricCard, RoleBadge, WorkCard, TrendChart, Heatmap, OrgTree, ImportPreview, numberTicker, guard };
 })();
