@@ -28,7 +28,7 @@ async function api(path, options) {
 }
 
 function denied() {
-  $('teacherNav').classList.add('hidden');
+  $('teacherAgentTools').classList.add('hidden');
   $('teacherLogout').classList.add('hidden');
   $('teacherMain').classList.add('hidden');
   $('teacherDenied').classList.remove('hidden');
@@ -46,7 +46,7 @@ async function boot() {
     if (me.role !== 'org_admin' && me.role !== 'platform_admin') { denied(); return; }
     orgId = me.org && me.org.id;
     if (!orgId) { denied(); return; }
-    $('teacherNav').classList.remove('hidden');
+    $('teacherAgentTools').classList.remove('hidden');
     $('teacherLogout').classList.remove('hidden');
     $('teacherMain').classList.remove('hidden');
     $('teacherOrg').textContent = me.org.name;
