@@ -1,0 +1,212 @@
+#!/usr/bin/env python3
+"""Campus HTTP client. Confirmation is a client convention, not an authorization boundary."""
+import argparse
+import json
+import os
+import pathlib
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
+import uuid
+
+HTTP_ERRORS = {
+    401: (10, "authentication_required"), 403: (11, "permission_denied"),
+    404: (12, "not_found"), 409: (13, "conflict"), 413: (14, "payload_too_large"),
+    429: (15, "rate_limited"),
+}
+ORG_READS = ("tree", "summary", "trends", "dashboard", "members", "featured", "audit", "works")
+
+
+class SafeParser(argparse.ArgumentParser):
+    def error(self, message):
+        self.exit(2, "Invalid arguments. Run campus-cli --help.\n")
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, request, response, code, message, headers, new_url):
+        return None
+
+
+def parser():
+    result = SafeParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
+                        epilog="""Commands:
+  me; onboarding get|update; key rotate; consume; logout
+  works list|mine|get|submit|update|withdraw|comments|comment|upvote|download|upload|preview-image
+  org tree|summary|trends|dashboard|members|member|featured|audit|works|review|feature|unpublish
+  accounts list
+Writes require confirmation unless --yes. Server authz always decides permissions.
+Credentials: CAMPUS_PAT only. Base URL: CAMPUS_BASE_URL or --base-url.
+Exit codes: 0 success; 2 usage; 3 cancelled; 10/11/12/13/14/15 for
+401/403/404/409/413/429; 16 server error; 17 transport; 18 other HTTP; 130 interrupted.""")
+    result.add_argument("command", choices=("me", "onboarding", "works", "key", "consume", "logout", "org", "accounts"))
+    result.add_argument("action", nargs="?")
+    result.add_argument("--base-url", default=os.environ.get("CAMPUS_BASE_URL", ""))
+    result.add_argument("--json", action="store_true")
+    result.add_argument("--yes", action="store_true")
+    result.add_argument("--timeout", type=float, default=20)
+    result.add_argument("--id")
+    result.add_argument("--org-id")
+    result.add_argument("--data", help="JSON object or @path; never put credentials here")
+    result.add_argument("--file", help="Binary upload file")
+    result.add_argument("--output", help="Download destination")
+    result.add_argument("--software-type", choices=("web", "app", "pc"), default="web")
+    result.add_argument("--days", type=int)
+    result.add_argument("--query")
+    result.add_argument("--amount", type=int)
+    result.add_argument("--request-id")
+    return result
+
+
+def segment(value):
+    if not value:
+        raise ValueError("missing identifier")
+    return urllib.parse.quote(value, safe="")
+
+
+def route(args):
+    action = args.action
+    if args.command == "me" and action is None:
+        return "GET", "/api/me"
+    if args.command == "onboarding" and action in (None, "get", "update"):
+        return ("POST" if action == "update" else "GET"), "/api/onboarding"
+    if args.command in ("consume", "logout") and action is None:
+        return "POST", "/api/" + args.command
+    if args.command == "key" and action == "rotate":
+        return "POST", "/api/key/rotate"
+    if args.command == "accounts" and action in (None, "list"):
+        return "GET", "/api/admin/accounts"
+    if args.command == "works":
+        if action in (None, "list", "submit"):
+            return ("POST" if action == "submit" else "GET"), "/api/works"
+        if action == "mine":
+            return "GET", "/api/works/mine"
+        if action in ("upload", "preview-image"):
+            return "POST", "/api/works/" + action
+        suffixes = {"get": ("GET", ""), "update": ("PATCH", ""), "withdraw": ("POST", "/withdraw"),
+                    "comments": ("GET", "/comments"), "comment": ("POST", "/comments"),
+                    "upvote": ("POST", "/upvote"), "download": ("GET", "/download")}
+        if action in suffixes:
+            method, suffix = suffixes[action]
+            return method, "/api/works/" + segment(args.id) + suffix
+    if args.command == "org":
+        base = "/api/orgs/" + segment(args.org_id)
+        if action in ORG_READS:
+            return "GET", base + "/" + action
+        if action == "member":
+            return "GET", base + "/members/" + segment(args.id)
+        if action in ("review", "feature", "unpublish"):
+            return "POST", base + "/works/" + segment(args.id) + "/" + action
+    raise ValueError("unsupported command")
+
+
+def request_parts(args, method, path):
+    payload = {}
+    if args.data:
+        raw = pathlib.Path(args.data[1:]).read_text(encoding="utf-8") if args.data.startswith("@") else args.data
+        payload = json.loads(raw)
+        if not isinstance(payload, dict):
+            raise ValueError("data must be an object")
+    query = {}
+    if args.org_id and args.command != "org":
+        query["orgId"] = args.org_id
+    if args.days is not None:
+        query["days"] = args.days
+    if args.query:
+        query["q"] = args.query
+    content_type = "application/json"
+    body = None
+    if method != "GET":
+        payload.setdefault("requestId", args.request_id or str(uuid.uuid4()))
+        if args.amount is not None:
+            payload["amount"] = args.amount
+        if args.command == "works" and args.action in ("upload", "preview-image"):
+            if not args.file:
+                raise ValueError("missing upload file")
+            upload = pathlib.Path(args.file)
+            body = upload.read_bytes()
+            content_type = "application/octet-stream"
+            if args.action == "upload":
+                query.update({"softwareType": args.software_type, "filename": upload.name})
+        else:
+            body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    if query:
+        path += "?" + urllib.parse.urlencode(query)
+    return path, body, content_type
+
+
+def emit_error(args, name, status=None):
+    if args.json:
+        print(json.dumps({"error": name, "status": status}))
+    else:
+        print("campus-cli: " + name + (" (HTTP %d)" % status if status else ""), file=sys.stderr)
+
+
+def run(args):
+    credential = os.environ.get("CAMPUS_PAT", "")
+    try:
+        base = urllib.parse.urlsplit(args.base_url)
+    except ValueError:
+        emit_error(args, "invalid_environment")
+        return 2
+    if (not credential.startswith("cpat_") or any(char.isspace() for char in credential) or
+            base.scheme not in ("http", "https") or not base.hostname or base.username is not None or
+            base.password is not None or base.query or base.fragment or credential in args.base_url or
+            not 0 < args.timeout <= 300):
+        emit_error(args, "invalid_environment")
+        return 2
+    try:
+        method, path = route(args)
+        if credential in path:
+            raise ValueError("credential in URL")
+        if args.command == "works" and args.action == "download" and not args.output:
+            raise ValueError("missing output file")
+        if method != "GET" and not args.yes:
+            if not sys.stdin.isatty():
+                emit_error(args, "confirmation_required_use_yes")
+                return 3
+            answer = input("Confirm %s %s? Client convention only; server authz applies. [y/N] " %
+                           (method, path))
+            if answer.strip().lower() not in ("y", "yes"):
+                emit_error(args, "cancelled")
+                return 3
+        path, body, content_type = request_parts(args, method, path)
+        if credential in path:
+            raise ValueError("credential in URL")
+        request = urllib.request.Request(args.base_url.rstrip("/") + path, data=body, method=method,
+                                         headers={"Authorization": "Bearer " + credential,
+                                                  "Content-Type": content_type})
+        opener = urllib.request.build_opener(NoRedirect())
+        with opener.open(request, timeout=args.timeout) as response:
+            raw = response.read()
+            if args.command == "works" and args.action == "download":
+                pathlib.Path(args.output).write_bytes(raw)
+                result = {"downloaded": True, "bytes": len(raw)}
+            else:
+                result = json.loads(raw.decode("utf-8"))
+        text = json.dumps(result, ensure_ascii=False, indent=None if args.json else 2)
+        print(text.replace(credential, "[redacted]"))
+        return 0
+    except urllib.error.HTTPError as exc:
+        status = exc.code
+        exc.close()
+        code, name = (16, "server_error") if status >= 500 else HTTP_ERRORS.get(status, (18, "http_error"))
+        emit_error(args, name, status)
+        return code
+    except (urllib.error.URLError, TimeoutError, ConnectionError):
+        emit_error(args, "transport_error")
+        return 17
+    except (OSError, ValueError, TypeError):
+        emit_error(args, "invalid_request_or_response")
+        return 2
+
+
+def main():
+    try:
+        return run(parser().parse_args())
+    except (KeyboardInterrupt, EOFError):
+        return 130
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>自习番茄钟 · Web 应用示例</title>
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;background:#f5f7fb;color:#17233c}
+.box{background:#fff;border:1px solid #e5eaf2;border-radius:20px;padding:34px 30px;width:min(92vw,420px);text-align:center;box-shadow:0 18px 40px #25345d0f}
+.modes{display:flex;gap:6px;justify-content:center;margin-bottom:22px}.m{border:1px solid #e5eaf2;background:#f8faff;padding:7px 14px;border-radius:20px;cursor:pointer;font:inherit;color:#51607d}
+.m.active{background:#17a673;border-color:#17a673;color:#fff;font-weight:700}
+.clock{font-size:64px;font-weight:800;letter-spacing:-2px;margin:10px 0 22px;font-variant-numeric:tabular-nums;color:#17233c}
+.actions{display:flex;gap:10px;justify-content:center}.primary{border:0;background:#17a673;color:#fff;padding:11px 26px;border-radius:10px;font:inherit;font-weight:700;cursor:pointer}
+.ghost{border:1px solid #d8deeb;background:#fff;color:#51607d;padding:11px 18px;border-radius:10px;font:inherit;cursor:pointer}
+</style></head><body><div class="box">
+<div style="color:#17a673;font-size:12px;font-weight:800;letter-spacing:1.2px">WEB APP DEMO</div>
+<h2 style="margin:4px 0 18px">自习番茄钟</h2>
+<div class="modes"><button class="m active" onclick="setMode(25,this)">专注 25 分钟</button><button class="m" onclick="setMode(5,this)">短休 5 分钟</button><button class="m" onclick="setMode(15,this)">长休 15 分钟</button></div>
+<div class="clock" id="clock">25:00</div>
+<div class="actions"><button class="primary" id="toggleBtn" onclick="toggle()">开始专注</button><button class="ghost" onclick="reset()">重置</button></div>
+<p style="color:#71809b;font-size:12px;margin:18px 0 0" id="done">今日已完成 0 个番茄</p>
+</div><script>
+let baseSec=25*60,left=baseSec,timer=null,done=0;
+function draw(){const m=String(Math.floor(left/60)).padStart(2,"0"),s=String(left%60).padStart(2,"0");document.getElementById("clock").textContent=m+":"+s;document.getElementById("toggleBtn").textContent=timer?"暂停":"开始专注";}
+window.setMode=(min,btn)=>{clearInterval(timer);timer=null;baseSec=min*60;left=baseSec;document.querySelectorAll(".m").forEach(n=>n.classList.remove("active"));btn.classList.add("active");draw();};
+window.toggle=()=>{if(timer){clearInterval(timer);timer=null;draw();return;}timer=setInterval(()=>{left--;if(left<=0){clearInterval(timer);timer=null;done++;document.getElementById("done").textContent="今日已完成 "+done+" 个番茄";left=baseSec;}draw();},1000);draw();};
+window.reset=()=>{clearInterval(timer);timer=null;left=baseSec;draw();};
+draw();
+</script></body></html>
