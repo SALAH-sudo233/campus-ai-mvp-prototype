@@ -51,9 +51,7 @@ async function boot() {
     $('teacherMain').classList.remove('hidden');
     $('teacherOrg').textContent = me.org.name;
     $('orgTitle').textContent = me.org.name;
-    $('orgSubtitle').textContent = ((me.labels && me.labels.admin) || '教师') + '视角 · 本组织成员、用量与精选作品';
-    $('importLink').href = 'import.html?org=' + encodeURIComponent(orgId);
-    $('importBtn').href = $('importLink').href;
+    $('orgSubtitle').textContent = ((me.labels && me.labels.admin) || '教师') + '视角 · 本组织用量、活跃度与精选作品';
     await Promise.all([loadDashboard(), loadWorks()]);
   } catch (error) {
     if (error.status === 401 || error.status === 403) denied(); else toast(error.message);
@@ -113,9 +111,9 @@ function renderRanking(rows) {
 }
 
 function matchesWorkStatus(work, tab) {
+  if (work.status === 'pending_review') return false;
   if (tab === 'featured') return work.status === 'published' && !!work.featured;
   if (tab === 'published') return work.status === 'published';
-  if (tab === 'pending_review') return work.status === 'pending_review';
   if (tab === 'inactive') return ['removed', 'withdrawn', 'rejected'].includes(work.status);
   return true;
 }
@@ -130,7 +128,6 @@ function renderWorkFilters() {
     ['all', '全部'],
     ['featured', '已精选'],
     ['published', '已发布'],
-    ['pending_review', '待审核'],
     ['inactive', '已下架']
   ];
   $('teacherWorkTabs').replaceChildren(...statusTabs.map(([key, label]) => {
@@ -164,10 +161,6 @@ function renderWorkCards() {
   }
   for (const work of items) {
     const actions = [];
-    if (work.status === 'pending_review') {
-      actions.push({ label: '通过', tone: 'primary', onClick: () => reviewWork(work, 'approve') });
-      actions.push({ label: '驳回', tone: 'danger', onClick: () => reviewWork(work, 'reject') });
-    }
     if (work.status === 'published') {
       actions.push({ label: work.featured ? '取消精选' : '精选', tone: 'outline', onClick: () => featureWork(work, !work.featured) });
       actions.push({ label: '下架', tone: 'danger', onClick: () => unpublishWork(work) });
@@ -179,20 +172,12 @@ function renderWorkCards() {
 async function loadWorks() {
   try {
     const data = await api('/api/orgs/' + encodeURIComponent(orgId) + '/works');
-    allOrgWorks = data.items || [];
+    allOrgWorks = (data.items || []).filter(w => w.status !== 'pending_review');
     renderWorkFilters();
     renderWorkCards();
   } catch (error) { toast(error.message || '作品列表暂时不可用'); }
 }
 
-async function reviewWork(work, decision) {
-  try {
-    await api('/api/orgs/' + encodeURIComponent(orgId) + '/works/' + encodeURIComponent(work.workId) + '/review', {
-      method: 'POST', body: JSON.stringify({ decision })
-    });
-    await Promise.all([loadWorks(), loadDashboard()]); toast(decision === 'approve' ? '作品已通过审核' : '作品已驳回');
-  } catch (error) { toast(error.message || '审核失败'); }
-}
 async function featureWork(work, featured) {
   try {
     await api('/api/orgs/' + encodeURIComponent(orgId) + '/works/' + encodeURIComponent(work.workId) + '/feature', {

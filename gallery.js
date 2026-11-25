@@ -780,7 +780,6 @@ async function boot() {
     $('studentNav').classList.add('hidden');
     $('galleryUser').textContent = (me.org && me.org.name) || me.identity || '';
     $('galleryLogout').textContent = '退出';
-    if (me.org && me.org.id) $('teacherMembersLink').href = 'import.html?org=' + encodeURIComponent(me.org.id);
     $('submitWorkBtn').classList.add('hidden');
     $('myWorksSection').classList.add('hidden');
     $('teacherSideCard').classList.remove('hidden');
