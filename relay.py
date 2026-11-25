@@ -24,6 +24,7 @@ NEWAPI_CHANNEL = "ch-newapi"
 BACKOFF_SECONDS = (30, 120, 600, 3600, 21600)
 MAX_ATTEMPTS = len(BACKOFF_SECONDS) + 1
 CREATING_LEASE_SECONDS = 60
+DELIVERY_LEASE_SECONDS = 60
 DEFAULT_TIMEOUT = 5.0
 TOKEN_NAME_LIMIT = 50
 ERROR_CATEGORIES = frozenset({
@@ -46,6 +47,7 @@ CREATE TABLE IF NOT EXISTS relay_keys (
   channel_id TEXT NOT NULL REFERENCES channels(id),
   status TEXT NOT NULL,
   state TEXT NOT NULL DEFAULT 'pending',
+  claim TEXT,
   provider_token_id INTEGER,
   token_name TEXT,
   quota INTEGER NOT NULL DEFAULT 0,
@@ -55,6 +57,8 @@ CREATE TABLE IF NOT EXISTS relay_keys (
   next_attempt_at REAL,
   last_error TEXT,
   delivered_at REAL,
+  delivery_claim TEXT,
+  delivery_claim_at REAL,
   issue_request_id TEXT NOT NULL,
   created_at REAL NOT NULL,
   revoked_at REAL,
@@ -62,8 +66,6 @@ CREATE TABLE IF NOT EXISTS relay_keys (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS one_active_key_per_owner
   ON relay_keys (owner_ref) WHERE status = 'active';
-CREATE INDEX IF NOT EXISTS idx_relay_keys_due ON relay_keys (state, next_attempt_at);
-CREATE INDEX IF NOT EXISTS idx_relay_keys_token_name ON relay_keys (token_name);
 CREATE TABLE IF NOT EXISTS relay_accounts (
   owner_ref TEXT PRIMARY KEY,
   user_id TEXT,
@@ -85,6 +87,7 @@ CHANNELS = [
 KEY_COLUMNS = {
     "user_id": "TEXT",
     "state": "TEXT DEFAULT 'pending'",
+    "claim": "TEXT",
     "provider_token_id": "INTEGER",
     "token_name": "TEXT",
     "quota": "INTEGER NOT NULL DEFAULT 0",
@@ -94,6 +97,8 @@ KEY_COLUMNS = {
     "next_attempt_at": "REAL",
     "last_error": "TEXT",
     "delivered_at": "REAL",
+    "delivery_claim": "TEXT",
+    "delivery_claim_at": "REAL",
 }
 
 
@@ -182,9 +187,11 @@ def init(path):
         for channel_id, label, status in CHANNELS:
             conn.execute("INSERT OR IGNORE INTO channels (id, label, status) VALUES (?, ?, ?)",
                          (channel_id, label, status))
-        conn.execute("UPDATE relay_keys SET state = CASE status "
-                     "WHEN 'active' THEN 'active' WHEN 'revoked' THEN 'revoked' "
-                     "ELSE COALESCE(state, 'pending') END WHERE state IS NULL OR state = ''")
+        # 老库新增 state 列时默认值会把所有旧行填成 pending，必须按 status 重新
+        # 判定；否则已吊销的行会被当成待补发而复活并重新返回明文。
+        conn.execute("UPDATE relay_keys SET state = status "
+                     "WHERE state IS NULL OR state = '' "
+                     "OR (state = 'pending' AND status IN ('active', 'creating', 'revoking', 'revoked', 'failed'))")
         for row in conn.execute("SELECT id, owner_ref, issue_request_id, token_name FROM relay_keys").fetchall():
             if not row["token_name"]:
                 conn.execute("UPDATE relay_keys SET token_name = ? WHERE id = ?",
@@ -501,15 +508,15 @@ def _mark(conn, key_id, state, **fields):
     conn.execute("UPDATE relay_keys SET %s WHERE id = ?" % ", ".join(columns), tuple(params))
 
 
-def _insert_key(conn, owner_ref, issue_request_id, quota):
+def _insert_key(conn, owner_ref, issue_request_id, quota, claim):
     key_id = "rk_" + secrets.token_hex(8)
     name = token_name(owner_ref, issue_request_id)
     conn.execute(
-        "INSERT INTO relay_keys (id, owner_ref, key_hash, key_hint, channel_id, status, state, issue_request_id, "
-        "token_name, quota, attempts, next_attempt_at, created_at) "
-        "VALUES (?, ?, ?, '', ?, 'creating', 'creating', ?, ?, ?, 0, ?, ?)",
-        (key_id, owner_ref, digest("pending:" + key_id), NEWAPI_CHANNEL, issue_request_id, name, int(quota or 0),
-         time.time() + CREATING_LEASE_SECONDS, time.time()))
+        "INSERT INTO relay_keys (id, owner_ref, key_hash, key_hint, channel_id, status, state, claim, "
+        "issue_request_id, token_name, quota, attempts, next_attempt_at, created_at) "
+        "VALUES (?, ?, ?, '', ?, 'creating', 'creating', ?, ?, ?, ?, 0, ?, ?)",
+        (key_id, owner_ref, digest("pending:" + key_id), NEWAPI_CHANNEL, claim, issue_request_id, name,
+         int(quota or 0), time.time() + CREATING_LEASE_SECONDS, time.time()))
     return _row(conn, key_id)
 
 
@@ -550,6 +557,7 @@ def prepare_issue(path, owner_ref, issue_request_id, quota=0, rotate=False):
         conn.execute("BEGIN IMMEDIATE")
         now = time.time()
         lease_until = now + CREATING_LEASE_SECONDS
+        claim = secrets.token_hex(8)
 
         def stale_creating(row):
             return row["next_attempt_at"] is None or row["next_attempt_at"] <= now
@@ -557,10 +565,11 @@ def prepare_issue(path, owner_ref, issue_request_id, quota=0, rotate=False):
         def resume(row):
             if quota and not row["quota"]:
                 conn.execute("UPDATE relay_keys SET quota = ? WHERE id = ?", (int(quota), row["id"]))
-            _mark(conn, row["id"], "creating", next_attempt_at=lease_until, last_error=None)
+            _mark(conn, row["id"], "creating", claim=claim, next_attempt_at=lease_until, last_error=None)
             conn.execute("COMMIT")
             return {"action": "network", "key_id": row["id"],
-                    "provider_token_id": row["provider_token_id"], "deliver_plaintext": True}
+                    "provider_token_id": row["provider_token_id"], "deliver_plaintext": True,
+                    "claim": claim, "lease": lease_until}
 
         replay = _replay_row(conn, owner_ref, issue_request_id)
         if replay is not None:
@@ -591,10 +600,15 @@ def prepare_issue(path, owner_ref, issue_request_id, quota=0, rotate=False):
             conn.execute("ROLLBACK")
             raise AlreadyIssued("该成员已有有效密钥，请使用重新生成")
 
+        revoke_ids = []
         existing = _existing_unfinished(conn, owner_ref)
         if existing is not None:
             if existing["state"] == "failed" and rotate:
-                _mark(conn, existing["id"], "revoked", revoked_at=now)
+                # 失败行可能已在上游建出 token（响应丢失或取明文失败）。轮换时不能
+                # 只在本地标 revoked，必须进 revoking 队列由 finish_revocations 同步撤销。
+                _mark(conn, existing["id"], "revoking", claim=None, revoked_at=now,
+                      next_attempt_at=now, attempts=0, last_error=None)
+                revoke_ids.append(existing["id"])
                 existing = None
             elif existing["state"] == "creating":
                 if stale_creating(existing):
@@ -612,9 +626,10 @@ def prepare_issue(path, owner_ref, issue_request_id, quota=0, rotate=False):
                 conn.execute("COMMIT")
                 return {"action": "final", "key_id": existing["id"], "deliver_plaintext": False}
 
-        row = _insert_key(conn, owner_ref, issue_request_id, quota)
+        row = _insert_key(conn, owner_ref, issue_request_id, quota, claim)
         conn.execute("COMMIT")
-        return {"action": "network", "key_id": row["id"], "provider_token_id": None, "deliver_plaintext": True}
+        return {"action": "network", "key_id": row["id"], "provider_token_id": None, "deliver_plaintext": True,
+                "claim": claim, "lease": row["next_attempt_at"], "revoke_ids": revoke_ids}
     except BaseException:
         if conn.in_transaction:
             conn.execute("ROLLBACK")
@@ -631,31 +646,92 @@ def _deliver_active_key(path, key_id, deliver_plaintext):
         conn.close()
     if row is None or row["state"] != "active" or not row["provider_token_id"]:
         return _result(row)
+    if not deliver_plaintext:
+        return _result(row, replayed=True)
+
+    # 先原子领取交付权，再调用上游取明文。并发的第二个请求看到交付租约后
+    # 直接返回不含明文的回执，保证同一份明文最多返回一次。
+    claim = secrets.token_hex(8)
+    claimed_at = time.time()
+    conn = connect(path)
     try:
-        plaintext = _client().get_key(row["provider_token_id"])
+        conn.execute("BEGIN IMMEDIATE")
+        cursor = conn.execute(
+            "UPDATE relay_keys SET delivery_claim = ?, delivery_claim_at = ? "
+            "WHERE id = ? AND state = 'active' AND provider_token_id IS NOT NULL AND delivered_at IS NULL "
+            "AND (delivery_claim IS NULL OR delivery_claim_at IS NULL OR delivery_claim_at <= ?)",
+            (claim, claimed_at, key_id, claimed_at - DELIVERY_LEASE_SECONDS))
+        claimed = cursor.rowcount == 1
+        row = _row(conn, key_id)
+        conn.execute("COMMIT")
+    except BaseException:
+        if conn.in_transaction:
+            conn.execute("ROLLBACK")
+        raise
+    finally:
+        conn.close()
+    if not claimed or row is None:
+        return _result(row)
+
+    provider_id = int(row["provider_token_id"])
+    try:
+        plaintext = _client().get_key(provider_id)
     except NewApiError as exc:
         conn = connect(path)
         try:
-            if exc.status == 404:
-                # 上游 token 已不存在：清掉失效 id，按确定性名称重新认领或创建。
-                conn.execute("UPDATE relay_keys SET state = 'pending', status = 'pending', provider_token_id = NULL, "
-                             "attempts = 0, next_attempt_at = ?, last_error = ? WHERE id = ? AND state = 'active'",
-                             (time.time(), exc.category, key_id))
-            else:
-                conn.execute("UPDATE relay_keys SET last_error = ? WHERE id = ? AND state = 'active'",
-                             (exc.category, key_id))
+            conn.execute("BEGIN IMMEDIATE")
+            current = _row(conn, key_id)
+            if current is not None and current["delivery_claim"] == claim:
+                if exc.status == 404 and current["state"] == "active":
+                    # 上游 token 已不存在：清掉失效 id，按确定性名称重新认领或创建。
+                    conn.execute("UPDATE relay_keys SET state = 'pending', status = 'pending', "
+                                 "provider_token_id = NULL, attempts = 0, next_attempt_at = ?, last_error = ?, "
+                                 "delivery_claim = NULL, delivery_claim_at = NULL WHERE id = ?",
+                                 (time.time(), exc.category, key_id))
+                elif current["state"] == "active":
+                    conn.execute("UPDATE relay_keys SET last_error = ?, delivery_claim = NULL, "
+                                 "delivery_claim_at = NULL WHERE id = ?",
+                                 (exc.category, key_id))
+                else:
+                    conn.execute("UPDATE relay_keys SET delivery_claim = NULL, delivery_claim_at = NULL "
+                                 "WHERE id = ?", (key_id,))
             row = _row(conn, key_id)
+            conn.execute("COMMIT")
+        except BaseException:
+            if conn.in_transaction:
+                conn.execute("ROLLBACK")
+            raise
         finally:
             conn.close()
         return _result(row)
-    delivered = time.time() if deliver_plaintext else row["delivered_at"]
+
     conn = connect(path)
     try:
-        conn.execute("UPDATE relay_keys SET delivered_at = ?, last_error = NULL WHERE id = ?", (delivered, key_id))
+        conn.execute("BEGIN IMMEDIATE")
+        current = _row(conn, key_id)
+        if (current is None or current["state"] != "active" or
+                current["provider_token_id"] != provider_id or current["delivery_claim"] != claim):
+            if current is not None and current["delivery_claim"] == claim:
+                conn.execute("UPDATE relay_keys SET delivery_claim = NULL, delivery_claim_at = NULL "
+                             "WHERE id = ?", (key_id,))
+            row = _row(conn, key_id)
+            conn.execute("COMMIT")
+            return _result(row)
+        cursor = conn.execute(
+            "UPDATE relay_keys SET delivered_at = ?, last_error = NULL, delivery_claim = NULL, "
+            "delivery_claim_at = NULL WHERE id = ? AND state = 'active' AND delivery_claim = ?",
+            (time.time(), key_id, claim))
         row = _row(conn, key_id)
+        conn.execute("COMMIT")
+    except BaseException:
+        if conn.in_transaction:
+            conn.execute("ROLLBACK")
+        raise
     finally:
         conn.close()
-    return _result(row, plaintext if deliver_plaintext else None, replayed=True)
+    if cursor.rowcount != 1:
+        return _result(row)
+    return _result(row, plaintext, replayed=True)
 
 
 def _result_for_path(path, key_id):
@@ -703,45 +779,43 @@ def finish_issue(job, deliver_plaintext=True):
         plaintext = token["key"]
     except NewApiError as exc:
         provider_id = exc.provider_token_id or provider_id
+        claim = job.get("claim")
         conn = connect(path)
+        result_key_id = None
         try:
             conn.execute("BEGIN IMMEDIATE")
             current = _row(conn, job["key_id"])
-            if current is None:
-                conn.execute("COMMIT")
-                return _result(None)
-            if current["state"] != "creating":
-                if provider_id:
-                    conn.execute("UPDATE relay_keys SET provider_token_id = ?, state = 'revoking', status = 'revoking', "
-                                 "next_attempt_at = ?, last_error = ? WHERE id = ?",
-                                 (provider_id, time.time(), exc.category, current["id"]))
-                conn.execute("COMMIT")
-            else:
-                attempts = int(current["attempts"] or 0) + 1
-                failed = exc.category == "quota_exhausted" or attempts >= MAX_ATTEMPTS
-                state = "failed" if failed else "pending"
-                next_attempt = None if failed else time.time() + BACKOFF_SECONDS[
-                    min(attempts - 1, len(BACKOFF_SECONDS) - 1)]
-                if exc.status == 404:
-                    # 旧 provider id 已失效，下一次按 token 名重新认领。
-                    provider_id = None
-                    conn.execute("UPDATE relay_keys SET provider_token_id = NULL WHERE id = ?", (current["id"],))
-                conn.execute("UPDATE relay_keys SET state = ?, status = ?, provider_token_id = COALESCE(?, provider_token_id), "
-                             "attempts = ?, next_attempt_at = ?, last_error = ? WHERE id = ?",
-                             (state, state, provider_id, attempts, next_attempt, exc.category, current["id"]))
-                conn.execute("COMMIT")
+            if current is not None:
+                result_key_id = current["id"]
+                owned = current["state"] == "creating" and (claim is None or current["claim"] == claim)
+                if owned:
+                    attempts = int(current["attempts"] or 0) + 1
+                    failed = exc.category == "quota_exhausted" or attempts >= MAX_ATTEMPTS
+                    state = "failed" if failed else "pending"
+                    next_attempt = None if failed else time.time() + BACKOFF_SECONDS[
+                        min(attempts - 1, len(BACKOFF_SECONDS) - 1)]
+                    if exc.status == 404:
+                        # 旧 provider id 已失效，下一次按 token 名重新认领。
+                        provider_id = None
+                        conn.execute("UPDATE relay_keys SET provider_token_id = NULL WHERE id = ?", (current["id"],))
+                    conn.execute("UPDATE relay_keys SET state = ?, status = ?, provider_token_id = COALESCE(?, provider_token_id), "
+                                 "attempts = ?, next_attempt_at = ?, last_error = ?, claim = NULL WHERE id = ?",
+                                 (state, state, provider_id, attempts, next_attempt, exc.category, current["id"]))
+            conn.execute("COMMIT")
         except BaseException:
             if conn.in_transaction:
                 conn.execute("ROLLBACK")
             raise
         finally:
             conn.close()
-        if provider_id and current["state"] not in ("creating", "revoking"):
-            finish_revocations([current["id"]], path)
-        return _result_for_path(path, current["id"])
+        if job.get("revoke_ids"):
+            finish_revocations(job["revoke_ids"], path)
+        return _result_for_path(path, result_key_id) if result_key_id else _result(None)
 
     old_ids = []
     cancelled = False
+    adopted = False
+    claim = job.get("claim")
     conn = connect(path)
     try:
         conn.execute("BEGIN IMMEDIATE")
@@ -749,19 +823,28 @@ def finish_issue(job, deliver_plaintext=True):
         if current is None:
             conn.execute("COMMIT")
             return _result(None)
-        if current["state"] != "creating":
-            cancelled = True
+        owned = current["state"] == "creating" and (claim is None or current["claim"] == claim)
+        if not owned:
+            if current["state"] == "active" and current["provider_token_id"] == provider_id:
+                # 另一个领取者已经把同一个上游 token 置为 active，不能删除。
+                adopted = True
+            elif current["state"] == "creating":
+                # 新的领取者会按确定性名称认领同一个上游 token，同样不能删除。
+                adopted = True
+            else:
+                cancelled = True
         else:
             for old in _active_rows(conn, current["owner_ref"]):
                 if old["id"] == current["id"]:
                     continue
-                _mark(conn, old["id"], "revoking", revoked_at=time.time(), next_attempt_at=time.time(), attempts=0)
+                _mark(conn, old["id"], "revoking", claim=None, revoked_at=time.time(),
+                      next_attempt_at=time.time(), attempts=0)
                 old_ids.append(old["id"])
             delivered_at = time.time() if deliver_plaintext else None
             # 上游 token 不设硬限额，额度只看平台台账；这里不再缓存 remain/used。
             conn.execute(
                 "UPDATE relay_keys SET state = 'active', status = 'active', provider_token_id = ?, key_hash = ?, "
-                "key_hint = ?, remaining_quota = NULL, used_quota = NULL, "
+                "key_hint = ?, remaining_quota = NULL, used_quota = NULL, claim = NULL, "
                 "attempts = 0, next_attempt_at = NULL, last_error = NULL, delivered_at = ?, revoked_at = NULL "
                 "WHERE id = ?",
                 (provider_id, digest(plaintext), hint_of(plaintext), delivered_at, current["id"]))
@@ -773,18 +856,35 @@ def finish_issue(job, deliver_plaintext=True):
     finally:
         conn.close()
 
+    if job.get("revoke_ids"):
+        finish_revocations(job["revoke_ids"], path)
+    if adopted:
+        return _result_for_path(path, job["key_id"])
+
     if cancelled:
         try:
             _client().delete_token(provider_id)
-            _set_revoked(path, job["key_id"])
         except NewApiError as exc:
             conn = connect(path)
             try:
-                conn.execute("UPDATE relay_keys SET state = 'revoking', status = 'revoking', provider_token_id = ?, "
-                             "next_attempt_at = ?, attempts = attempts + 1, last_error = ? WHERE id = ?",
-                             (provider_id, time.time() + BACKOFF_SECONDS[0], exc.category, job["key_id"]))
+                current = _row(conn, job["key_id"])
+                if current is not None and not (current["state"] == "active" and
+                                                current["provider_token_id"] != provider_id):
+                    conn.execute("UPDATE relay_keys SET state = 'revoking', status = 'revoking', provider_token_id = ?, "
+                                 "next_attempt_at = ?, attempts = attempts + 1, last_error = ?, claim = NULL "
+                                 "WHERE id = ?", (provider_id, time.time() + BACKOFF_SECONDS[0], exc.category,
+                                                  job["key_id"]))
             finally:
                 conn.close()
+        else:
+            conn = connect(path)
+            try:
+                current = _row(conn, job["key_id"])
+            finally:
+                conn.close()
+            if current is None or not (current["state"] == "active" and
+                                       current["provider_token_id"] != provider_id):
+                _set_revoked(path, job["key_id"])
         return _result_for_path(path, job["key_id"])
 
     if old_ids:
@@ -799,7 +899,8 @@ def _set_revoked(path, key_id):
     conn = connect(path)
     try:
         conn.execute("UPDATE relay_keys SET state = 'revoked', status = 'revoked', revoked_at = ?, "
-                     "next_attempt_at = NULL, last_error = NULL WHERE id = ?", (time.time(), key_id))
+                     "next_attempt_at = NULL, last_error = NULL, claim = NULL, delivery_claim = NULL, "
+                     "delivery_claim_at = NULL WHERE id = ?", (time.time(), key_id))
     finally:
         conn.close()
 
@@ -826,10 +927,12 @@ def prepare_revoke(path, owner_ref):
         now = time.time()
         for row in rows:
             if row["provider_token_id"]:
-                _mark(conn, row["id"], "revoking", revoked_at=now, next_attempt_at=now, attempts=0)
+                _mark(conn, row["id"], "revoking", claim=None, revoked_at=now,
+                      next_attempt_at=now, attempts=0)
                 jobs.append(row["id"])
             else:
-                _mark(conn, row["id"], "revoked", revoked_at=now, next_attempt_at=None, last_error=None)
+                _mark(conn, row["id"], "revoked", claim=None, revoked_at=now,
+                      next_attempt_at=None, last_error=None)
         conn.execute("COMMIT")
     except BaseException:
         if conn.in_transaction:
@@ -849,11 +952,26 @@ def finish_revocations(key_ids, path):
             conn.close()
         if row is None or row["state"] != "revoking":
             continue
-        if not row["provider_token_id"]:
-            _set_revoked(path, key_id)
-            continue
         try:
-            _client().delete_token(row["provider_token_id"])
+            provider_id = row["provider_token_id"]
+            if not provider_id:
+                # 失败/响应丢失的行可能没记下上游 id，但上游已按确定性名称建出
+                # token。删除前先按名称认领，避免只标本地 revoked 留下孤儿。
+                name = row["token_name"] or token_name(row["owner_ref"], row["issue_request_id"])
+                existing = _client().find_token(name)
+                if existing is None:
+                    _set_revoked(path, key_id)
+                    continue
+                provider_id = existing.get("id")
+                if not provider_id:
+                    raise NewApiError("upstream_5xx", "token id missing")
+                conn = connect(path)
+                try:
+                    conn.execute("UPDATE relay_keys SET provider_token_id = ? WHERE id = ? AND state = 'revoking'",
+                                 (int(provider_id), key_id))
+                finally:
+                    conn.close()
+            _client().delete_token(int(provider_id))
         except NewApiError as exc:
             attempts = int(row["attempts"] or 0) + 1
             delay = BACKOFF_SECONDS[min(max(attempts - 1, 0), len(BACKOFF_SECONDS) - 1)]
@@ -921,7 +1039,9 @@ def retry_due(path, owner_ref=None, org_id=None, now=None, limit_pending=1, limi
 
     for row in pending:
         _quota_lookup_for(path, quota_lookup, row)
-        lease_until = time.time() + CREATING_LEASE_SECONDS
+        claim = secrets.token_hex(8)
+        claim_now = time.time()
+        lease_until = claim_now + CREATING_LEASE_SECONDS
         conn = connect(path)
         try:
             conn.execute("BEGIN IMMEDIATE")
@@ -930,11 +1050,25 @@ def retry_due(path, owner_ref=None, org_id=None, now=None, limit_pending=1, limi
                 conn.execute("COMMIT")
                 continue
             if current["state"] == "pending":
-                _mark(conn, row["id"], "creating", next_attempt_at=lease_until, last_error=None)
+                cursor = conn.execute(
+                    "UPDATE relay_keys SET state = 'creating', status = 'creating', claim = ?, "
+                    "next_attempt_at = ?, last_error = NULL WHERE id = ? AND state = 'pending' "
+                    "AND (next_attempt_at IS NULL OR next_attempt_at <= ?)",
+                    (claim, lease_until, row["id"], claim_now))
             else:
-                conn.execute("UPDATE relay_keys SET next_attempt_at = ?, last_error = NULL WHERE id = ?",
-                             (lease_until, row["id"]))
-                current = _row(conn, row["id"])
+                if current["next_attempt_at"] is not None and current["next_attempt_at"] > claim_now:
+                    # 另一个补发者仍持有未过期的领取租约，不能重复发钥。
+                    conn.execute("COMMIT")
+                    continue
+                cursor = conn.execute(
+                    "UPDATE relay_keys SET claim = ?, next_attempt_at = ?, last_error = NULL "
+                    "WHERE id = ? AND state = 'creating' "
+                    "AND (next_attempt_at IS NULL OR next_attempt_at <= ?)",
+                    (claim, lease_until, row["id"], claim_now))
+            if cursor.rowcount != 1:
+                conn.execute("COMMIT")
+                continue
+            current = _row(conn, row["id"])
             conn.execute("COMMIT")
         except BaseException:
             if conn.in_transaction:
@@ -944,7 +1078,7 @@ def retry_due(path, owner_ref=None, org_id=None, now=None, limit_pending=1, limi
             conn.close()
         deliver = bool(allow_delivery_for and row["owner_ref"] == allow_delivery_for)
         job = {"action": "network", "key_id": row["id"], "provider_token_id": current["provider_token_id"],
-               "deliver_plaintext": deliver, "_path": path}
+               "deliver_plaintext": deliver, "_path": path, "claim": claim, "lease": lease_until}
         result = finish_issue(job, deliver_plaintext=deliver)
         if deliver and result.get("plaintext"):
             plaintext = result["plaintext"]
