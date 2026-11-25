@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>校园活动清单 · Web 应用示例</title>
+<style>
+body{margin:0;font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;background:#f5f7fb;color:#17233c}
+.wrap{max-width:760px;margin:0 auto;padding:32px 20px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+h1{margin:0;font-size:24px}.tag{background:#eef1ff;color:#4968ed;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}.chip{border:1px solid #d8deeb;background:#fff;padding:7px 14px;border-radius:20px;cursor:pointer;font:inherit;color:#51607d}
+.chip.active{background:#4968ed;border-color:#4968ed;color:#fff;font-weight:700}
+.list{display:flex;flex-direction:column;gap:12px}.card{background:#fff;border:1px solid #e5eaf2;border-radius:14px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:14px}
+.card b{display:block;font-size:16px}.card small{color:#71809b}.btn{border:1px solid #d8deeb;background:#fff;border-radius:9px;padding:7px 13px;cursor:pointer;font:inherit;color:#17233c}
+.btn.saved{background:#4968ed;border-color:#4968ed;color:#fff;font-weight:700}
+</style></head><body><div class="wrap">
+<div class="top"><div><h1>校园活动清单</h1><div style="color:#71809b;font-size:13px">Web 应用托管示例 · 筛选并收藏本周感兴趣的校园活动</div></div><span class="tag" id="favCount">已收藏 0 项</span></div>
+<div class="bar" id="cats"></div><div class="list" id="list"></div>
+</div><script>
+const ITEMS=[
+  {id:1,title:"软件学院 AI 编程沙龙",cat:"学习",time:"周二 19:00 · 东九楼 B201"},
+  {id:2,title:"百团大战社团招新",cat:"社团",time:"周三 16:30 · 韵苑操场"},
+  {id:3,title:"校园荧光夜跑 5km",cat:"运动",time:"周四 20:00 · 中心操场"},
+  {id:4,title:"开源 Agent 实战分享会",cat:"学习",time:"周五 15:00 · 南一楼 312"},
+  {id:5,title:"草地独立音乐节",cat:"社团",time:"周六 19:30 · 醉晚亭草坪"},
+  {id:6,title:"周末羽毛球约球局",cat:"运动",time:"周日 14:30 · 光谷体育馆"}
+];
+let cat="全部",fav=new Set();
+function render(){
+  document.getElementById("favCount").textContent="已收藏 "+fav.size+" 项";
+  const cats=["全部","学习","社团","运动"];
+  document.getElementById("cats").innerHTML=cats.map(c=>'<button class="chip '+(c===cat?'active':'')+'" data-cat="'+c+'">'+c+'</button>').join("");
+  document.querySelectorAll("#cats .chip").forEach(b=>b.onclick=()=>setCat(b.dataset.cat));
+  const rows=ITEMS.filter(x=>cat==="全部"||x.cat===cat);
+  document.getElementById("list").innerHTML=rows.map(x=>'<div class="card"><div><b>'+x.title+'</b><small>'+x.cat+' · '+x.time+'</small></div><button class="btn '+(fav.has(x.id)?'saved':'')+'" onclick="toggle('+x.id+')">'+(fav.has(x.id)?'已收藏 ★':'收藏')+'</button></div>').join("");
+}
+window.setCat=c=>{cat=c;render();};
+window.toggle=id=>{fav.has(id)?fav.delete(id):fav.add(id);render();};
+render();
+</script></body></html>

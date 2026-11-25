@@ -20,6 +20,7 @@ import importer
 import migrations
 import onboarding
 import org_service
+import pat_service
 import relay
 import roster
 import works_service
@@ -42,7 +43,8 @@ ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME")
 ADMIN_SESSION_SECONDS = 2 * 3600
 STATIC_FILES = {"/", "/index.html", "/admin", "/admin.html", "/teacher", "/teacher.html",
                 "/import", "/import.html", "/gallery", "/gallery.html", "/app.js", "/admin.js",
-                "/teacher.js", "/import.js", "/gallery.js", "/components.js", "/styles.css"}
+                "/teacher.js", "/import.js", "/gallery.js", "/components.js", "/styles.css",
+                "/agent-tools.js", "/cli/campus-cli", "/skills/campus-platform/SKILL.md"}
 MAX_JSON_BODY = 65536
 MAX_IMPORT_BODY = importer.MAX_BYTES
 LOCK = threading.Lock()
@@ -194,12 +196,32 @@ def _principal_for(conn, user_id, org_id=None):
     }
 
 
+def _principal_from_pat(token, conn):
+    row = conn.execute("SELECT * FROM pat_tokens WHERE token_hash = ?", (token_digest(token),)).fetchone()
+    context = org_service.AUTH_CONTEXT.get()
+    if context is not None:
+        context.update({"authMethod": "pat", "patId": row["id"] if row else None})
+    if row is None or row["revoked_at"] is not None or row["expires_at"] <= time.time():
+        raise authz.AuthzError(401, pat_service.REISSUE_MESSAGE)
+    principal = _principal_for(conn, row["user_id"])
+    if not principal or pat_service.permissions_shrank(row["role_snapshot"], principal["role"]):
+        raise authz.AuthzError(401, pat_service.REISSUE_MESSAGE)
+    student = conn.execute("SELECT owner_ref FROM students WHERE user_id = ? AND org_id = ? "
+                           "ORDER BY created_at LIMIT 1", (row["user_id"], principal["org_id"])).fetchone()
+    principal.update({"owner_ref": student["owner_ref"] if student else None,
+                      "auth_method": "pat", "pat_id": row["id"]})
+    conn.execute("UPDATE pat_tokens SET last_used_at = ? WHERE id = ?", (time.time(), row["id"]))
+    return principal
+
+
 def principal_from_token(token, conn=None):
     if not token:
         return None
     own = conn is None
     conn = conn or db()
     try:
+        if token.startswith("cpat_"):
+            return _principal_from_pat(token, conn)
         row = conn.execute("SELECT owner_ref, user_id, org_id, expires_at FROM sessions WHERE token_hash = ?",
                            (token_digest(token),)).fetchone()
         if row is None or row["expires_at"] < time.time():
@@ -211,6 +233,7 @@ def principal_from_token(token, conn=None):
         principal = _principal_for(conn, user_id, row["org_id"])
         if principal:
             principal["owner_ref"] = row["owner_ref"]
+            principal["auth_method"] = "session"
         return principal
     finally:
         if own:
@@ -851,6 +874,29 @@ def import_commit(principal, org_id, batch_id, request_id):
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
+    def handle_one_request(self):
+        context_token = org_service.AUTH_CONTEXT.set({"authMethod": "session", "patId": None})
+        self._audit_principal = None
+        self._audit_status = None
+        try:
+            return super().handle_one_request()
+        finally:
+            try:
+                if (self._audit_status is not None and getattr(self, "command", "GET") in
+                        ("POST", "PATCH", "PUT", "DELETE") and _bearer(self.headers)):
+                    principal = self._audit_principal or {}
+                    conn = db()
+                    try:
+                        org_service.audit(conn, principal.get("user_id"), principal.get("role"),
+                                          principal.get("org_id"), "http." + self.command.lower(),
+                                          "endpoint", urllib.parse.urlparse(self.path).path,
+                                          metadata={"result": "success" if self._audit_status < 400 else "error",
+                                                    "status": self._audit_status})
+                    finally:
+                        conn.close()
+            finally:
+                org_service.AUTH_CONTEXT.reset(context_token)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=ROOT, **kwargs)
 
@@ -858,6 +904,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         pass
 
     def _send(self, code, payload):
+        self._audit_status = code
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -916,7 +963,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         return self.rfile.read(length) if length else b""
 
     def _principal(self):
-        return principal_from_token(_bearer(self.headers))
+        principal = principal_from_token(_bearer(self.headers))
+        self._audit_principal = principal
+        return principal
 
     def _admin(self):
         return _admin_principal(_bearer(self.headers))
@@ -930,9 +979,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def _require_admin(self):
         token = _bearer(self.headers)
         if is_admin_token(token):
-            return {"kind": "platform", "user_id": None, "role": authz.PLATFORM_ADMIN, "org_id": None,
-                    "org": None, "admission_status": None}
-        principal = principal_from_token(token)
+            principal = {"kind": "platform", "user_id": None, "role": authz.PLATFORM_ADMIN, "org_id": None,
+                         "org": None, "admission_status": None}
+            self._audit_principal = principal
+            return principal
+        principal = self._principal()
         if principal:
             if principal["role"] not in (authz.PLATFORM_ADMIN, authz.ORG_ADMIN):
                 raise authz.AuthzError(403, "无权访问该资源")
@@ -968,6 +1019,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 principal = self._require_user()
                 authz.require(principal, "profile", "read_self", owner_user_id=principal["user_id"])
                 return self._send(*do_me(principal["owner_ref"]))
+            if path == "/api/me/tokens":
+                principal = self._require_user()
+                authz.require(principal, "profile", "read_self", owner_user_id=principal["user_id"])
+                conn = db()
+                try:
+                    return self._send(200, pat_service.list_tokens(conn, principal))
+                finally:
+                    conn.close()
             if path == "/api/onboarding":
                 principal = self._require_user()
                 authz.require(principal, "onboarding", "read", owner_user_id=principal["user_id"])
@@ -1255,6 +1314,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 ValueError) as exc:
             return self._error(exc)
 
+    def do_DELETE(self):
+        path = urllib.parse.urlparse(self.path).path
+        try:
+            match = re.fullmatch(r"/api/me/tokens/([^/]+)", path)
+            if not match:
+                return self._send(404, {"error": "未知接口"})
+            principal = self._require_user()
+            authz.require(principal, "profile", "read_self", owner_user_id=principal["user_id"])
+            conn = db()
+            try:
+                return self._send(200, pat_service.revoke(conn, principal, match.group(1)))
+            finally:
+                conn.close()
+        except (authz.AuthzError, ValueError) as exc:
+            return self._error(exc)
+
     def do_PATCH(self):
         parsed = urllib.parse.urlparse(self.path)
         data = self._body()
@@ -1323,6 +1398,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         try:
+            if path == "/api/me/tokens":
+                principal = self._require_user()
+                authz.require(principal, "profile", "read_self", owner_user_id=principal["user_id"])
+                data = self._body()
+                conn = db()
+                try:
+                    return self._send(*pat_service.create(conn, principal, data))
+                finally:
+                    conn.close()
             if path == "/api/orgs":
                 principal = self._require_admin()
                 authz.require(principal, "organizations", "create")

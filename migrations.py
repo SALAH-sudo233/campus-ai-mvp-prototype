@@ -341,6 +341,17 @@ def _migration_7(conn):
     _fold_email_case(conn)
 
 
+def _migration_10(conn):
+    conn.execute("""CREATE TABLE pat_tokens (
+        id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id),
+        token_hash TEXT NOT NULL UNIQUE, token_hint TEXT NOT NULL, label TEXT NOT NULL,
+        role_snapshot TEXT NOT NULL, org_snapshot TEXT, created_at REAL NOT NULL,
+        created_by TEXT NOT NULL, expires_at REAL NOT NULL, last_used_at REAL,
+        revoked_at REAL, revoked_by TEXT, request_id TEXT NOT NULL,
+        UNIQUE(user_id, request_id))""")
+    conn.execute("CREATE INDEX idx_pat_user ON pat_tokens(user_id, created_at)")
+
+
 MIGRATIONS = [
     (1, "legacy-schema", _migration_1),
     (2, "org-schema", _migration_2),
@@ -353,6 +364,7 @@ MIGRATIONS = [
         None if "quota_limit" in _columns(conn, "organizations")
         else conn.execute("ALTER TABLE organizations ADD COLUMN quota_limit INTEGER")
     )),
+    (10, "personal-access-tokens", _migration_10),
 ]
 
 

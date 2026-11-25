@@ -1,14 +1,19 @@
 """组织、成员、审计与批量操作。权限判断在 server 层按 authz 矩阵完成。"""
 import json
 import time
+from contextvars import ContextVar
+
+AUTH_CONTEXT = ContextVar("campus_audit_auth", default=None)
 
 
 def audit(conn, actor_user_id, actor_role, org_id, action, resource_type, resource_id, request_id=None, metadata=None):
+    details = dict(metadata or {})
+    details.update(AUTH_CONTEXT.get() or {})
     conn.execute(
         "INSERT INTO audit_events (actor_user_id, actor_role, org_id, action, resource_type, resource_id, "
         "request_id, metadata_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (actor_user_id, actor_role, org_id, action, resource_type, resource_id, request_id,
-         json.dumps(metadata or {}, ensure_ascii=False), time.time()))
+         json.dumps(details, ensure_ascii=False), time.time()))
 
 
 def list_audit(conn, org_id=None, limit=100):
