@@ -134,7 +134,7 @@ async function selectOrg(orgId) {
   $('selectedOrgLabel').textContent = label;
   $('memberOrgHint').textContent = '当前组织：' + (org ? org.name : orgId) + ' · 支持录入学生/老师、CSV 批量导入与批量操作。';
   $('worksOrgHint').textContent = '当前组织：' + (org ? org.name : orgId) + ' · 平台管理员可全局下架。';
-  $('rewardsOrgHint').textContent = '当前组织：' + (org ? org.name : orgId) + ' · 平台额外激励（不扣减组织原定额度）· 纯按有效点赞排序，单件作品仅获奖一次。';
+  $('rewardsOrgHint').textContent = '当前组织：' + (org ? org.name : orgId) + ' · 每两周评审一次 · 平台额外激励（不扣减组织原定额度）· 纯按有效点赞排序，单件作品不重复获奖。';
 
   const memberQuery = ($('adminMemberSearch').value || '').trim();
   const memberSuffix = memberQuery ? '?q=' + encodeURIComponent(memberQuery) : '';

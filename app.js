@@ -71,7 +71,7 @@ async function loadProductConfig() {
   try {
     productConfig = await fetch(API + '/api/config').then(resp => resp.json());
     for (const node of document.querySelectorAll('[data-product-name]')) node.textContent = productConfig.productName;
-    document.title = productConfig.productName + ' · 我的作品';
+    document.title = productConfig.productName + ' · 我的创作';
   } catch (error) { productConfig = { productName: '创作平台', demoLoginEnabled: false }; }
   const quick = $('quickLoginBtn');
   if (quick) quick.classList.toggle('hidden', !productConfig.demoLoginEnabled);
@@ -159,7 +159,7 @@ function renderAccount(next) {
 
 function applyAdmission() {
   $('pendingBanner').classList.toggle('hidden', !pendingReview);
-  const blocked = [$('demoUseBtn'), $('rotateKeyBtn'), $('createBtn'), $('goPublishBtn'), $('galleryQuick'), $('galleryNav')];
+  const blocked = [$('demoUseBtn'), $('rotateKeyBtn'), $('goPublishBtn'), $('galleryQuick'), $('galleryNav')];
   for (const node of blocked) {
     if (!node) continue;
     if ('disabled' in node) node.disabled = pendingReview;
@@ -322,10 +322,6 @@ $('galleryNav').addEventListener('click', event => {
 $('galleryQuick').onclick = () => {
   if (pendingReview) { toast(PENDING_HINT); return; }
   window.location.href = 'gallery.html';
-};
-$('createBtn').onclick = () => {
-  if (pendingReview) { toast(PENDING_HINT); return; }
-  window.location.href = 'gallery.html?submit=1';
 };
 
 function openModal(title, text) { $('modalTitle').textContent = title; $('modalText').textContent = text; $('modal').classList.remove('hidden'); }

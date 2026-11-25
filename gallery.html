@@ -11,7 +11,7 @@
   <header class="topbar">
     <div class="wordmark"><span class="brand-mark small">AI</span><span data-product-name>创作平台</span><span class="muted hidden" id="galleryRoleTag">教师端</span></div>
     <nav class="topnav hidden" id="studentNav" aria-label="学生主导航">
-      <a class="navbtn" href="index.html">我的作品</a>
+      <a class="navbtn" href="index.html">我的创作</a>
       <button class="navbtn active">作品广场</button>
     </nav>
     <nav class="topnav hidden" id="teacherNav" aria-label="教师主导航">
@@ -37,10 +37,24 @@
         <div>
           <p class="eyebrow">CAMPUS SOFTWARE LAUNCHES</p>
           <h2>作品广场</h2>
-          <p class="muted">学生自主使用 Token 开发的 Web 应用、App 与 PC 软件，发布即上榜，有效点赞决定排名，最受欢迎作品可获平台最高 10× 额外 Token 奖励。</p>
         </div>
         <button class="primary hidden" id="submitWorkBtn">＋ 发布我的软件</button>
       </div>
+
+      <section class="reward-promo-banner" id="rewardRuleCard" aria-label="平台作品奖励计划">
+        <div class="reward-promo-left">
+          <div class="reward-promo-eyebrow">
+            <span class="reward-promo-tag">🏆 平台额外激励</span>
+            <span>每两周评审一次 · 不扣减组织原定额度</span>
+          </div>
+          <h3 class="reward-promo-title">发布你的 AI 软件作品，冲榜赢最高 <em>10×</em> 额外 Token 奖励</h3>
+          <p class="reward-promo-sub" id="rewardPoolMeta">支持 Web 应用、App 与 PC 软件，发布即上榜，有效点赞决定排名。</p>
+        </div>
+        <div class="reward-promo-right">
+          <div id="rewardTierList" class="reward-promo-tiers"></div>
+          <button type="button" class="reward-rules-trigger" id="openRewardRulesBtn">查看评审规则与注意事项 →</button>
+        </div>
+      </section>
 
       <div class="ph-toolbar">
         <div class="ph-cats" id="phCategories" role="tablist" aria-label="软件类型筛选"></div>
@@ -69,13 +83,6 @@
         </section>
 
         <aside class="ph-sidebar">
-          <section class="panel ph-side-card reward-rule-card" id="rewardRuleCard">
-            <div class="ph-side-head"><h3>🏆 平台作品奖励</h3><span class="badge reward">额外激励</span></div>
-            <p class="muted reward-rule-desc" id="rewardRuleDesc">按有效点赞排名由平台统一结算，不扣减组织原定额度；单件作品仅获奖一次。</p>
-            <div id="rewardTierList" class="reward-tier-list"></div>
-            <div id="rewardPoolMeta" class="reward-pool-meta muted"></div>
-          </section>
-
           <section class="panel ph-side-card">
             <div class="ph-side-head"><h3>榜单焦点</h3><span class="muted">Top 3</span></div>
             <div id="phTopSpotlight" class="ph-spotlight"></div>
@@ -191,6 +198,49 @@
       <div class="modal-actions">
         <button class="ghost" data-close-modal="submitWorkModal">取消</button>
         <button class="primary" id="submitWorkConfirm">立即发布上榜</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="rewardRulesModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="rewardRulesTitle">
+    <div class="modal-box modal-wide reward-rules-box">
+      <button class="close" data-close-modal="rewardRulesModal" aria-label="关闭">×</button>
+      <p class="eyebrow reward-modal-eyebrow">BIWEEKLY REWARD RULES</p>
+      <h3 id="rewardRulesTitle">🏆 作品奖励评审规则与注意事项</h3>
+      <p class="muted modal-desc">鼓励同学围绕校园真实场景持续创作可体验的软件作品，由平台每两周统一评审并额外发放 Token 奖励。</p>
+
+      <section class="rule-block">
+        <h4>1. 评审周期与奖励档位</h4>
+        <ul class="rule-list">
+          <li><b>评审周期：</b>原则上<b>每两周评审结算一次</b>，由平台管理员按期复核并统一公布获奖名单、发放奖励。</li>
+          <li><b>资金来源：</b>奖励 Token 属于<b>平台额外激励</b>，直接入账到作者个人账本，<b>不扣减</b>所在学院/组织的原有额度池。</li>
+        </ul>
+        <div id="rewardRulesTiers" class="reward-rules-tiers"></div>
+        <p class="hint" id="rewardRulesBaseNote"></p>
+      </section>
+
+      <section class="rule-block">
+        <h4>2. 评审与排序规则</h4>
+        <ul class="rule-list">
+          <li><b>入围范围：</b>本组织内状态为「已发布」的学生原创软件作品（不含平台内置演示示例，也不含已撤回、已下架作品），且当期至少获得 <b>1 个有效点赞</b>。</li>
+          <li><b>有效点赞口径：</b>仅统计本组织内「已准入」成员的去重点赞（每人每作品限 1 票）；<b>作者给自己点赞不计入有效票数</b>。</li>
+          <li><b>排序与破平：</b>纯按有效点赞数从高到低排序；有效赞数相同时，按作品发布时间更早者优先。按排名依次授予一、二、三等奖（若当期有效入围作品少于总名额，按实际入围件数发放）。</li>
+          <li><b>到账查询：</b>平台确认结算后奖励即时到账，作品广场与详情页将自动点亮 🏆 获奖徽章；作者可在「我的创作 → 我的看板 → Token 使用记录」中查看入账流水。</li>
+        </ul>
+      </section>
+
+      <section class="rule-block rule-block-warn">
+        <h4>3. 注意事项</h4>
+        <ul class="rule-list">
+          <li><b>单件作品不重复获奖：</b>每件作品终身仅可获得一次平台榜单奖励，已获奖作品不再参与后续期次的重复评选，鼓励持续创作新作品。</li>
+          <li><b>严禁刷票与搬运抄袭：</b>禁止拉小号、互刷、非真实体验刷赞或直接搬运他人作品参评；平台复核发现异常数据有权取消当期获奖资格或下架作品。</li>
+          <li><b>保持作品可访问：</b>参评作品需确保托管网页能正常打开，或安装包/访问链接真实有效；结算前若作品已撤回、下架或作者账号被停用/待复核，则不参与当期发奖。</li>
+          <li><b>多身份不重复发奖：</b>同一作者若同时拥有校园邮箱与学号等多个登录身份，同一件获奖作品仅向其主账户发放 1 份奖励。</li>
+        </ul>
+      </section>
+
+      <div class="modal-actions">
+        <button class="primary" data-close-modal="rewardRulesModal">我知道了</button>
       </div>
     </div>
   </div>

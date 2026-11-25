@@ -243,33 +243,53 @@ function renderFeed() {
   });
 }
 
+function defaultRewardTiers() {
+  return [
+    { code: 'tier_10x', label: '一等奖', multiplier: 10, slots: 1, amount: 1000000 },
+    { code: 'tier_5x', label: '二等奖', multiplier: 5, slots: 5, amount: 500000 },
+    { code: 'tier_1x', label: '三等奖', multiplier: 1, slots: 10, amount: 100000 }
+  ];
+}
+
 function renderRewardCard() {
   const listWrap = $('rewardTierList');
   const metaWrap = $('rewardPoolMeta');
   if (!listWrap || !metaWrap) return;
   const data = rewardSummary;
-  const tiers = (data && data.tiers) || [
-    { code: 'tier_10x', label: '一等奖', multiplier: 10, slots: 1, amount: 1000000 },
-    { code: 'tier_5x', label: '二等奖', multiplier: 5, slots: 5, amount: 500000 },
-    { code: 'tier_1x', label: '三等奖', multiplier: 1, slots: 10, amount: 100000 }
-  ];
+  const tiers = (data && data.tiers) || defaultRewardTiers();
   const medals = ['🥇', '🥈', '🥉'];
-  listWrap.replaceChildren(...tiers.map((tier, idx) => el('div', { className: 'reward-tier-row' }, [
+  listWrap.replaceChildren(...tiers.map((tier, idx) => el('div', { className: 'reward-promo-tier' }, [
+    el('span', { className: 'reward-promo-tier-label', text: (medals[idx] || '🏅') + ' ' + tier.label }),
+    el('strong', { className: 'reward-promo-tier-mult', text: tier.multiplier + '× Token' }),
+    el('small', { text: '每期 ' + tier.slots + ' 名' })
+  ])));
+  if (data) {
+    const progress = data.rewardedWorkCount > 0
+      ? ('本组织已奖励 ' + data.rewardedWorkCount + ' 件作品，累计发放 +' + Number(data.totalAwarded || 0).toLocaleString('zh-CN') + ' Token')
+      : ('当前已有 ' + (data.eligibleCandidateCount || 0) + ' 件学生作品参与本期冲榜');
+    metaWrap.textContent = '支持 Web 应用、App 与 PC 软件，发布即上榜，有效点赞决定排名 · ' + progress;
+  } else {
+    metaWrap.textContent = '支持 Web 应用、App 与 PC 软件，发布即上榜，有效点赞决定排名。';
+  }
+}
+
+function renderRewardRulesModal() {
+  const wrap = $('rewardRulesTiers');
+  const note = $('rewardRulesBaseNote');
+  if (!wrap || !note) return;
+  const data = rewardSummary;
+  const tiers = (data && data.tiers) || defaultRewardTiers();
+  const medals = ['🥇', '🥈', '🥉'];
+  wrap.replaceChildren(...tiers.map((tier, idx) => el('div', { className: 'reward-tier-row' }, [
     el('div', { className: 'reward-tier-name' }, [
       el('span', { className: 'reward-medal', text: medals[idx] || '🏅' }),
       el('b', { text: tier.label }),
-      el('small', { className: 'muted', text: tier.multiplier + '× · ' + tier.slots + ' 名' })
+      el('small', { className: 'muted', text: '初始额度的 ' + tier.multiplier + ' 倍 · 每期 ' + tier.slots + ' 名' })
     ]),
-    el('strong', { className: 'reward-tier-amount', text: '+' + Number(tier.amount || 0).toLocaleString('zh-CN') + ' Token' })
+    el('strong', { className: 'reward-tier-amount', text: '+' + Number(tier.amount || 0).toLocaleString('zh-CN') + ' Token / 件' })
   ])));
-  if (data) {
-    const awardedText = data.totalAwarded > 0
-      ? ('已发放 ' + Number(data.totalAwarded).toLocaleString('zh-CN') + ' Token（' + data.rewardedWorkCount + ' 件获奖）')
-      : ('当前 ' + (data.eligibleCandidateCount || 0) + ' 件作品参与本期冲榜');
-    metaWrap.textContent = '基准初始额度 ' + Number(data.baseQuota || 100000).toLocaleString('zh-CN') + ' Token · ' + awardedText;
-  } else {
-    metaWrap.textContent = '平台额外激励，不扣减组织原定额度。';
-  }
+  const baseQuota = Number((data && data.baseQuota) || 100000);
+  note.textContent = '当前组织基准初始额度为 ' + baseQuota.toLocaleString('zh-CN') + ' Token（单人初始份额），具体每期名额可由平台管理员在结算前按参与规模微调。';
 }
 
 function renderSidebar() {
@@ -799,6 +819,7 @@ $('phSearch').addEventListener('input', event => { searchQuery = event.target.va
 
 $('submitWorkBtn').onclick = () => openCreateModal('web');
 $('sideSubmitBtn').onclick = () => openCreateModal('web');
+$('openRewardRulesBtn').onclick = () => { renderRewardRulesModal(); openModal('rewardRulesModal'); };
 document.querySelectorAll('[data-sw-type]').forEach(btn => btn.addEventListener('click', () => setFormSwType(btn.dataset.swType, false)));
 document.querySelectorAll('#aiToolChips .chip').forEach(chip => chip.addEventListener('click', () => {
   const t = chip.dataset.tool;
