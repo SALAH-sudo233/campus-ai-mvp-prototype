@@ -29,8 +29,8 @@ if ! id -u "${SERVICE_USER}" >/dev/null 2>&1; then
 fi
 
 echo "==> 2/5 同步后端代码到 ${APP_DIR}"
-PY_FILES="server.py app_server.py config.py authz.py identity.py migrations.py migrate.py importer.py analytics.py onboarding.py works_service.py org_service.py relay.py roster.py"
-WEB_FILES="index.html admin.html teacher.html import.html gallery.html app.js admin.js teacher.js import.js gallery.js components.js styles.css"
+PY_FILES="server.py app_server.py config.py authz.py identity.py migrations.py migrate.py importer.py analytics.py onboarding.py works_service.py org_service.py relay.py roster.py pat_service.py rewards_service.py"
+WEB_FILES="index.html admin.html teacher.html import.html gallery.html app.js admin.js teacher.js import.js gallery.js components.js agent-tools.js styles.css"
 mkdir -p "${APP_DIR}"
 if [ -n "$(ls -A "${APP_DIR}" 2>/dev/null)" ]; then
   BACKUP_DIR="${APP_DIR}.bak-$(date +%Y%m%d-%H%M%S)"

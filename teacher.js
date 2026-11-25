@@ -70,7 +70,8 @@ async function loadDashboard() {
       UI.MetricCard({ label: '活跃成员', value: summary.activeMemberCount, hint: '近 30 天有使用', tone: 'accent' }),
       UI.MetricCard({ label: '总消耗', value: summary.totalConsumed, unit: ' Token', hint: '平台记账消耗' }),
       UI.MetricCard({ label: '剩余额度', value: summary.remainingQuota, unit: ' Token',
-        hint: '平台账面剩余 · 人均 ' + Number(summary.memberQuota || 0).toLocaleString('zh-CN') })
+        hint: '平台账面剩余 · 人均 ' + Number(summary.memberQuota || 0).toLocaleString('zh-CN') +
+          (summary.rewardTotal > 0 ? (' · 另含作品奖励 +' + fmt(summary.rewardTotal)) : '') })
     );
     $('trendChart').replaceChildren(UI.TrendChart(data.trend));
     $('heatmap').replaceChildren(UI.Heatmap(data.heatmap));

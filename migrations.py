@@ -361,6 +361,41 @@ def _migration_10(conn):
     conn.execute("CREATE INDEX idx_pat_user ON pat_tokens(user_id, created_at)")
 
 
+def _migration_11(conn):
+    conn.execute("""CREATE TABLE IF NOT EXISTS reward_settlements (
+        id TEXT PRIMARY KEY,
+        org_id TEXT NOT NULL REFERENCES organizations(id),
+        period_label TEXT NOT NULL,
+        base_quota INTEGER NOT NULL,
+        tiers_json TEXT NOT NULL,
+        total_awarded INTEGER NOT NULL,
+        winner_count INTEGER NOT NULL,
+        settled_by TEXT,
+        request_id TEXT NOT NULL,
+        created_at REAL NOT NULL,
+        UNIQUE(org_id, request_id))""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_reward_settlements_org "
+                 "ON reward_settlements(org_id, created_at DESC)")
+    conn.execute("""CREATE TABLE IF NOT EXISTS work_rewards (
+        id TEXT PRIMARY KEY,
+        settlement_id TEXT NOT NULL REFERENCES reward_settlements(id),
+        org_id TEXT NOT NULL REFERENCES organizations(id),
+        work_id TEXT NOT NULL UNIQUE REFERENCES works(work_id),
+        owner_user_id TEXT NOT NULL REFERENCES users(id),
+        owner_ref TEXT,
+        rank INTEGER NOT NULL,
+        tier_code TEXT NOT NULL,
+        tier_label TEXT NOT NULL,
+        multiplier INTEGER NOT NULL,
+        amount INTEGER NOT NULL,
+        valid_upvotes INTEGER NOT NULL,
+        created_at REAL NOT NULL)""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_work_rewards_org "
+                 "ON work_rewards(org_id, created_at DESC)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_work_rewards_owner "
+                 "ON work_rewards(owner_user_id, created_at DESC)")
+
+
 MIGRATIONS = [
     (1, "legacy-schema", _migration_1),
     (2, "org-schema", _migration_2),
@@ -375,6 +410,7 @@ MIGRATIONS = [
     )),
     (9, "demo-login-and-pilot-quota", _migration_9),
     (10, "personal-access-tokens", _migration_10),
+    (11, "work-rewards", _migration_11),
 ]
 
 

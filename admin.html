@@ -31,6 +31,7 @@
         <div class="wordmark"><span class="brand-mark small">AD</span><span>平台管理</span></div>
         <nav class="topnav">
           <button class="navbtn active" data-admin-tab="orgs">组织管理</button>
+          <button class="navbtn" data-admin-tab="rewards">作品奖励</button>
         </nav>
         <div class="user-menu">
           <select id="orgSwitcher" class="compact-select org-switcher" aria-label="切换当前组织"></select>
@@ -75,7 +76,60 @@
           </section>
         </section>
 
+        <section id="tab-rewards" class="admin-tab">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">WORK REWARDS</p>
+              <h2>作品奖励统一结算</h2>
+              <p class="muted" id="rewardsOrgHint">平台额外激励（不扣减组织原定额度）· 纯按有效点赞排序（排除自赞、已获奖作品不重复获奖）。</p>
+            </div>
+            <button class="outline" id="refreshRewardPreview">刷新候选榜</button>
+          </div>
 
+          <div id="rewardOverviewStats" class="stats admin-overview-stats"></div>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>本期结算配置与候选预览</h3>
+                <p class="muted" id="rewardBaseHint">按组织成员初始额度的 10× / 5× / 1× 三档发放，可按需微调各档名额或勾选排除异常作品。</p>
+              </div>
+              <button class="primary" id="settleRewardsBtn">确认统一结算发奖</button>
+            </div>
+
+            <div class="reward-config-bar">
+              <label class="reward-field period-field">
+                <span>结算期次</span>
+                <input id="rewardPeriodInput" maxlength="60" placeholder="例如 2026 第 1 期" />
+              </label>
+              <label class="reward-field tier-field">
+                <span>🥇 一等奖（10×）名额</span>
+                <input id="tierSlot10x" type="number" min="0" max="200" value="1" />
+                <small class="muted" id="tierAmount10x"></small>
+              </label>
+              <label class="reward-field tier-field">
+                <span>🥈 二等奖（5×）名额</span>
+                <input id="tierSlot5x" type="number" min="0" max="200" value="5" />
+                <small class="muted" id="tierAmount5x"></small>
+              </label>
+              <label class="reward-field tier-field">
+                <span>🥉 三等奖（1×）名额</span>
+                <input id="tierSlot1x" type="number" min="0" max="200" value="10" />
+                <small class="muted" id="tierAmount1x"></small>
+              </label>
+            </div>
+
+            <div class="reward-preview-summary" id="rewardPreviewSummary">正在加载候选榜……</div>
+            <div class="table-scroll"><table class="data-table" id="rewardCandidatesTable"></table></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div><h3>历史结算与发奖记录</h3><p class="muted">每期结算批次与获奖作品明细，发奖后自动写入作者账本并公示于作品广场。</p></div>
+            </div>
+            <div id="rewardHistoryList" class="reward-history-list"></div>
+          </section>
+        </section>
       </div>
     </section>
   </main>

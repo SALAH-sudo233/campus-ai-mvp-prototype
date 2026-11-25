@@ -5,6 +5,12 @@ PRODUCT_NAME = "校园 AI 创作平台"
 PILOT_TOTAL_QUOTA = 20_000_000
 DEFAULT_MEMBER_QUOTA = 100_000
 
+REWARD_TIERS = [
+    {"code": "tier_10x", "label": "一等奖", "multiplier": 10, "slots": 1},
+    {"code": "tier_5x", "label": "二等奖", "multiplier": 5, "slots": 5},
+    {"code": "tier_1x", "label": "三等奖", "multiplier": 1, "slots": 10},
+]
+
 PILOT_ORG = {
     "id": "org_hust_software",
     "slug": "hust-software",

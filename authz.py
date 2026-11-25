@@ -56,6 +56,8 @@ _RULES = {
         ("accounts", "revoke_key"): "all",
         ("accounts", "reissue_key"): "all",
         ("works", "read_any"): "all",
+        ("rewards", "read"): "all",
+        ("rewards", "settle"): "all",
     },
     ORG_ADMIN: {
         ("organizations", "read"): "org",
@@ -79,6 +81,7 @@ _RULES = {
         ("accounts", "reissue_key"): "org",
         ("members", "revoke_key"): "org",
         ("members", "reissue_key"): "org",
+        ("rewards", "read"): "org",
     },
     ORG_MEMBER: {
         ("organizations", "read"): "org",
@@ -94,6 +97,7 @@ _RULES = {
         ("profile", "read_self"): "self",
         ("usage", "consume_self"): "self",
         ("sessions", "revoke_self"): "self",
+        ("rewards", "read"): "org",
     },
 }
 

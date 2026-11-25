@@ -75,6 +75,12 @@
   function WorkCard(work, options) {
     const opts = options || {};
     const badges = [];
+    if (work.reward) {
+      badges.push(el('span', {
+        className: 'work-badge reward',
+        text: '🏆 ' + work.reward.tierLabel + ' +' + Number(work.reward.amount || 0).toLocaleString('zh-CN') + ' Token'
+      }));
+    }
     if (work.sourceKind === 'seed_demo') badges.push(el('span', { className: 'work-badge demo', text: '演示作品' }));
     if (work.featured) badges.push(el('span', { className: 'work-badge featured', text: '精选' }));
     if (work.status && work.status !== 'published' && opts.showStatus) {

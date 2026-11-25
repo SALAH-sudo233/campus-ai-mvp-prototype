@@ -37,7 +37,7 @@
         <div>
           <p class="eyebrow">CAMPUS SOFTWARE LAUNCHES</p>
           <h2>作品广场</h2>
-          <p class="muted">学生自主使用 Token 开发的 Web 应用、App 与 PC 软件，发布即上榜，点赞决定排名。</p>
+          <p class="muted">学生自主使用 Token 开发的 Web 应用、App 与 PC 软件，发布即上榜，有效点赞决定排名，最受欢迎作品可获平台最高 10× 额外 Token 奖励。</p>
         </div>
         <button class="primary hidden" id="submitWorkBtn">＋ 发布我的软件</button>
       </div>
@@ -69,6 +69,13 @@
         </section>
 
         <aside class="ph-sidebar">
+          <section class="panel ph-side-card reward-rule-card" id="rewardRuleCard">
+            <div class="ph-side-head"><h3>🏆 平台作品奖励</h3><span class="badge reward">额外激励</span></div>
+            <p class="muted reward-rule-desc" id="rewardRuleDesc">按有效点赞排名由平台统一结算，不扣减组织原定额度；单件作品仅获奖一次。</p>
+            <div id="rewardTierList" class="reward-tier-list"></div>
+            <div id="rewardPoolMeta" class="reward-pool-meta muted"></div>
+          </section>
+
           <section class="panel ph-side-card">
             <div class="ph-side-head"><h3>榜单焦点</h3><span class="muted">Top 3</span></div>
             <div id="phTopSpotlight" class="ph-spotlight"></div>
@@ -107,6 +114,7 @@
         </div>
       </div>
 
+      <div id="detailRewardBanner" class="reward-banner hidden"></div>
       <div id="detailShots" class="ph-detail-shots hidden"></div>
       <div class="ph-detail-about" id="detailAbout"></div>
 

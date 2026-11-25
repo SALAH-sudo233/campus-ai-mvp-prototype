@@ -115,9 +115,11 @@ function ledgerNode(rows) {
   const wrap = el('div', { className: 'ledger' });
   if (!rows || !rows.length) return el('p', { className: 'muted empty', text: '暂无流水记录' });
   for (const row of rows) {
-    wrap.appendChild(el('div', { className: 'ledger-row' }, [
+    const isReward = row.type === 'reward';
+    const icon = isReward ? '🏆' : row.type === 'grant' ? '＋' : '✦';
+    wrap.appendChild(el('div', { className: 'ledger-row' + (isReward ? ' is-reward' : '') }, [
       el('div', { className: 'ledger-title' }, [
-        el('span', { className: 'ledger-icon', text: row.type === 'grant' ? '＋' : '✦' }),
+        el('span', { className: 'ledger-icon' + (isReward ? ' reward' : ''), text: icon }),
         el('div', {}, [el('b', { text: row.title }), el('small', { text: row.time })])
       ]),
       el('span', { className: 'amount ' + (row.amount > 0 ? 'plus' : 'minus'),
@@ -134,9 +136,15 @@ function renderAccount(next) {
   $('appView').classList.remove('hidden');
   $('userIdentity').textContent = next.identity;
   const quota = next.quota || {};
+  const rewardQuota = Number(quota.rewardQuota || 0);
+  const rewardCount = Number(quota.rewardCount || 0);
+  const remainHint = '平台账面剩余 · 人均 ' + fmt(quota.memberQuota) + (rewardQuota > 0 ? (' · 含奖励 +' + fmt(rewardQuota)) : '');
+  const rewardHint = rewardCount > 0
+    ? ('已获奖 ' + rewardCount + ' 件作品 · 平台额外激励')
+    : '发布作品冲榜，最高赢 10× 额外激励';
   $('studentStats').replaceChildren(
-    UI.MetricCard({ label: '可用 Token', value: quota.remainingQuota == null ? '—' : quota.remainingQuota, tone: 'accent',
-      hint: '平台账面剩余 · 人均 ' + fmt(quota.memberQuota) }),
+    UI.MetricCard({ label: '可用 Token', value: quota.remainingQuota == null ? '—' : quota.remainingQuota, tone: 'accent', hint: remainHint }),
+    UI.MetricCard({ label: '作品奖励', value: rewardQuota, unit: ' Token', tone: rewardQuota > 0 ? 'reward' : '', hint: rewardHint }),
     UI.MetricCard({ label: '累计消耗', value: quota.usedQuota == null ? '—' : quota.usedQuota, hint: '平台记账消耗' }),
     UI.MetricCard({ label: '所属组织', value: (next.org && next.org.name) || '试点组织', hint: '组织是权限与可见范围' })
   );

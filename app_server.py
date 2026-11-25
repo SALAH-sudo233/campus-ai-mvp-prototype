@@ -22,6 +22,7 @@ import onboarding
 import org_service
 import pat_service
 import relay
+import rewards_service
 import roster
 import works_service
 from identity import normalize_identity, owner_ref_of
@@ -68,6 +69,8 @@ def setup():
     try:
         conn.execute("BEGIN IMMEDIATE")
         works_service.ensure_social_tables(conn, DATA_DIR)
+        if _demo_login_enabled():
+            rewards_service.ensure_demo_candidates(conn, config.PILOT_ORG["id"])
         conn.execute("COMMIT")
     finally:
         conn.close()
@@ -409,11 +412,16 @@ def profile(conn, owner_ref):
             "spent": row["spent"], "ledger": ledger_rows(conn, owner_ref)}
     total_quota, member_quota = _org_quota(conn, row["org_id"] if row else None)
     key_state = relay.key_view(RELAY_DB, owner_ref)
+    reward_summary = rewards_service.user_reward_summary(
+        conn, row["user_id"] if row else None, row["org_id"] if row else None
+    )
     view["quota"] = {
         "totalQuota": total_quota,
         "memberQuota": member_quota,
         "remainingQuota": int(row["balance"] or 0),
         "usedQuota": int(row["spent"] or 0),
+        "rewardQuota": reward_summary["totalAmount"],
+        "rewardCount": reward_summary["workCount"],
         "state": key_state["state"],
         "source": "platform_ledger",
         "displayBalance": row["balance"],
@@ -1121,6 +1129,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self._send(exc.status, payload)
         if isinstance(exc, works_service.WorkError):
             return self._send(exc.status, {"error": exc.message, "reasonCode": exc.code})
+        if isinstance(exc, rewards_service.RewardError):
+            return self._send(exc.status, {"error": exc.message, "reasonCode": exc.code})
         if isinstance(exc, ValueError):
             return self._send(400, {"error": str(exc)})
         raise exc
@@ -1225,6 +1235,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                                             "progress": onboarding.load(conn, principal["user_id"])})
                 finally:
                     conn.close()
+            if path == "/api/rewards/summary":
+                principal = self._require_user()
+                org_id = _scope_org(principal, query.get("orgId", [None])[0])
+                authz.require(principal, "rewards", "read", org_id=org_id)
+                conn = db()
+                try:
+                    _, member_quota = _org_quota(conn, org_id)
+                    return self._send(200, rewards_service.org_summary(conn, org_id, member_quota))
+                finally:
+                    conn.close()
             if path == "/api/works":
                 principal = self._require_user()
                 org_id = _scope_org(principal, query.get("orgId", [None])[0])
@@ -1299,7 +1319,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     if not authz.work_readable(principal, row["org_id"], row["owner_user_id"],
                                                row["status"] == "published"):
                         return self._send(403, {"error": "无权访问该资源"})
-                    return self._send(200, works_service._card(row))
+                    card = works_service._card(row)
+                    works_service.attach_rewards(conn, [card])
+                    return self._send(200, card)
                 finally:
                     conn.close()
             if path == "/api/orgs":
@@ -1308,6 +1330,38 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 conn = db()
                 try:
                     return self._send(200, {"organizations": org_service.organizations(conn)})
+                finally:
+                    conn.close()
+            match = re.match(r"^/api/orgs/([^/]+)/rewards/preview$", path)
+            if match:
+                principal = self._require_admin()
+                org_id = self._org_allowed(principal, match.group(1))
+                self._require_org(org_id)
+                authz.require(principal, "rewards", "settle", org_id=org_id)
+                custom_slots = {}
+                for tier in config.REWARD_TIERS:
+                    raw_slot = query.get(tier["code"], [None])[0]
+                    if raw_slot is not None and str(raw_slot).strip() != "":
+                        custom_slots[tier["code"]] = raw_slot
+                excluded = [x for x in query.get("exclude", []) if str(x).strip()]
+                conn = db()
+                try:
+                    _, member_quota = _org_quota(conn, org_id)
+                    return self._send(200, rewards_service.preview_settlement(
+                        conn, org_id, member_quota, custom_slots=custom_slots or None,
+                        excluded_work_ids=excluded or None))
+                finally:
+                    conn.close()
+            match = re.match(r"^/api/orgs/([^/]+)/rewards$", path)
+            if match:
+                principal = self._require_admin()
+                org_id = self._org_allowed(principal, match.group(1))
+                self._require_org(org_id)
+                authz.require(principal, "rewards", "read", org_id=org_id)
+                conn = db()
+                try:
+                    _, member_quota = _org_quota(conn, org_id)
+                    return self._send(200, rewards_service.org_summary(conn, org_id, member_quota))
                 finally:
                     conn.close()
             match = re.match(r"^/api/orgs/([^/]+)/works$", path)
@@ -1328,7 +1382,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         params.append(status)
                     sql += "ORDER BY w.updated_at DESC LIMIT 200"
                     rows = conn.execute(sql, tuple(params)).fetchall()
-                    return self._send(200, {"items": [works_service._card(row) for row in rows]})
+                    return self._send(200, {"items": works_service.attach_rewards(conn, [works_service._card(row) for row in rows])})
                 finally:
                     conn.close()
             if path == "/api/audit-events":
@@ -1526,7 +1580,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.path = "/gallery.html"
             return super().do_GET()
         except (authz.AuthzError, importer.ImportError_, onboarding.OnboardingError, works_service.WorkError,
-                ValueError) as exc:
+                rewards_service.RewardError, ValueError) as exc:
             return self._error(exc)
 
     def do_DELETE(self):
@@ -1657,6 +1711,34 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                                       metadata={"name": name, "quotaLimit": quota_limit})
                     conn.execute("COMMIT")
                     return self._send(201, org_service.org(conn, org_id))
+                except BaseException:
+                    if conn.in_transaction:
+                        conn.execute("ROLLBACK")
+                    raise
+                finally:
+                    conn.close()
+            match = re.match(r"^/api/orgs/([^/]+)/rewards/settle$", path)
+            if match:
+                principal = self._require_admin()
+                org_id = self._org_allowed(principal, match.group(1))
+                self._require_org(org_id)
+                authz.require(principal, "rewards", "settle", org_id=org_id)
+                data = self._body()
+                period_label = data.get("periodLabel")
+                custom_slots = data.get("slots") if isinstance(data.get("slots"), dict) else None
+                excluded = data.get("excludedWorkIds") if isinstance(data.get("excludedWorkIds"), list) else None
+                rid = str(data.get("requestId") or ("settle-" + secrets.token_hex(8)))[:80]
+                conn = db()
+                try:
+                    conn.execute("BEGIN IMMEDIATE")
+                    _, member_quota = _org_quota(conn, org_id)
+                    result = rewards_service.settle(
+                        conn, org_id, member_quota, period_label,
+                        principal.get("user_id"), principal["role"], rid,
+                        custom_slots=custom_slots, excluded_work_ids=excluded,
+                    )
+                    conn.execute("COMMIT")
+                    return self._send(200 if result.get("duplicate") else 201, result)
                 except BaseException:
                     if conn.in_transaction:
                         conn.execute("ROLLBACK")
@@ -2055,7 +2137,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return self._send(*do_reset())
             return self._send(404, {"error": "未知接口"})
         except (authz.AuthzError, importer.ImportError_, onboarding.OnboardingError, works_service.WorkError,
-                ValueError) as exc:
+                rewards_service.RewardError, ValueError) as exc:
             return self._error(exc)
 
 
@@ -2063,7 +2145,8 @@ def do_reset():
     with LOCK:
         conn = db()
         try:
-            for table in ("onboarding_progress", "ledger", "sessions", "login_failures", "admin_sessions", "students"):
+            for table in ("work_rewards", "reward_settlements", "onboarding_progress", "ledger", "sessions",
+                          "login_failures", "admin_sessions", "students"):
                 conn.execute("DELETE FROM " + table)
         finally:
             conn.close()

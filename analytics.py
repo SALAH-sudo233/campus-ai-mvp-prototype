@@ -43,6 +43,10 @@ def summary(conn, org_id, now=None, provider_quota=None):
     # New-API token 不设硬限额；额度分摊与消耗口径统一取平台账面。
     remaining = int(balances["balance"])
     consumed = int(balances["spent"])
+    reward_agg = conn.execute(
+        "SELECT COALESCE(SUM(amount), 0) AS total, COUNT(*) AS cnt FROM work_rewards WHERE org_id = ?",
+        (org_id,),
+    ).fetchone()
     return {
         "memberCount": active,
         "activeMemberCount": active_members,
@@ -50,6 +54,8 @@ def summary(conn, org_id, now=None, provider_quota=None):
         "memberQuota": member_quota,
         "totalConsumed": consumed,
         "remainingQuota": remaining,
+        "rewardTotal": int(reward_agg["total"] or 0),
+        "rewardedWorkCount": int(reward_agg["cnt"] or 0),
         "quotaSource": "platform_ledger",
         "activeTokenCount": int((provider_quota or {}).get("activeTokens") or 0),
         "range": {"from": _day(now - 30 * 86400), "to": _day(now), "days": 30},

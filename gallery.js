@@ -8,6 +8,7 @@ let me = null;
 let pendingReview = false;
 let allWorks = [];
 let myWorks = [];
+let rewardSummary = null;
 let activeCategory = '全部';
 let activeSort = 'hot';
 let searchQuery = '';
@@ -191,6 +192,12 @@ function renderFeed() {
     const rankClass = rank <= 3 ? 'ph-rank top-' + rank : 'ph-rank';
     const spec = swSpec(work.softwareType);
     const badges = [el('span', { className: 'work-badge sw-badge ' + spec.theme, text: spec.label })];
+    if (work.reward) {
+      badges.push(el('span', {
+        className: 'work-badge reward',
+        text: '🏆 ' + work.reward.tierLabel + ' +' + Number(work.reward.amount || 0).toLocaleString('zh-CN') + ' Token'
+      }));
+    }
     if (work.version) badges.push(el('span', { className: 'work-badge state', text: work.version }));
     if (work.featured) badges.push(el('span', { className: 'work-badge featured', text: '★ 精选' }));
     if (work.sourceKind === 'seed_demo') badges.push(el('span', { className: 'work-badge demo', text: '示例' }));
@@ -236,7 +243,37 @@ function renderFeed() {
   });
 }
 
+function renderRewardCard() {
+  const listWrap = $('rewardTierList');
+  const metaWrap = $('rewardPoolMeta');
+  if (!listWrap || !metaWrap) return;
+  const data = rewardSummary;
+  const tiers = (data && data.tiers) || [
+    { code: 'tier_10x', label: '一等奖', multiplier: 10, slots: 1, amount: 1000000 },
+    { code: 'tier_5x', label: '二等奖', multiplier: 5, slots: 5, amount: 500000 },
+    { code: 'tier_1x', label: '三等奖', multiplier: 1, slots: 10, amount: 100000 }
+  ];
+  const medals = ['🥇', '🥈', '🥉'];
+  listWrap.replaceChildren(...tiers.map((tier, idx) => el('div', { className: 'reward-tier-row' }, [
+    el('div', { className: 'reward-tier-name' }, [
+      el('span', { className: 'reward-medal', text: medals[idx] || '🏅' }),
+      el('b', { text: tier.label }),
+      el('small', { className: 'muted', text: tier.multiplier + '× · ' + tier.slots + ' 名' })
+    ]),
+    el('strong', { className: 'reward-tier-amount', text: '+' + Number(tier.amount || 0).toLocaleString('zh-CN') + ' Token' })
+  ])));
+  if (data) {
+    const awardedText = data.totalAwarded > 0
+      ? ('已发放 ' + Number(data.totalAwarded).toLocaleString('zh-CN') + ' Token（' + data.rewardedWorkCount + ' 件获奖）')
+      : ('当前 ' + (data.eligibleCandidateCount || 0) + ' 件作品参与本期冲榜');
+    metaWrap.textContent = '基准初始额度 ' + Number(data.baseQuota || 100000).toLocaleString('zh-CN') + ' Token · ' + awardedText;
+  } else {
+    metaWrap.textContent = '平台额外激励，不扣减组织原定额度。';
+  }
+}
+
 function renderSidebar() {
+  renderRewardCard();
   const top3 = allWorks.slice().sort((a, b) => (b.upvoteCount || 0) - (a.upvoteCount || 0)).slice(0, 3);
   const spot = $('phTopSpotlight');
   spot.replaceChildren();
@@ -290,6 +327,7 @@ function renderSidebar() {
             el('b', { text: work.title }),
             el('div', { className: 'ph-my-meta' }, [
               el('span', { className: 'badge ' + tone, text: STATUS_LABELS[work.status] || work.status }),
+              work.reward ? el('span', { className: 'work-badge reward', text: '🏆 ' + work.reward.tierLabel + ' +' + Number(work.reward.amount || 0).toLocaleString('zh-CN') }) : null,
               el('small', { text: work.category + ' · ' + (work.version || 'v1.0.0') })
             ])
           ]),
@@ -304,10 +342,11 @@ async function loadWorks() {
   if (!token || pendingReview) return;
   const isStudent = me && me.role === 'org_member';
   try {
-    const tasks = [api('/api/works')];
+    const tasks = [api('/api/works'), api('/api/rewards/summary').catch(() => null)];
     if (isStudent) tasks.push(api('/api/works/mine'));
-    const [gallery, mine] = await Promise.all(tasks);
+    const [gallery, rewards, mine] = await Promise.all(tasks);
     allWorks = gallery.items || [];
+    rewardSummary = rewards;
     myWorks = (mine && mine.items) || [];
     renderCategories();
     renderFeed();
@@ -369,6 +408,12 @@ async function openDetail(workId) {
   $('detailTitle').textContent = work.title;
   $('detailSummary').textContent = work.summary || '';
   const badges = [el('span', { className: 'work-badge sw-badge ' + spec.theme, text: spec.label })];
+  if (work.reward) {
+    badges.push(el('span', {
+      className: 'work-badge reward',
+      text: '🏆 ' + work.reward.tierLabel + ' +' + Number(work.reward.amount || 0).toLocaleString('zh-CN') + ' Token'
+    }));
+  }
   if (work.version) badges.push(el('span', { className: 'work-badge state', text: work.version }));
   if (work.featured) badges.push(el('span', { className: 'work-badge featured', text: '★ 精选' }));
   if (work.sourceKind === 'seed_demo') badges.push(el('span', { className: 'work-badge demo', text: '平台示例' }));
@@ -425,6 +470,19 @@ async function openDetail(workId) {
   aboutParts.push(work.sourceKind === 'seed_demo'
     ? '这是平台内置软件示例，用来演示 Web 托管网站与 App / PC 安装包的发布体验。'
     : '该软件由本组织同学自主使用 Token 开发并发布，仅在本组织作品广场内展示交流。');
+  const rewardBanner = $('detailRewardBanner');
+  if (rewardBanner) {
+    if (work.reward) {
+      rewardBanner.classList.remove('hidden');
+      rewardBanner.replaceChildren(
+        el('strong', { text: '🏆 平台激励获奖作品 · ' + work.reward.tierLabel + '（' + work.reward.multiplier + '× 初始额度）' }),
+        el('span', { text: '已发放 +' + Number(work.reward.amount || 0).toLocaleString('zh-CN') + ' Token（' + (work.reward.periodLabel || '平台结算') + ' · 结算时第 ' + work.reward.rank + ' 名，有效点赞 ' + work.reward.validUpvotes + '）' })
+      );
+    } else {
+      rewardBanner.classList.add('hidden');
+      rewardBanner.replaceChildren();
+    }
+  }
   const shotsWrap = $('detailShots');
   if (work.previewImages && work.previewImages.length) {
     shotsWrap.classList.remove('hidden');

@@ -9,6 +9,8 @@ import shutil
 import time
 import zipfile
 
+import rewards_service
+
 MAX_ARTIFACT_BYTES = 50 * 1024 * 1024
 MAX_PREVIEW_IMAGE_BYTES = 8 * 1024 * 1024
 MAX_PREVIEW_IMAGES = 4
@@ -487,7 +489,17 @@ def _card(row):
         "upvoteCount": int(row["upvote_count"]) if "upvote_count" in keys else 0,
         "upvoted": bool(row["upvoted"]) if "upvoted" in keys else False,
         "commentCount": int(row["comment_count"]) if "comment_count" in keys else 0,
+        "reward": None,
     }
+
+
+def attach_rewards(conn, cards):
+    if not cards:
+        return cards
+    rmap = rewards_service.work_reward_map(conn, [c["workId"] for c in cards])
+    for card in cards:
+        card["reward"] = rmap.get(card["workId"])
+    return cards
 
 
 def gallery(conn, org_id, limit=50, viewer_user_id=None):
@@ -502,7 +514,7 @@ def gallery(conn, org_id, limit=50, viewer_user_id=None):
         "WHERE w.org_id = ? AND w.status = 'published' "
         "ORDER BY upvote_count DESC, featured DESC, w.published_at DESC, w.work_id LIMIT ?",
         (viewer_user_id, viewer_user_id, org_id, limit)).fetchall()
-    return [_card(row) for row in rows]
+    return attach_rewards(conn, [_card(row) for row in rows])
 
 
 def toggle_upvote(conn, work_id, org_id, user_id):
@@ -570,12 +582,12 @@ def featured(conn, org_id, limit=12):
         "SELECT w.*, 1 AS featured FROM featured_works f JOIN works w ON w.work_id = f.work_id "
         "WHERE f.org_id = ? AND w.org_id = ? AND w.status = 'published' "
         "ORDER BY f.created_at DESC LIMIT ?", (org_id, org_id, limit)).fetchall()
-    return [_card(row) for row in rows]
+    return attach_rewards(conn, [_card(row) for row in rows])
 
 
 def mine(conn, user_id):
     rows = conn.execute("SELECT * FROM works WHERE owner_user_id = ? ORDER BY updated_at DESC", (user_id,)).fetchall()
-    return [_card(row) for row in rows]
+    return attach_rewards(conn, [_card(row) for row in rows])
 
 
 def get(conn, work_id):
