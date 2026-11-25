@@ -495,40 +495,66 @@ DEMO_CANDIDATE_WORKS = [
 def ensure_demo_candidates(conn, org_id):
     """演示模式（DEMO_ALLOW_LOGIN=1）下幂等预置 7 件真实名册学生候选作品与有效点赞。
 
-    第 1 名候选归属默认学生演示账号 2024001100，第 2–6 名覆盖二等奖区，第 7 名覆盖三等奖区，
-    方便直接在演示版体验「管理端一键结算 → 广场亮 🏆 徽章 → 学生端余额 +100 万 Token 到账」。
-    若已存在预置作品或已有结算记录，则不再重复插入。
+    第 1 名候选优先归属默认学生演示账号 2024001100，其余按名册已有 active 学生动态分配，
+    覆盖一等奖（10×）、二等奖（5×）、三等奖（1×）全部三档；若已存在全部预置作品或已有结算记录则跳过。
     """
     if not org_id:
         return 0
-    has_any = conn.execute(
-        "SELECT 1 FROM works WHERE org_id = ? AND work_id LIKE 'demo-award-%' LIMIT 1",
-        (org_id,),
-    ).fetchone()
     has_settled = conn.execute(
         "SELECT 1 FROM reward_settlements WHERE org_id = ? LIMIT 1",
         (org_id,),
     ).fetchone()
-    if has_any or has_settled:
+    if has_settled:
+        return 0
+    existing_ids = {
+        r["work_id"] for r in conn.execute(
+            "SELECT work_id FROM works WHERE org_id = ? AND work_id LIKE 'demo-award-%'",
+            (org_id,),
+        ).fetchall()
+    }
+    if len(existing_ids) >= len(DEMO_CANDIDATE_WORKS):
         return 0
 
-    voters = [
+    active_students = conn.execute(
+        "SELECT user_id, student_id, name FROM org_memberships "
+        "WHERE org_id = ? AND role = 'org_member' AND admission_status = 'active' "
+        "ORDER BY CASE WHEN student_id = '2024001100' THEN 0 ELSE 1 END, student_id ASC",
+        (org_id,),
+    ).fetchall()
+    if not active_students:
+        return 0
+    by_sid = {str(r["student_id"]): r for r in active_students if r["student_id"]}
+    all_voters = [
         r["user_id"] for r in conn.execute(
             "SELECT user_id FROM org_memberships WHERE org_id = ? AND admission_status = 'active' "
-            "AND student_id NOT IN ('2024001100','2024001101','2024001102','2024001103','2024001104','2024001105','2024001106') "
-            "ORDER BY student_id ASC LIMIT 40",
+            "ORDER BY student_id ASC LIMIT 60",
             (org_id,),
         ).fetchall()
     ]
+    used_authors = {
+        r["owner_user_id"] for r in conn.execute(
+            "SELECT owner_user_id FROM works WHERE org_id = ? AND work_id LIKE 'demo-award-%'",
+            (org_id,),
+        ).fetchall()
+    }
+    fallback_pool = [r for r in active_students if r["user_id"] not in used_authors]
+
     now = time.time()
     inserted = 0
+    total_specs = len(DEMO_CANDIDATE_WORKS)
     for idx, spec in enumerate(DEMO_CANDIDATE_WORKS):
-        mem = conn.execute(
-            "SELECT user_id, name FROM org_memberships WHERE org_id = ? AND student_id = ? AND admission_status = 'active'",
-            (org_id, spec["student_id"]),
-        ).fetchone()
-        if not mem:
+        if spec["work_id"] in existing_ids:
             continue
+        mem = by_sid.get(spec["student_id"])
+        if mem and mem["user_id"] not in used_authors:
+            used_authors.add(mem["user_id"])
+            fallback_pool = [r for r in fallback_pool if r["user_id"] != mem["user_id"]]
+        elif fallback_pool:
+            mem = fallback_pool.pop(0)
+            used_authors.add(mem["user_id"])
+        else:
+            mem = active_students[idx % len(active_students)]
+
         target = {
             "softwareType": spec["software_type"],
             "version": spec["version"],
@@ -538,7 +564,7 @@ def ensure_demo_candidates(conn, org_id):
         }
         if spec.get("hosted_url"):
             target["hostedUrl"] = spec["hosted_url"]
-        ts = now - (len(DEMO_CANDIDATE_WORKS) - idx) * 1800
+        ts = now - (total_specs - idx) * 1800
         conn.execute(
             "INSERT OR IGNORE INTO works (work_id, org_id, owner_user_id, title, summary, author_display_name, "
             "category, cover_path, source_kind, status, visibility, artifact_ref, open_target_json, "
@@ -547,11 +573,20 @@ def ensure_demo_candidates(conn, org_id):
             (spec["work_id"], org_id, mem["user_id"], spec["title"], spec["summary"], mem["name"] or "学生",
              spec["category"], json.dumps(target, ensure_ascii=False), ts, ts, ts),
         )
-        vote_count = min(int(spec["upvotes"]), len(voters))
+        eligible_voters = [uid for uid in all_voters if uid != mem["user_id"]]
+        max_votes = len(eligible_voters)
+        if max_votes >= spec["upvotes"]:
+            vote_count = int(spec["upvotes"])
+        elif max_votes > 0:
+            # 成员较少时按递减梯度分配有效赞，确保 7 件作品排名清晰且均 ≥ 1 赞
+            step = max(1, (max_votes - 1) // max(1, total_specs - 1))
+            vote_count = max(1, max_votes - idx * step)
+        else:
+            vote_count = 0
         for v_idx in range(vote_count):
             conn.execute(
                 "INSERT OR IGNORE INTO work_upvotes (work_id, user_id, created_at) VALUES (?, ?, ?)",
-                (spec["work_id"], voters[v_idx], ts + (v_idx + 1) * 30),
+                (spec["work_id"], eligible_voters[v_idx], ts + (v_idx + 1) * 30),
             )
         inserted += 1
     return inserted
