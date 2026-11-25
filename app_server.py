@@ -206,9 +206,11 @@ def _principal_from_pat(token, conn):
     principal = _principal_for(conn, row["user_id"], row["org_snapshot"])
     if not principal or pat_service.permissions_shrank(row["role_snapshot"], principal["role"]):
         raise authz.AuthzError(401, pat_service.REISSUE_MESSAGE)
-    student = conn.execute("SELECT owner_ref FROM students WHERE user_id = ? AND org_id = ? "
-                           "ORDER BY created_at LIMIT 1", (row["user_id"], principal["org_id"])).fetchone()
-    principal.update({"owner_ref": student["owner_ref"] if student else None,
+    student = conn.execute("SELECT owner_ref FROM students WHERE user_id = ? "
+                           "ORDER BY created_at LIMIT 1", (row["user_id"],)).fetchone()
+    if student is None:
+        raise authz.AuthzError(401, pat_service.REISSUE_MESSAGE)
+    principal.update({"owner_ref": student["owner_ref"],
                       "auth_method": "pat", "pat_id": row["id"]})
     conn.execute("UPDATE pat_tokens SET last_used_at = ? WHERE id = ?", (time.time(), row["id"]))
     return principal

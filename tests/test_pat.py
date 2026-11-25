@@ -50,6 +50,88 @@ class PatHttpTests(unittest.TestCase):
         self.assertEqual(code, 200)
         return org["id"], session["token"]
 
+    def test_nonpilot_pat_reads_account_profile(self):
+        _, session = self.nonpilot_session()
+        code, created = self.mint(token=session)
+        self.assertEqual(code, 201)
+        code, profile = self.server.get("/api/me", created["token"])
+        self.assertEqual(code, 200)
+        self.assertEqual(profile["identity"], "2024001091")
+        self.assertEqual(profile["balance"], self.member["balance"])
+
+    def test_nonpilot_pat_consumes_account_balance(self):
+        _, session = self.nonpilot_session()
+        code, created = self.mint(token=session)
+        self.assertEqual(code, 201)
+        code, profile = self.server.post("/api/consume", {"amount": 17, "requestId": "nonpilot-use"},
+                                         created["token"])
+        self.assertEqual(code, 200)
+        self.assertEqual(profile["balance"], self.member["balance"] - 17)
+        self.assertEqual(profile["spent"], self.member["spent"] + 17)
+        with sqlite3.connect(self.server.db_path) as conn:
+            balance, spent = conn.execute("SELECT balance, spent FROM students WHERE user_id = ?",
+                                           (self.user_id,)).fetchone()
+        self.assertEqual((balance, spent), (profile["balance"], profile["spent"]))
+
+    def test_nonpilot_pat_rotates_account_key(self):
+        _, session = self.nonpilot_session()
+        code, created = self.mint(token=session)
+        self.assertEqual(code, 201)
+        code, key = self.server.post("/api/key/rotate", {"requestId": "nonpilot-rotate"}, created["token"])
+        self.assertEqual(code, 200)
+        self.assertEqual(key["status"], "active")
+        self.assertTrue(key["plaintext"])
+        with sqlite3.connect(self.server.relay_path) as conn:
+            active_keys = conn.execute("SELECT COUNT(*) FROM relay_keys WHERE user_id = ? AND revoked_at IS NULL",
+                                       (self.user_id,)).fetchone()[0]
+        self.assertEqual(active_keys, 1)
+
+    def test_platform_pat_without_membership_reads_account_profile(self):
+        with sqlite3.connect(self.server.db_path) as conn:
+            conn.execute("INSERT INTO platform_admins (user_id, created_at) VALUES (?, ?)",
+                         (self.user_id, time.time()))
+            conn.execute("DELETE FROM org_memberships WHERE user_id = ?", (self.user_id,))
+        code, created = self.mint()
+        self.assertEqual(code, 201)
+        self.assertIsNone(created["item"]["orgSnapshot"])
+        self.assertEqual(created["item"]["roleSnapshot"], authz.PLATFORM_ADMIN)
+        code, profile = self.server.get("/api/me", created["token"])
+        self.assertEqual(code, 200)
+        self.assertEqual(profile["identity"], "2024001091")
+        self.assertEqual(profile["role"], authz.PLATFORM_ADMIN)
+        self.assertIsNone(profile["org"])
+
+    def test_pat_without_account_identity_returns_401(self):
+        code, created = self.mint()
+        self.assertEqual(code, 201)
+        with sqlite3.connect(self.server.db_path) as conn:
+            conn.execute("UPDATE students SET user_id = NULL WHERE user_id = ?", (self.user_id,))
+        for method, path, data in (("GET", "/api/me", None), ("GET", "/api/me/tokens", None),
+                                   ("POST", "/api/consume", {"amount": 17, "requestId": "missing-use"}),
+                                   ("POST", "/api/key/rotate", {"requestId": "missing-rotate"})):
+            with self.subTest(path=path):
+                code, body = self.server.request(method, path, data, created["token"])
+                self.assertEqual(code, 401)
+                self.assertIn("重新签发", body["error"])
+        with sqlite3.connect(self.server.db_path) as conn:
+            last_used = conn.execute("SELECT last_used_at FROM pat_tokens WHERE id = ?",
+                                     (created["item"]["id"],)).fetchone()[0]
+        self.assertIsNone(last_used)
+
+    def test_platform_pat_without_account_identity_returns_401(self):
+        with sqlite3.connect(self.server.db_path) as conn:
+            conn.execute("INSERT INTO platform_admins (user_id, created_at) VALUES (?, ?)",
+                         (self.user_id, time.time()))
+            conn.execute("DELETE FROM org_memberships WHERE user_id = ?", (self.user_id,))
+            conn.execute("UPDATE students SET user_id = NULL WHERE user_id = ?", (self.user_id,))
+        code, created = self.mint()
+        self.assertEqual(code, 201)
+        for path in ("/api/me", "/api/me/tokens"):
+            with self.subTest(path=path):
+                code, body = self.server.get(path, created["token"])
+                self.assertEqual(code, 401)
+                self.assertIn("重新签发", body["error"])
+
     def test_nonpilot_pat_preserves_issuing_org_for_work_and_audit(self):
         org_id, session = self.nonpilot_session()
         code, created = self.mint(token=session)
