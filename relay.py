@@ -569,7 +569,7 @@ def prepare_issue(path, owner_ref, issue_request_id, quota=0, rotate=False):
             conn.execute("COMMIT")
             return {"action": "network", "key_id": row["id"],
                     "provider_token_id": row["provider_token_id"], "deliver_plaintext": True,
-                    "claim": claim, "lease": lease_until}
+                    "claim": claim}
 
         replay = _replay_row(conn, owner_ref, issue_request_id)
         if replay is not None:
@@ -629,7 +629,7 @@ def prepare_issue(path, owner_ref, issue_request_id, quota=0, rotate=False):
         row = _insert_key(conn, owner_ref, issue_request_id, quota, claim)
         conn.execute("COMMIT")
         return {"action": "network", "key_id": row["id"], "provider_token_id": None, "deliver_plaintext": True,
-                "claim": claim, "lease": row["next_attempt_at"], "revoke_ids": revoke_ids}
+                "claim": claim, "revoke_ids": revoke_ids}
     except BaseException:
         if conn.in_transaction:
             conn.execute("ROLLBACK")
@@ -1078,7 +1078,7 @@ def retry_due(path, owner_ref=None, org_id=None, now=None, limit_pending=1, limi
             conn.close()
         deliver = bool(allow_delivery_for and row["owner_ref"] == allow_delivery_for)
         job = {"action": "network", "key_id": row["id"], "provider_token_id": current["provider_token_id"],
-               "deliver_plaintext": deliver, "_path": path, "claim": claim, "lease": lease_until}
+               "deliver_plaintext": deliver, "_path": path, "claim": claim}
         result = finish_issue(job, deliver_plaintext=deliver)
         if deliver and result.get("plaintext"):
             plaintext = result["plaintext"]
