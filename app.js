@@ -255,14 +255,14 @@ async function demoLogin(role) {
   } catch (error) { toast(error.message || '快捷登录失败'); }
 }
 
-$('loginBtn').onclick = () => handleAuth('/api/login', '登录成功');
-$('registerBtn').onclick = () => handleAuth('/api/register', '注册成功，已领取 100,000 Token');
-$('quickLoginBtn').onclick = () => demoLogin(mode === 'teacher' ? 'teacher' : 'student');
-$('logoutBtn').onclick = async () => {
+$('loginBtn').onclick = UI.guard(() => handleAuth('/api/login', '登录成功'));
+$('registerBtn').onclick = UI.guard(() => handleAuth('/api/register', '注册成功，已领取 100,000 Token'));
+$('quickLoginBtn').onclick = UI.guard(() => demoLogin(mode === 'teacher' ? 'teacher' : 'student'));
+$('logoutBtn').onclick = UI.guard(async () => {
   try { await api('/api/logout', { method: 'POST', body: '{}' }); } catch (error) { /* ignore */ }
   token = ''; revealedKey = ''; localStorage.removeItem(STORE_KEY); showLogin();
-};
-$('rotateKeyBtn').onclick = async () => {
+});
+$('rotateKeyBtn').onclick = UI.guard(async () => {
   try {
     const relayKey = await api('/api/key/rotate', { method: 'POST', body: '{}' });
     renderKey(relayKey);
@@ -271,7 +271,7 @@ $('rotateKeyBtn').onclick = async () => {
       : '密钥状态已更新，请查看说明');
   }
   catch (error) { toast(error.message || '重新生成失败'); }
-};
+});
 $('copyBaseBtn').onclick = async () => {
   try { await navigator.clipboard.writeText($('apiBaseUrl').textContent); toast('Base URL 已复制'); }
   catch (error) { toast('复制失败，请手动选择文本'); }
@@ -300,14 +300,14 @@ $('goPublishBtn').onclick = () => {
   if (pendingReview) { toast(PENDING_HINT); return; }
   window.location.href = 'gallery.html?submit=1&type=' + encodeURIComponent(activePromptType);
 };
-$('demoUseBtn').onclick = async () => {
+$('demoUseBtn').onclick = UI.guard(async () => {
   try {
     const next = await api('/api/consume', { method: 'POST', body: JSON.stringify({ amount: 1200, requestId: 'ui-' + Date.now() }) });
     renderAccount(next);
     $('ledgerFold').open = true;
     toast('已模拟消耗 1,200 Token（仅演示账面，不改 New-API token）');
   } catch (error) { toast(error.status === 409 ? 'Token 余额不足' : (error.message || '操作失败')); }
-};
+});
 $('galleryNav').addEventListener('click', event => {
   if (pendingReview) { event.preventDefault(); toast(PENDING_HINT); }
 });
@@ -324,9 +324,9 @@ function openModal(title, text) { $('modalTitle').textContent = title; $('modalT
 $('rechargeBtn').onclick = () => openModal('充值额度', '充值功能将在正式版开放，原型阶段仅展示入口。');
 $('closeModal').onclick = () => $('modal').classList.add('hidden');
 $('modalAction').onclick = () => $('modal').classList.add('hidden');
-$('resetFromLogin').onclick = $('resetBtn').onclick = async () => {
+$('resetFromLogin').onclick = $('resetBtn').onclick = UI.guard(async () => {
   try { await api('/api/reset', { method: 'POST', body: '{}' }); } catch (error) { /* ignore */ }
   token = ''; revealedKey = ''; localStorage.removeItem(STORE_KEY); showLogin(); toast('演示数据已重置');
-};
+});
 
 boot();
