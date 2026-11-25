@@ -140,12 +140,16 @@
             <div>
               <p class="eyebrow">WORKS</p>
               <h2>作品管理</h2>
-              <p class="muted" id="worksOrgHint">平台管理员可查看本组织全部作品并执行全局下架。</p>
+              <p class="muted" id="worksOrgHint">平台管理员可按状态与软件类型筛选本组织作品，执行审核、精选与全局下架。</p>
             </div>
             <button class="outline" id="refreshOrgWorks">刷新</button>
           </div>
 
           <section class="panel">
+            <div class="teacher-works-toolbar">
+              <div class="ph-sorts" id="adminWorkTabs" role="tablist" aria-label="作品状态筛选"></div>
+              <div class="ph-cats" id="adminWorkTypes" role="tablist" aria-label="软件类型筛选"></div>
+            </div>
             <div id="adminWorks" class="work-grid"></div>
           </section>
         </section>

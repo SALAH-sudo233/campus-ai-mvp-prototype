@@ -5,6 +5,9 @@ let adminToken = sessionStorage.getItem(ADMIN_STORE_KEY) || '';
 let organizations = [];
 let selectedOrg = sessionStorage.getItem(SELECTED_ORG_KEY) || null;
 let memberRows = [];
+let orgWorks = [];
+let adminWorkStatusTab = 'all';
+let adminWorkTypeTab = 'all';
 let orgLabels = { admin: '教师', member: '学生' };
 let selectSeq = 0;
 let activeAdminTab = 'tokens';
@@ -129,11 +132,13 @@ async function selectOrg(orgId) {
   if (org) orgLabels = { admin: org.adminLabel || '教师', member: org.memberLabel || '学生' };
   rewardExcluded = new Set();
   rewardPeriodDirty = false;
+  adminWorkStatusTab = 'all';
+  adminWorkTypeTab = 'all';
   const quotaText = org && org.quotaLimit ? (' · 总额度上限 ' + fmt(org.quotaLimit) + ' Token') : ' · 总额度不限';
   const label = org ? (org.name + ' · ' + org.slug + quotaText) : orgId;
   $('selectedOrgLabel').textContent = label;
   $('memberOrgHint').textContent = '当前组织：' + (org ? org.name : orgId) + ' · 支持录入学生/老师、CSV 批量导入与批量操作。';
-  $('worksOrgHint').textContent = '当前组织：' + (org ? org.name : orgId) + ' · 平台管理员可全局下架。';
+  $('worksOrgHint').textContent = '当前组织：' + (org ? org.name : orgId) + ' · 可按状态与软件类型筛选，支持作品审核、精选与全局下架。';
   $('rewardsOrgHint').textContent = '当前组织：' + (org ? org.name : orgId) + ' · 每两周评审一次 · 平台额外激励（不扣减组织原定额度）· 纯按有效点赞排序，单件作品不重复获奖。';
 
   const memberQuery = ($('adminMemberSearch').value || '').trim();
@@ -258,15 +263,94 @@ function openAdminWork(item) {
   toast(item.title + '：可前往作品广场查看详情或下载安装包。');
 }
 
-function renderWorks(items) {
+function matchesAdminWorkStatus(work, tab) {
+  if (tab === 'featured') return work.status === 'published' && !!work.featured;
+  if (tab === 'published') return work.status === 'published';
+  if (tab === 'pending_review') return work.status === 'pending_review';
+  if (tab === 'inactive') return ['removed', 'withdrawn', 'rejected'].includes(work.status);
+  return true;
+}
+
+function matchesAdminWorkType(work, typeKey) {
+  if (typeKey === 'all') return true;
+  return (work.softwareType || 'web') === typeKey;
+}
+
+function renderAdminWorkFilters() {
+  const statusTabs = [
+    ['all', '全部'],
+    ['featured', '已精选'],
+    ['published', '已发布'],
+    ['pending_review', '待审核'],
+    ['inactive', '已下架']
+  ];
+  $('adminWorkTabs').replaceChildren(...statusTabs.map(([key, label]) => {
+    const count = orgWorks.filter(w => matchesAdminWorkStatus(w, key) && matchesAdminWorkType(w, adminWorkTypeTab)).length;
+    return el('button', {
+      className: 'ph-sort' + (adminWorkStatusTab === key ? ' active' : ''),
+      text: label + ' (' + count + ')',
+      onclick: () => { adminWorkStatusTab = key; renderAdminWorkFilters(); renderAdminWorkCards(); }
+    });
+  }));
+  const typePills = [
+    ['all', '全部类型'],
+    ['web', 'Web 应用'],
+    ['app', 'App'],
+    ['pc', 'PC 软件']
+  ];
+  $('adminWorkTypes').replaceChildren(...typePills.map(([key, label]) => el('button', {
+    className: 'ph-cat' + (adminWorkTypeTab === key ? ' active' : ''),
+    text: label,
+    onclick: () => { adminWorkTypeTab = key; renderAdminWorkFilters(); renderAdminWorkCards(); }
+  })));
+}
+
+function renderAdminWorkCards() {
   const wrap = $('adminWorks');
   wrap.replaceChildren();
-  if (!items.length) { wrap.appendChild(el('p', { className: 'muted empty', text: '该组织暂无作品。' })); return; }
+  const items = orgWorks.filter(w => matchesAdminWorkStatus(w, adminWorkStatusTab) && matchesAdminWorkType(w, adminWorkTypeTab));
+  if (!items.length) {
+    wrap.appendChild(el('p', { className: 'muted empty', text: '当前筛选条件下暂无作品。' }));
+    return;
+  }
   for (const work of items) {
-    const actions = work.status === 'published' || work.status === 'pending_review'
-      ? [{ label: '全局下架', tone: 'danger', onClick: () => globalUnpublish(work) }] : [];
+    const actions = [];
+    if (work.status === 'pending_review') {
+      actions.push({ label: '通过', tone: 'primary', onClick: () => reviewAdminWork(work, 'approve') });
+      actions.push({ label: '驳回', tone: 'danger', onClick: () => reviewAdminWork(work, 'reject') });
+      actions.push({ label: '全局下架', tone: 'danger', onClick: () => globalUnpublish(work) });
+    } else if (work.status === 'published') {
+      actions.push({ label: work.featured ? '取消精选' : '精选', tone: 'outline', onClick: () => featureAdminWork(work, !work.featured) });
+      actions.push({ label: '全局下架', tone: 'danger', onClick: () => globalUnpublish(work) });
+    }
     wrap.appendChild(UI.WorkCard(work, { density: 'compact', showStatus: true, actions, onOpen: openAdminWork }));
   }
+}
+
+function renderWorks(items) {
+  orgWorks = items || [];
+  renderAdminWorkFilters();
+  renderAdminWorkCards();
+}
+
+async function reviewAdminWork(work, decision) {
+  try {
+    await api('/api/orgs/' + encodeURIComponent(selectedOrg) + '/works/' + encodeURIComponent(work.workId) + '/review', {
+      method: 'POST', body: JSON.stringify({ decision })
+    });
+    await selectOrg(selectedOrg);
+    toast(decision === 'approve' ? '作品已通过审核' : '作品已驳回');
+  } catch (error) { toast(error.message || '审核失败'); }
+}
+
+async function featureAdminWork(work, featured) {
+  try {
+    await api('/api/orgs/' + encodeURIComponent(selectedOrg) + '/works/' + encodeURIComponent(work.workId) + '/feature', {
+      method: 'POST', body: JSON.stringify({ featured })
+    });
+    await selectOrg(selectedOrg);
+    toast(featured ? '已加入精选' : '已取消精选');
+  } catch (error) { toast(error.message || '操作失败'); }
 }
 
 async function globalUnpublish(work) {
