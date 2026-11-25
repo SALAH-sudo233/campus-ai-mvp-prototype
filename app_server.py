@@ -203,7 +203,7 @@ def _principal_from_pat(token, conn):
         context.update({"authMethod": "pat", "patId": row["id"] if row else None})
     if row is None or row["revoked_at"] is not None or row["expires_at"] <= time.time():
         raise authz.AuthzError(401, pat_service.REISSUE_MESSAGE)
-    principal = _principal_for(conn, row["user_id"])
+    principal = _principal_for(conn, row["user_id"], row["org_snapshot"])
     if not principal or pat_service.permissions_shrank(row["role_snapshot"], principal["role"]):
         raise authz.AuthzError(401, pat_service.REISSUE_MESSAGE)
     student = conn.execute("SELECT owner_ref FROM students WHERE user_id = ? AND org_id = ? "

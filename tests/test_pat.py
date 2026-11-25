@@ -38,6 +38,85 @@ class PatHttpTests(unittest.TestCase):
                 conn.execute("UPDATE org_memberships SET " + field + " = ? WHERE user_id = ?",
                              (value, self.user_id))
 
+    def nonpilot_session(self, role=authz.ORG_MEMBER):
+        admin = self.server.admin_token()
+        code, org = self.server.post("/api/orgs", {"name": "第二学院", "slug": "second-pat"}, admin)
+        self.assertEqual(code, 201)
+        with sqlite3.connect(self.server.db_path) as conn:
+            conn.execute("INSERT INTO org_memberships (org_id, user_id, role, admission_status, "
+                         "external_ref, name, joined_at) VALUES (?, ?, ?, 'active', ?, ?, ?)",
+                         (org["id"], self.user_id, role, "2024001091", "多组织成员", time.time()))
+        code, session = login(self.server, "2024001091", org_id=org["id"])
+        self.assertEqual(code, 200)
+        return org["id"], session["token"]
+
+    def test_nonpilot_pat_preserves_issuing_org_for_work_and_audit(self):
+        org_id, session = self.nonpilot_session()
+        code, created = self.mint(token=session)
+        self.assertEqual(code, 201)
+        self.assertEqual(created["item"]["orgSnapshot"], org_id)
+        with sqlite3.connect(self.server.db_path) as conn:
+            stored = conn.execute("SELECT org_snapshot, role_snapshot FROM pat_tokens WHERE id = ?",
+                                  (created["item"]["id"],)).fetchone()
+        self.assertEqual(stored, (org_id, authz.ORG_MEMBER))
+        code, work = self.server.post("/api/works", {"title": "第二学院作品", "summary": "多组织 PAT 回归",
+                                                   "category": "学习"}, created["token"])
+        self.assertEqual(code, 201)
+        with sqlite3.connect(self.server.db_path) as conn:
+            stored_org = conn.execute("SELECT org_id FROM works WHERE work_id = ?",
+                                      (work["workId"],)).fetchone()[0]
+            audit_org = conn.execute("SELECT org_id FROM audit_events WHERE action = 'work.submitted' "
+                                     "AND resource_id = ?", (work["workId"],)).fetchone()[0]
+        self.assertEqual(stored_org, org_id)
+        self.assertEqual(audit_org, org_id)
+
+    def test_nonpilot_admin_pat_uses_bound_org_live_role(self):
+        org_id, session = self.nonpilot_session(authz.ORG_ADMIN)
+        code, created = self.mint(token=session)
+        self.assertEqual(code, 201)
+        pat = created["token"]
+        self.assertEqual(self.server.get("/api/orgs/%s/dashboard" % org_id, pat)[0], 200)
+        self.assertEqual(self.server.get("/api/orgs/%s/dashboard" % PILOT, pat)[0], 403)
+        with sqlite3.connect(self.server.db_path) as conn:
+            conn.execute("UPDATE org_memberships SET role = ? WHERE user_id = ? AND org_id = ?",
+                         (authz.ORG_ADMIN, self.user_id, PILOT))
+            conn.execute("UPDATE org_memberships SET role = ? WHERE user_id = ? AND org_id = ?",
+                         (authz.ORG_MEMBER, self.user_id, org_id))
+        for target in (org_id, PILOT):
+            code, body = self.server.get("/api/orgs/%s/dashboard" % target, pat)
+            self.assertEqual(code, 401)
+            self.assertIn("重新签发", body["error"])
+
+    def test_nonpilot_member_pat_does_not_inherit_pilot_role_or_admission(self):
+        self.update_membership(role=authz.ORG_ADMIN)
+        org_id, session = self.nonpilot_session()
+        code, created = self.mint(token=session)
+        self.assertEqual(code, 201)
+        pat = created["token"]
+        for target in (org_id, PILOT):
+            self.assertEqual(self.server.get("/api/orgs/%s/dashboard" % target, pat)[0], 403)
+        with sqlite3.connect(self.server.db_path) as conn:
+            conn.execute("UPDATE org_memberships SET admission_status = 'disabled' "
+                         "WHERE user_id = ? AND org_id = ?", (self.user_id, PILOT))
+        self.assertEqual(self.server.post("/api/works", {"title": "独立准入", "summary": "只读本组织准入",
+                                                       "category": "学习"}, pat)[0], 201)
+        with sqlite3.connect(self.server.db_path) as conn:
+            conn.execute("UPDATE org_memberships SET admission_status = 'disabled' "
+                         "WHERE user_id = ? AND org_id = ?", (self.user_id, org_id))
+        self.assertEqual(self.server.get("/api/works", pat)[0], 401)
+
+    def test_removed_bound_membership_does_not_fall_back_to_pilot(self):
+        org_id, session = self.nonpilot_session()
+        code, created = self.mint(token=session)
+        self.assertEqual(code, 201)
+        with sqlite3.connect(self.server.db_path) as conn:
+            conn.execute("DELETE FROM org_memberships WHERE user_id = ? AND org_id = ?",
+                         (self.user_id, org_id))
+        code, body = self.server.get("/api/works", created["token"])
+        self.assertEqual(code, 401)
+        self.assertIn("重新签发", body["error"])
+        self.assertEqual(self.server.get("/api/works", self.session)[0], 200)
+
     def test_mint_list_revoke_and_one_time_plaintext(self):
         before = time.time()
         code, created = self.mint("once")
@@ -142,15 +221,17 @@ class PatHttpTests(unittest.TestCase):
             self.assertIn("重新签发", body["error"])
         self.assertEqual(self.server.get("/api/me", self.session)[0], 200)
 
-    def test_org_move_never_uses_snapshot_scope(self):
+    def test_org_move_invalidates_pat_bound_to_previous_membership(self):
         self.update_membership(role=authz.ORG_ADMIN)
         _, created = self.mint()
         admin = self.server.admin_token()
         code, new_org = self.server.post("/api/orgs", {"name": "第二学院", "slug": "second-pat"}, admin)
         self.assertEqual(code, 201)
         self.update_membership(org_id=new_org["id"])
-        self.assertEqual(self.server.get("/api/orgs/%s/dashboard" % PILOT, created["token"])[0], 403)
-        self.assertEqual(self.server.get("/api/orgs/%s/dashboard" % new_org["id"], created["token"])[0], 200)
+        for org_id in (PILOT, new_org["id"]):
+            code, body = self.server.get("/api/orgs/%s/dashboard" % org_id, created["token"])
+            self.assertEqual(code, 401)
+            self.assertIn("重新签发", body["error"])
 
     def test_pending_review_preserves_existing_allowed_range(self):
         _, created = self.mint()
