@@ -186,15 +186,9 @@ function renderMembers() {
     const status = el('select', { className: 'compact-select', onchange: event => updateMember(row, { admissionStatus: event.target.value }) }, [
       ['active', '已准入'], ['disabled', '已停用'], ['pending_review', '待复核']
     ].map(([value, label]) => el('option', { value, selected: row.admissionStatus === value, text: label })));
-    const isAdmin = row.role === 'org_admin';
     const quota = row.quota || {};
     const canReissue = ['pending', 'failed', 'revoking', 'none'].includes(row.keyStatus);
     const actions = [
-      el('button', {
-        className: 'ghost',
-        text: isAdmin ? '设为学生' : '设为教师',
-        onclick: () => updateMember(row, { role: isAdmin ? 'org_member' : 'org_admin' })
-      }),
       el('button', { className: 'danger', text: '吊销', onclick: () => revokeOne(row) })
     ];
     if (canReissue) actions.unshift(el('button', { className: 'outline', text: '重发密钥', onclick: () => reissueOne(row) }));
