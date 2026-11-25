@@ -54,7 +54,7 @@ async function boot() {
     $('orgSubtitle').textContent = ((me.labels && me.labels.admin) || '教师') + '视角 · 本组织成员、用量与精选作品';
     $('importLink').href = 'import.html?org=' + encodeURIComponent(orgId);
     $('importBtn').href = $('importLink').href;
-    await Promise.all([loadDashboard(), loadWorks(), loadAudit()]);
+    await Promise.all([loadDashboard(), loadWorks()]);
   } catch (error) {
     if (error.status === 401 || error.status === 403) denied(); else toast(error.message);
   }
@@ -214,25 +214,7 @@ function openWork(work) {
   toast(work.title + '：可前往“作品广场”查看详情或下载安装包。');
 }
 
-async function loadAudit() {
-  try {
-    const data = await api('/api/orgs/' + encodeURIComponent(orgId) + '/audit');
-    const table = $('auditTable');
-    table.replaceChildren(el('thead', {}, [el('tr', {}, ['时间', '动作', '资源', '角色'].map(label => el('th', { text: label })))]));
-    const body = el('tbody');
-    for (const event of data.events) {
-      body.appendChild(el('tr', {}, [
-        el('td', { text: new Date(event.createdAt * 1000).toLocaleString('zh-CN') }),
-        el('td', { text: event.action }), el('td', { text: event.resourceType + ' / ' + (event.resourceId || '—') }),
-        el('td', { text: event.actorRole || '—' })
-      ]));
-    }
-    table.appendChild(body);
-  } catch (error) { /* audit is secondary */ }
-}
-
 $('refreshWorks').onclick = loadWorks;
-$('refreshAudit').onclick = loadAudit;
 $('teacherLogout').onclick = async () => {
   try { await api('/api/logout', { method: 'POST', body: '{}' }); } catch (error) { /* ignore */ }
   localStorage.removeItem(STORE_KEY);
