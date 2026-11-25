@@ -26,7 +26,7 @@ class MigrationTests(unittest.TestCase):
             conn.close()
 
             applied = migrations.migrate(db_path)
-            self.assertEqual(applied, [1, 2, 3, 4, 5, 6, 7])
+            self.assertEqual(applied, [1, 2, 3, 4, 5, 6, 7, 8, 9])
             self.assertEqual(migrations.migrate(db_path), [])
 
             conn = sqlite3.connect(db_path)
@@ -49,8 +49,13 @@ class MigrationTests(unittest.TestCase):
             count = conn.execute("SELECT COUNT(*) FROM org_memberships WHERE org_id = ? AND admission_status = 'active'",
                                  (config.PILOT_ORG["id"],)).fetchone()[0]
             self.assertGreaterEqual(count, 200)
+            quota = conn.execute("SELECT quota_limit FROM organizations WHERE id = ?",
+                                 (config.PILOT_ORG["id"],)).fetchone()[0]
+            self.assertEqual(quota, config.PILOT_TOTAL_QUOTA)
+            demo_columns = {row[1] for row in conn.execute("PRAGMA table_info(sessions)").fetchall()}
+            self.assertIn("demo", demo_columns)
             versions = conn.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0]
-            self.assertEqual(versions, 7)
+            self.assertEqual(versions, 9)
             conn.close()
 
     def test_failed_version_rolls_back_without_half_write(self):
@@ -75,7 +80,7 @@ class MigrationTests(unittest.TestCase):
             conn.close()
             self.assertEqual(versions, [1, 2])
             self.assertNotIn("half_write", tables)
-            self.assertEqual(migrations.migrate(db_path), [3, 4, 5, 6, 7])
+            self.assertEqual(migrations.migrate(db_path), [3, 4, 5, 6, 7, 8, 9])
 
     def test_relay_backfill_fills_user_and_org(self):
         with tempfile.TemporaryDirectory() as tmp:

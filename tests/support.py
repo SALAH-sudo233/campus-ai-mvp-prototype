@@ -10,6 +10,8 @@ import time
 import urllib.error
 import urllib.request
 
+from tests.fake_new_api import FakeNewApi
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEST_AUTH_VALUE = "test-" + secrets.token_urlsafe(16)
 def free_port():
@@ -21,11 +23,14 @@ def free_port():
 
 
 class DemoServer:
-    def __init__(self):
+    def __init__(self, env_overrides=None, new_api_enabled=True):
         self.dir = tempfile.mkdtemp(prefix="campus-test-")
         self.port = free_port()
         self.base = "http://127.0.0.1:%d" % self.port
         self.proc = None
+        self.env_overrides = dict(env_overrides or {})
+        self.new_api_enabled = new_api_enabled
+        self.new_api = FakeNewApi()
         self.admin_user = "test-admin"
         self.admin_value = "test-" + secrets.token_urlsafe(24)
 
@@ -38,6 +43,7 @@ class DemoServer:
         return os.path.join(self.dir, "relay.sqlite")
 
     def __enter__(self):
+        self.new_api.__enter__()
         env = os.environ.copy()
         env.update({
             "DEMO_DB": self.db_path,
@@ -45,9 +51,16 @@ class DemoServer:
             "ADMIN_USERNAME": self.admin_user,
             "ADMIN_PASSWORD": self.admin_value,
             "DEMO_ALLOW_RESET": "1",
+            "DEMO_ALLOW_LOGIN": "0",
+            "NEW_API_ENABLED": "1" if self.new_api_enabled else "0",
+            "NEW_API_BASE_URL": self.new_api.base_url,
+            "NEW_API_TOKEN": self.new_api.token,
+            "NEW_API_USER_ID": "1",
+            "NEW_API_TIMEOUT": "2",
             "HOST": "127.0.0.1",
             "PORT": str(self.port),
         })
+        env.update({str(key): str(value) for key, value in self.env_overrides.items()})
         self.proc = subprocess.Popen([sys.executable, "server.py"], cwd=ROOT, env=env,
                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         deadline = time.time() + 20
@@ -71,6 +84,7 @@ class DemoServer:
                 self.proc.kill()
         if self.proc and self.proc.stdout:
             self.proc.stdout.close()
+        self.new_api.__exit__(exc_type, exc, tb)
         shutil.rmtree(self.dir, ignore_errors=True)
 
     def request(self, method, path, body=None, token=None, raw=None, content_type=None):

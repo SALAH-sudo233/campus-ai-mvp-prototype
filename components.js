@@ -186,7 +186,9 @@
         el('span', { className: 'tree-name', text: child.name || '未命名成员' }),
         el('code', { text: child.studentId || '—' }),
         RoleBadge(child, labels),
-        el('span', { className: 'muted', text: '余额 ' + Number(child.balance || 0).toLocaleString('zh-CN') }),
+        el('span', { className: 'muted', text: child.remainingQuota == null
+          ? ('人均 ' + Number((child.quota && child.quota.memberQuota) || 0).toLocaleString('zh-CN'))
+          : ('剩余 ' + Number(child.remainingQuota).toLocaleString('zh-CN')) }),
         el('span', { className: 'muted', text: child.keyHint || '无密钥' })
       ]);
     }
@@ -250,5 +252,29 @@
     return wrap;
   }
 
-  window.UI = { el, svg, MetricCard, RoleBadge, WorkCard, TrendChart, Heatmap, OrgTree, ImportPreview, numberTicker };
+
+  function guard(handler) {
+    let busy = false;
+    return async function (event) {
+      if (busy) {
+        if (event && typeof event.preventDefault === 'function') event.preventDefault();
+        return;
+      }
+      busy = true;
+      const target = event && event.currentTarget;
+      const canDisable = target && 'disabled' in target;
+      const wasDisabled = canDisable ? target.disabled : false;
+      if (canDisable) target.disabled = true;
+      if (target && target.classList) target.classList.add('is-busy');
+      try {
+        return await handler.call(this, event);
+      } finally {
+        busy = false;
+        if (canDisable) target.disabled = wasDisabled;
+        if (target && target.classList) target.classList.remove('is-busy');
+      }
+    };
+  }
+
+  window.UI = { el, svg, MetricCard, RoleBadge, WorkCard, TrendChart, Heatmap, OrgTree, ImportPreview, numberTicker, guard };
 })();

@@ -178,7 +178,7 @@ class CrossOrgImportTests(unittest.TestCase):
                                      {}, teacher["token"])
             self.assertEqual(code, 403, data)
             code, updated = server.patch("/api/orgs/%s/members/%s" % (org_b, victim["userId"]),
-                                         {"admissionStatus": "disabled"}, teacher["token"])
+                                         {"admissionStatus": "disabled"}, admin)
             self.assertEqual(code, 200, updated)
             self.assertEqual(updated["admissionStatus"], "disabled")
 

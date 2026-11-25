@@ -13,6 +13,7 @@ import app_server
 import config
 from identity import owner_ref_of
 from tests.support import TEST_AUTH_VALUE, login, register
+from tests.fake_new_api import FakeNewApi
 
 PILOT = config.PILOT_ORG["id"]
 
@@ -23,10 +24,18 @@ class InProcessServer:
     def __init__(self):
         self.dir = tempfile.mkdtemp(prefix="campus-test-")
         self.saved = {}
+        self.saved_env = {}
+        self.new_api = FakeNewApi()
         self.server = None
         self.thread = None
 
     def __enter__(self):
+        self.new_api.__enter__()
+        for name, value in (("NEW_API_ENABLED", "1"), ("NEW_API_BASE_URL", self.new_api.base_url),
+                            ("NEW_API_TOKEN", self.new_api.token), ("NEW_API_USER_ID", "1"),
+                            ("NEW_API_TIMEOUT", "2"), ("DEMO_ALLOW_LOGIN", "0")):
+            self.saved_env[name] = os.environ.get(name)
+            os.environ[name] = value
         for name in ("DB_PATH", "RELAY_DB", "ADMIN_USERNAME", "ADMIN_PASSWORD"):
             self.saved[name] = getattr(app_server, name)
         app_server.DB_PATH = os.path.join(self.dir, "backend.sqlite")
@@ -61,6 +70,12 @@ class InProcessServer:
             self.thread.join(timeout=5)
         for name, value in self.saved.items():
             setattr(app_server, name, value)
+        for name, value in self.saved_env.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+        self.new_api.__exit__(exc_type, exc, tb)
         shutil.rmtree(self.dir, ignore_errors=True)
 
     def request(self, method, path, body=None, token=None):
@@ -107,25 +122,26 @@ def relay_key_states(server, student_id):
 
 
 class LoginRevocationRaceTests(unittest.TestCase):
-    def test_pending_review_change_waits_for_inflight_login_key_issue(self):
+    def test_login_network_phase_does_not_hold_lock_and_revokes_after_status_change(self):
         with InProcessServer() as server:
             admin = server.admin_token()
             code, student = register(server, "2024001161")
             self.assertEqual(code, 201, student)
             member = member_for(server, admin, "2024001161")
+            code, revoked = server.post("/api/orgs/%s/members/%s/revoke-key" % (PILOT, member["userId"]),
+                                        {}, admin)
+            self.assertEqual(code, 200, revoked)
 
             entered = threading.Event()
             release = threading.Event()
             patch_done = threading.Event()
             responses = {}
-            original_ensure_key = app_server.ensure_key
-            target = owner_ref_of("student", "2024001161")
+            original_finish = app_server._finish_key_issue
 
-            def gated_ensure_key(owner_ref, *args, **kwargs):
-                if owner_ref == target:
-                    entered.set()
-                    self.assertTrue(release.wait(5), "测试未释放密钥发放窗口")
-                return original_ensure_key(owner_ref, *args, **kwargs)
+            def gated_finish(job, user_id=None):
+                entered.set()
+                self.assertTrue(release.wait(5), "测试未释放网络窗口")
+                return original_finish(job, user_id)
 
             def login_request():
                 responses["login"] = login(server, "2024001161")
@@ -136,24 +152,25 @@ class LoginRevocationRaceTests(unittest.TestCase):
                     {"admissionStatus": "pending_review"}, admin)
                 patch_done.set()
 
-            app_server.ensure_key = gated_ensure_key
+            app_server._finish_key_issue = gated_finish
             login_thread = threading.Thread(target=login_request)
             patch_thread = threading.Thread(target=pending_review_request)
             try:
                 login_thread.start()
                 self.assertTrue(entered.wait(5), "登录未进入密钥发放窗口")
                 patch_thread.start()
-                self.assertFalse(patch_done.wait(0.5), "成员吊销未等待同一账户的在途登录")
+                self.assertTrue(patch_done.wait(2), "网络阶段不应持有全局 LOCK")
             finally:
                 release.set()
                 login_thread.join(timeout=10)
                 patch_thread.join(timeout=10)
-                app_server.ensure_key = original_ensure_key
+                app_server._finish_key_issue = original_finish
 
             self.assertFalse(login_thread.is_alive())
             self.assertFalse(patch_thread.is_alive())
             code, logged_in = responses["login"]
             self.assertEqual(code, 200, logged_in)
+            self.assertIsNone(logged_in["relayKey"]["plaintext"])
             code, updated = responses["patch"]
             self.assertEqual(code, 200, updated)
             self.assertEqual(updated["admissionStatus"], "pending_review")
