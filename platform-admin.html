@@ -151,7 +151,7 @@
       <div class="p-3.5 rounded-xl text-[11px] leading-relaxed border border-slate-200 space-y-1" style="background:#FFFFFF; color:#464D5B;">
         <div class="font-semibold" style="color:var(--ink);">内部治理红线</div>
         <div>• 统一配置合作学院规则、默认初始额度与单日防刷限流。</div>
-        <div>• 严审各校追加激励池申请；全程审计校内发奖与倒卖异常，秒级冻结止损。</div>
+        <div>• 严审各校追加激励池申请；全程审计挑战结算发奖与倒卖异常，秒级冻结止损。</div>
       </div>
     </aside>
 
@@ -217,9 +217,9 @@
                   <span class="mono">总预算 214.8M / 300M (71.6%)</span>
                 </div>
                 <div class="h-2 rounded-full overflow-hidden" style="background:var(--bg-subtle);"><div class="h-full rounded-full" style="width:71.6%; background:linear-gradient(90deg,#624AFF,#36CFD1);"></div></div>
-                <div class="text-[11px] flex justify-between" style="color:var(--muted);">
+                <div class="text-[11px] flex flex-wrap justify-between gap-1" style="color:var(--muted);">
                   <span>认证 642 人 · 作品 96 件</span>
-                  <span style="color:var(--warn);">激励池已用 82.5%（已提追加申请）</span>
+                  <span id="hustPoolOverviewLine" style="color:var(--warn);">激励池可用 2.5M / 20M（已发 14.0M · 挑战冻结 3.5M · 占用 87.5%）</span>
                 </div>
               </div>
               <div class="space-y-1.5">
@@ -270,7 +270,7 @@
           <div class="section-eyebrow">
             <div class="section-bar" style="background:var(--accent);"></div>
             <div>
-              <div class="text-[11px]" style="color:var(--muted);">资金出口管控（适配机制 A）</div>
+              <div class="text-[11px]" style="color:var(--muted);">资金出口管控（学院激励池预算预占制）</div>
               <h1 class="text-lg font-bold">激励池追加审批与额度防刷策略</h1>
             </div>
           </div>
@@ -341,7 +341,7 @@
               <select id="logScopeFilter" onchange="renderAuditLogs()" class="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs">
                 <option value="all">全部来源端</option>
                 <option value="学生端">学生端</option>
-                <option value="校内运营端">校内运营端（含池内发奖）</option>
+                <option value="校内运营端">校内运营端（含挑战预占与结算）</option>
                 <option value="浣溪平台端">浣溪平台端</option>
               </select>
               <input id="logSearch" oninput="renderAuditLogs()" type="text" placeholder="搜索账号、动作或单号..." class="px-3.5 py-1.5 rounded-full border border-slate-200 text-xs w-52 focus:outline-none focus:border-[#624AFF]" />
@@ -426,31 +426,32 @@
     let approveTargetId = null;
 
     let talents = [
-      { name: '林知行', college: '华科软件 · 本科大三', email: 'linzhixing@hust.edu.cn', highlight: '4.82M 消耗 · 双周榜 #1 · 精选作品', tagged: true },
+      { name: '林知行', college: '华科软件 · 本科大三', email: 'linzhixing@hust.edu.cn', highlight: '4.82M 消耗 · 先导挑战赛一等奖 · 精选作品', tagged: true },
       { name: '周予安', college: '华科软件 · 研一', email: 'zhouyuan@hust.edu.cn', highlight: '4.26M 消耗 · 论文精读卡片作者', tagged: false },
       { name: '陈一鸣', college: '华科软件 · 本科大四', email: 'chenyiming@hust.edu.cn', highlight: '3.65M 消耗 · 社团志愿核心 · 精选作品', tagged: false }
     ];
 
     let colleges = [
-      { id: 'c-1', name: '华中科技大学 · 软件学院', domain: '@hust.edu.cn', status: '运行中', budgetUsed: 214.8, budgetTotal: 300, poolRemain: 3.5, poolTotal: 20, collegeAcct: 'dean_hust_se', opsAcct: 'ops_hust_se_club' },
-      { id: 'c-2', name: '武汉大学 · 计算机学院（预置试点）', domain: '@whu.edu.cn', status: '预置试跑', budgetUsed: 31.4, budgetTotal: 100, poolRemain: 8.0, poolTotal: 10, collegeAcct: 'dean_whu_cs', opsAcct: 'ops_whu_cs_club' }
+      { id: 'c-1', name: '华中科技大学 · 软件学院', domain: '@hust.edu.cn', status: '运行中', budgetUsed: 214.8, budgetTotal: 300, poolRemain: 2.5, poolFrozen: 3.5, poolIssued: 14.0, poolTotal: 20, collegeAcct: 'dean_hust_se', opsAcct: 'ops_hust_se_club' },
+      { id: 'c-2', name: '武汉大学 · 计算机学院（预置试点）', domain: '@whu.edu.cn', status: '预置试跑', budgetUsed: 31.4, budgetTotal: 100, poolRemain: 8.0, poolFrozen: 0, poolIssued: 2.0, poolTotal: 10, collegeAcct: 'dean_whu_cs', opsAcct: 'ops_whu_cs_club' }
     ];
 
     let approvals = [
-      { id: 'REQ-1126-01', college: '华中科技大学 · 软件学院', amount: 10000000, poolLeft: '3.5M / 20M', budgetLeft: '85.2M', works30d: 96, reason: '用于 12 月第 1 期黑客松优胜奖发放、第 3 期双周 Top 10 及 6 名社团志愿者激励', time: '今日 09:40', status: 'pending' },
-      { id: 'REQ-1125-04', college: '武汉大学 · 计算机学院', amount: 5000000, poolLeft: '8.0M / 10M', budgetLeft: '68.6M', works30d: 21, reason: '首场校内 Workshop 结课激励预算预备', time: '昨日 17:15', status: 'pending' }
+      { id: 'REQ-1126-01', collegeId: 'c-1', college: '华中科技大学 · 软件学院', amount: 10000000, poolLeft: '可用 2.5M / 冻结 3.5M / 总额 20M', budgetLeft: '85.2M', works30d: 96, reason: '用于 12 月新主题挑战赛预算预占及校内开发社团志愿者激励补充', time: '今日 09:40', status: 'pending' },
+      { id: 'REQ-1125-04', collegeId: 'c-2', college: '武汉大学 · 计算机学院', amount: 5000000, poolLeft: '可用 8.0M / 冻结 0M / 总额 10M', budgetLeft: '68.6M', works30d: 21, reason: '首期校内主题挑战赛预算预占与社团志愿者激励预备', time: '昨日 17:15', status: 'pending' }
     ];
 
     let risks = [
       { id: 'r-1', level: 'high', type: '疑似 Key 倒卖 / 多人共享', target: 'zhangwei@hust.edu.cn', college: '华科软件学院', evidence: '24h 跨 19 个来源 IP · 连续调用 14 小时 · 消耗 890K / 0 作品', status: 'open' },
       { id: 'r-2', level: 'high', type: '高频异常重置 Key', target: 'liyang@hust.edu.cn', college: '华科软件学院', evidence: '7 天内重置密钥 6 次 · 凌晨 2:00-5:00 突增调用 420K', status: 'open' },
-      { id: 'r-3', level: 'med', type: '校内发奖异常集中稽核（机制 A）', target: 'ops_hust_se_club → wangxx@hust.edu.cn', college: '华科软件学院', evidence: '7 天内向同一学生邮箱连续发放 3 笔激励（累计 1.5M）', status: 'review' }
+      { id: 'r-3', level: 'med', type: '校内发奖异常集中稽核（预算预占池制）', target: 'ops_hust_se_club → wangxx@hust.edu.cn', college: '华科软件学院', evidence: '7 天内向同一学生邮箱连续发放 3 笔激励（累计 1.5M）', status: 'review' }
     ];
 
     let auditLogs = [
       { time: '11-26 10:18', scope: '学生端', actor: 'zhangwei@hust.edu.cn', detail: '触发反倒卖规则：24h 来源 IP 数达到 19（阈值 8）', res: '高危告警' },
-      { time: '11-26 09:40', scope: '校内运营端', actor: 'ops_hust_se_club', detail: '提交追加激励池申请 #REQ-1126-01（+10,000,000 Token）', res: '待审批' },
-      { time: '11-24 18:20', scope: '校内运营端', actor: 'ops_hust_se_club', detail: '从学院激励池向 linzhixing@hust.edu.cn 发放 +500,000（双周榜 #1）', res: '已到账' },
+      { time: '11-26 09:40', scope: '校内运营端', actor: 'ops_hust_se_club', detail: '提交追加激励池申请 #REQ-1126-01（+10,000,000 Token · 当前可用 2.5M / 冻结 3.5M）', res: '待审批' },
+      { time: '11-25 14:10', scope: '校内运营端', actor: 'ops_hust_se_club', detail: '上线「#第2期科研工具赛」并从学院激励池预占冻结 1,300,000 Token', res: '已预占' },
+      { time: '11-24 18:20', scope: '校内运营端', actor: 'ops_hust_se_club', detail: '先导期小应用挑战赛一等奖结算 +500,000（发放至 linzhixing@hust.edu.cn · 未用预占自动回池）', res: '已到账' },
       { time: '11-23 15:02', scope: '学生端', actor: 'linzhixing@hust.edu.cn', detail: '重置个人 API Key（旧密钥 sk-hx******2a10 立即失效）', res: '成功' },
       { time: '11-16 11:00', scope: '浣溪平台端', actor: 'ouyangchao (超管)', detail: '批复华科软件学院首期激励池 20,000,000 Token（幂等号 #REQ-1116-01）', res: '已生效' }
     ];
@@ -509,7 +510,7 @@
             </div>
             <div class="mono text-right">
               <div>总预算 <strong>${c.budgetUsed}M / ${c.budgetTotal}M</strong></div>
-              <div style="color:var(--accent-ink);">激励池余 <strong>${c.poolRemain}M / ${c.poolTotal}M</strong></div>
+              <div style="color:${c.poolFrozen > 0 && (c.poolRemain / c.poolTotal) <= 0.2 ? 'var(--warn)' : 'var(--accent-ink)'};">激励池可用 <strong>${c.poolRemain}M / ${c.poolTotal}M</strong>（已发 ${(c.poolIssued || 0).toFixed(1)}M · 挑战冻结 ${(c.poolFrozen || 0).toFixed(1)}M · 占用 ${((( (c.poolIssued || 0) + (c.poolFrozen || 0) ) / c.poolTotal) * 100).toFixed(1)}%）</div>
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-slate-100">
@@ -541,7 +542,7 @@
       const pool = Number(document.getElementById('ncPool').value) || 15;
       if (!name) { showToast('请输入学院名称'); return; }
       const slug = 'col_' + (colleges.length + 1);
-      colleges.push({ id: 'c-' + Date.now(), name, domain, status: '新开通', budgetUsed: 0, budgetTotal: bud, poolRemain: pool, poolTotal: pool, collegeAcct: 'dean_' + slug, opsAcct: 'ops_' + slug });
+      colleges.push({ id: 'c-' + Date.now(), name, domain, status: '新开通', budgetUsed: 0, budgetTotal: bud, poolRemain: pool, poolFrozen: 0, poolIssued: 0, poolTotal: pool, collegeAcct: 'dean_' + slug, opsAcct: 'ops_' + slug });
       auditLogs.unshift({ time: '刚刚', scope: '浣溪平台端', actor: 'ouyangchao (超管)', detail: `开通新试点学院「${name}」（预算 ${bud}M / 初始激励池 ${pool}M）`, res: '成功' });
       closeNewCollegeModal();
       renderBadges();
@@ -609,7 +610,22 @@
       const a = approvals.find(x => x.id === approveTargetId);
       if (a) {
         a.status = 'approved';
-        auditLogs.unshift({ time: '刚刚', scope: '浣溪平台端', actor: 'ouyangchao (超管)', detail: `审批通过 ${a.id}：向 ${a.college} 激励池注入 +${(a.amount/1000000).toFixed(0)}M Token`, res: '已到账' });
+        const addM = +(a.amount / 1000000).toFixed(1);
+        const col = colleges.find(c => c.id === a.collegeId);
+        if (col) {
+          col.poolRemain = +(col.poolRemain + addM).toFixed(1);
+          col.poolTotal = +(col.poolTotal + addM).toFixed(1);
+          a.poolLeft = `可用 ${col.poolRemain}M / 冻结 ${col.poolFrozen}M / 总额 ${col.poolTotal}M`;
+          if (col.id === 'c-1') {
+            const hEl = document.getElementById('hustPoolOverviewLine');
+            if (hEl) {
+              const occ = (((col.poolIssued + col.poolFrozen) / col.poolTotal) * 100).toFixed(1);
+              hEl.style.color = 'var(--accent-ink)';
+              hEl.textContent = `激励池可用 ${col.poolRemain}M / ${col.poolTotal}M（已发 ${col.poolIssued.toFixed(1)}M · 挑战冻结 ${col.poolFrozen.toFixed(1)}M · 占用 ${occ}%）`;
+            }
+          }
+        }
+        auditLogs.unshift({ time: '刚刚', scope: '浣溪平台端', actor: 'ouyangchao (超管)', detail: `审批通过 ${a.id}：向 ${a.college} 激励池注入 +${addM}M Token`, res: '已到账' });
       }
       closeApproveModal();
       renderBadges();

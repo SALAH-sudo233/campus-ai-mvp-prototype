@@ -366,7 +366,7 @@
                   <div class="text-xs flex items-center gap-1.5" style="color:var(--muted);">
                     <span>初始 1.0M</span>
                     <span>+</span>
-                    <span style="color:var(--accent-ink);" class="font-medium">激励奖励 1.0M</span>
+                    <span style="color:var(--accent-ink);" class="font-medium">挑战赛奖励 1.0M</span>
                     <span>· 余量 74.1%</span>
                   </div>
                 </div>
@@ -448,7 +448,7 @@
               <div class="w-6 h-[3px] rounded-full" style="background:var(--primary);"></div>
               <div class="flex items-center gap-1 text-xs" style="color:var(--muted);">
                 <span>额度余量占比</span>
-                <span title="初始 1.0M + 奖励 1.0M - 已消耗 517.5K" class="cursor-help opacity-70">ⓘ</span>
+                <span title="初始 1.0M + 挑战赛奖励 1.0M - 已消耗 517.5K" class="cursor-help opacity-70">ⓘ</span>
               </div>
               <div class="text-2xl font-bold mono">74.1%</div>
               <div class="h-[3px] rounded-full overflow-hidden" style="background:#F1F1FD;">
@@ -466,11 +466,11 @@
               <div class="text-[11px]" style="color:var(--muted);">含代码 / 推理 / 多模态</div>
             </div>
 
-            <div class="cpa-card p-5 space-y-3 cursor-pointer hover:border-slate-300 transition" onclick="switchTab('square')">
+            <div class="cpa-card p-5 space-y-3 cursor-pointer hover:border-slate-300 transition" onclick="jumpToChallengeDetail('ch-hackathon')">
               <div class="w-6 h-[3px] rounded-full" style="background:var(--accent);"></div>
-              <div class="text-xs" style="color:var(--muted);">当期作品榜排名</div>
-              <div class="text-2xl font-bold mono" style="color:var(--primary);">#1</div>
-              <div class="text-[11px]" style="color:var(--accent-ink);">领跑双周 500K 奖励 →</div>
+              <div class="text-xs" style="color:var(--muted);">参赛挑战排名</div>
+              <div id="kpiChallengeRank" class="text-2xl font-bold mono" style="color:var(--primary);">#1</div>
+              <div id="kpiChallengeHint" class="text-[11px]" style="color:var(--accent-ink);">第1期黑客松暂列榜首 →</div>
             </div>
           </div>
 
@@ -695,20 +695,20 @@
             <div id="cmsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
           </div>
 
-          <!-- ===== 03 · 参赛赢 TOKEN（主题挑战与双周榜，点击进独立页互动评论） ===== -->
+          <!-- ===== 03 · 参赛赢 TOKEN（主题挑战赛，点击进独立详情页查看奖项档位、实时作品榜与获奖公示） ===== -->
           <div id="studioChallengeSection" class="pt-10 border-t border-slate-200/80 space-y-5">
             <div class="flex flex-wrap items-end justify-between gap-4">
               <div class="flex items-center gap-3">
                 <span class="w-8 h-8 rounded-xl mono text-xs font-bold inline-flex items-center justify-center text-white shrink-0" style="background:var(--accent);">03</span>
                 <div>
-                  <h2 class="text-base font-bold leading-tight">参赛赢 Token · 主题挑战与双周榜</h2>
-                  <div class="text-xs mt-0.5" style="color:var(--muted);">点击任意活动进入独立详情页查看简介并互动评论，单件最高奖 500,000 Token</div>
+                  <h2 class="text-base font-bold leading-tight">参赛赢 Token · 主题挑战赛</h2>
+                  <div class="text-xs mt-0.5" style="color:var(--muted);">校内运营自主发起与定奖结算，点击进入独立详情页查看奖项档位、参赛作品实时榜与开奖公示</div>
                 </div>
               </div>
-              <button onclick="switchTab('square')" class="cpa-ghost-pill px-4 py-1.5 text-xs font-medium bg-white shrink-0">查看双周作品榜 →</button>
+              <button onclick="activeSquareTag='awarded'; squareMode='all'; switchTab('square')" class="cpa-ghost-pill px-4 py-1.5 text-xs font-medium bg-white shrink-0">查看挑战获奖作品 →</button>
             </div>
 
-            <div id="challengeGrid" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
+            <div id="challengeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
 
             <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-4 flex flex-wrap items-center justify-between gap-3 text-xs">
               <div class="flex flex-wrap items-center gap-2.5">
@@ -745,14 +745,24 @@
           <!-- Sub-Mode A: 广场作品 -->
           <div id="squareAllPane" class="space-y-5">
             <div class="rounded-3xl p-5 px-6 text-white flex flex-wrap items-center justify-between gap-4" style="background:radial-gradient(ellipse 50% 90% at 92% 20%, rgba(54,207,209,0.28), transparent 70%), linear-gradient(135deg, #27254C 0%, #36298C 55%, #624AFF 100%); box-shadow:0 12px 28px rgba(98,74,255,0.18);">
-              <div class="space-y-1">
-                <div class="flex items-center gap-2 text-xs">
-                  <span class="px-2.5 py-0.5 rounded-full font-medium" style="background:var(--accent);">双周冲刺激励</span>
-                  <span class="text-slate-300">距本期截榜还剩 <strong class="text-white mono">5 天 14 小时</strong></span>
+              <div class="space-y-1.5">
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                  <span class="px-2.5 py-0.5 rounded-full font-semibold text-white" style="background:var(--accent);">🔥 火热进行中的主题挑战赛</span>
+                  <span class="mono text-slate-200">#第1期校园黑客松 · 12-05 截稿</span>
                 </div>
-                <div class="text-base font-semibold">每两周点赞量前 10 名的作品，作者可获 500,000 Token 奖励（每件作品不重复领奖）</div>
+                <div class="text-base sm:text-lg font-bold tracking-tight">《第 1 期校园效率工具黑客松》正在征集参赛作品</div>
+                <div class="text-xs text-slate-200 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span>总奖池 <strong class="mono text-white">2,200,000 Token</strong></span>
+                  <span class="opacity-50">·</span>
+                  <span>最高单奖 <strong class="mono text-white">500,000 Token</strong></span>
+                  <span class="opacity-50">·</span>
+                  <span><strong class="mono text-white">12-05 截稿</strong></span>
+                </div>
               </div>
-              <button onclick="openPublishModal()" class="px-4 py-2 rounded-full text-xs font-semibold bg-white text-[#27254C] hover:bg-slate-100 shrink-0">发布作品冲榜 →</button>
+              <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+                <button onclick="jumpToChallengeDetail('ch-hackathon')" class="px-4 py-2 rounded-full text-xs font-semibold border border-white/30 bg-white/10 hover:bg-white/20 text-white transition">查看挑战详情</button>
+                <button onclick="openPublishModal('#第1期校园黑客松')" class="px-4 py-2 rounded-full text-xs font-semibold bg-white text-[#27254C] hover:bg-slate-100 transition">带标签参赛 →</button>
+              </div>
             </div>
 
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -819,12 +829,11 @@
             <button onclick="copyPublishPrompt()" class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-[11px] font-sans bg-white/15 hover:bg-white/25 text-white">复制指令</button>
             <div id="publishPromptText" class="pr-16"></div>
           </div>
-          <div class="flex items-center justify-between pt-1">
-            <span style="color:var(--muted);">关联活动专题（选填）：</span>
+          <div class="flex items-center justify-between gap-2 pt-1">
+            <span style="color:var(--muted);">参加进行中的挑战赛（选填）：</span>
             <select id="promptTagSelect" onchange="updatePublishPrompt()" class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs">
-              <option value="">不参加专题（普通作品）</option>
-              <option value="#第1期校园黑客松">#第1期校园黑客松</option>
-              <option value="#第2周Workshop实战">#第2周Workshop实战</option>
+              <option value="">不参加挑战（普通作品）</option>
+              <option value="#第1期校园黑客松">#第1期校园黑客松（进行中 · 奖池 2.2M）</option>
             </select>
           </div>
           <button onclick="simulatePromptPublish()" class="cpa-pill-btn w-full py-2.5 text-xs font-semibold">模拟 AI 执行回执 · 一键提交审核</button>
@@ -845,11 +854,10 @@
               </select>
             </div>
             <div>
-              <label class="block font-medium mb-1">参加专题活动（可选）</label>
+              <label class="block font-medium mb-1">参加进行中挑战（可选）</label>
               <select id="pubTag" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs">
-                <option value="">不参加专题</option>
-                <option value="#第1期校园黑客松">#第1期校园黑客松</option>
-                <option value="#第2周Workshop实战">#第2周Workshop实战</option>
+                <option value="">不参加挑战</option>
+                <option value="#第1期校园黑客松">#第1期校园黑客松（进行中）</option>
               </select>
             </div>
           </div>
@@ -1043,7 +1051,7 @@ Model   ：claude-sonnet-4
         cover: './media/demo_cms_web.jpg',
         title: '用 AI 自动开发并上线 Web 项目',
         summary: '不需要懂前端框架！看 UP 主如何通过对话自动完成开发、调试并上线一个可公网访问的 Web 应用。',
-        tag: '#第2周Workshop实战',
+        tag: '#第2期科研工具赛',
         steps: [
           '用“用户是谁 + 解决什么痛点 + 3 个核心交互”写清楚首轮需求 Prompt',
           '让 AI 直接输出单文件 HTML/JS 并在本地浏览器边看边改 2 轮',
@@ -1065,7 +1073,7 @@ Model   ：claude-sonnet-4
         steps: [
           '准备 1 份真实课程材料或论文 PDF，告诉 AI 需要提取的固定栏目',
           '加入实时问答或一键导出 Markdown 交互，调用浣溪网关 API 跑通',
-          '附 2 张清晰效果图，勾选 #第1期校园黑客松 标签发布冲榜'
+          '附 2 张清晰效果图，勾选 #第1期校园黑客松 标签发布参赛'
         ],
         code: `帮我构建一个本地可运行的「论文精读卡片生成器」：\n- 支持粘贴论文摘要或文本，自动拆解：核心痛点 / 方法创新 / 关键公式 / 复现清单；\n- 支持一键复制为 Markdown 笔记，调用 OPENAI_BASE_URL 环境变量访问模型。`
       },
@@ -1097,13 +1105,13 @@ Model   ：claude-sonnet-4
         cover: './media/demo_cms_codex.jpg',
         title: '用 1 句 Prompt 做出校园效率工具',
         summary: '写好首轮需求 Prompt 的实用公式：对象 + 痛点 + 交互约束，减少返工、大幅节省 Token。',
-        tag: '#第2周Workshop实战',
+        tag: '#第2期科研工具赛',
         steps: [
           '先用 3 句话界定工具的使用场景与核心页面（避免一次性堆砌过多功能）',
           '要求 AI 先输出数据结构与最小可运行页面，实测后再加二期交互',
           '最后附带 2 张运行效果图，通过 Prompt 一键发布到作品广场'
         ],
-        code: `需求 Prompt 模板：\n我正在参加高校 AI 创新挑战赛，请帮我做一个面向在校大学生的【填入场景】单页工具：\n- 核心功能（不超过 3 个）：1)... 2)... 3)...\n- 数据使用本地 localStorage 持久化，附带 3 条真实校园演示数据；\n- 界面清爽简洁，单文件 index.html 可直接浏览器打开。`
+        code: `需求 Prompt 模板：\n我正在参加高校 AI 主题挑战赛，请帮我做一个面向在校大学生的【填入场景】单页工具：\n- 核心功能（不超过 3 个）：1)... 2)... 3)...\n- 数据使用本地 localStorage 持久化，附带 3 条真实校园演示数据；\n- 界面清爽简洁，单文件 index.html 可直接浏览器打开。`
       },
       {
         id: 'l-5',
@@ -1115,11 +1123,11 @@ Model   ：claude-sonnet-4
         cover: './media/demo_focus_timer_1.jpg',
         title: 'AI 编程训练全攻略：5 步入门实战',
         summary: '面向高校同学的 5 步系统实战指南：从学习辅助工具、番茄专注钟到科研效率小应用一站掌握。',
-        tag: '#第2周Workshop实战',
+        tag: '#第2期科研工具赛',
         steps: [
           '拆分工具的核心状态机与输入输出边界，先跑通最小可用原型',
           '本地验证 3 组边界用例（空输入、超长文本、移动端适配）',
-          '打包成静态 Web 或桌面 zip 上传到「我的作品」参与校园评选'
+          '打包成静态 Web 或桌面 zip 上传到「我的作品」参与校园挑战评选'
         ],
         code: `设计一个轻量化「实验室值班提醒桌面小助手」：\n1. 输入成员名单和空闲时间，自动生成本周公平排班表；\n2. 支持导出飞书/微信群公告文案；\n3. 界面简洁无广告，附打包启动脚本说明。`
       },
@@ -1146,46 +1154,88 @@ Model   ：claude-sonnet-4
     const CHALLENGES = [
       {
         id: 'ch-hackathon',
-        statusBadge: '奖 500K Token · 进行中',
+        status: 'ongoing',
+        statusBadge: '进行中 · 总奖池 2.2M Token',
         statusStyle: 'background:var(--accent); color:#FFFFFF;',
         deadline: '12-05 截稿',
         title: '第 1 期校园效率工具黑客松',
-        subtitle: '围绕选课、科研、寝室或社团痛点做出可体验工具，优胜直发 500,000 Token + 校园礼品。',
+        subtitle: '围绕选课排课、科研文献、寝室生活或社团协作痛点做出可体验工具，校内运营评审定奖直发算力。',
         tag: '#第1期校园黑客松',
         tagColor: 'var(--accent-ink)',
         cover: './media/demo_cms_hackathon.jpg',
-        reward: '优胜直发 500,000 Token + 校园礼品（计入双周 Top 10 榜单）',
-        timeline: '11-20 开启征集 · 12-05 23:59 截稿 · 12-08 院内公示发奖',
+        totalPoolText: '2,200,000 Token',
+        shortPoolText: '总奖池 2.2M Token',
+        tierSummary: '🥇 一等奖 2×500K · 🥈 优胜 4×250K · 🎖️ 鼓励 4×50K',
+        timeline: '11-20 开启征集 · 12-05 23:59 截稿 · 12-08 校内运营评奖公示',
         participants: 128,
-        submissions: 34,
-        ctaText: '带标签参赛赢 Token',
-        ctaPrimary: true,
+        tiers: [
+          { badge: '🥇 一等奖', quota: '2 名', unitReward: '500,000 Token', subtotal: '1,000,000 Token' },
+          { badge: '🥈 优胜奖', quota: '4 名', unitReward: '250,000 Token', subtotal: '1,000,000 Token' },
+          { badge: '🎖️ 入围鼓励奖', quota: '4 名', unitReward: '50,000 Token', subtotal: '200,000 Token' }
+        ],
         rules: [
           '选题聚焦高校学习、科研、校园生活或社团协作的真实高频痛点，鼓励小而美、点开即用；',
-          '作品形态支持 Web（自动静态托管，推荐）、APP 或 PC 安装包，发布时勾选 #第1期校园黑客松 专题标签；',
-          '评审结合「作品广场实名点赞热度 + 实用完整度」，单件作品不重复领取双周 500K 奖励。'
+          '作品形态支持 Web（自动静态托管，推荐）、APP 或 PC 安装包，发布时选择 #第1期校园黑客松 标签；',
+          '截稿后由校内运营综合「作品完整实用度 + 作品广场实名点赞热度」定奖结算，奖励直发个人账户并公开公示。'
         ]
       },
       {
         id: 'ch-workshop',
-        statusBadge: '实战打卡 · 冲榜双周激励',
-        statusStyle: 'background:rgba(255,255,255,0.95); color:var(--primary);',
-        deadline: '周三 19:30',
-        title: '第 2 周 Workshop：从对话到公网 Web 应用',
-        subtitle: '浣溪工程师现场演示 + 1v1 答疑，发布实践作品自动计入双周 Top 10（奖 500K Token）。',
-        tag: '#第2周Workshop实战',
+        status: 'judging',
+        statusBadge: '评奖结算中 · 总奖池 1.3M Token',
+        statusStyle: 'background:#FFFBE6; color:#D48806; border:1px solid #FDE68A;',
+        deadline: '今日截稿待开奖',
+        title: '第 2 期 AI 科研与学习小工具挑战赛',
+        subtitle: '面向文献阅读、实验记录、公式处理与课程复习场景的轻量工具专项赛，目前已截稿进入评奖结算。',
+        tag: '#第2期科研工具赛',
         tagColor: 'var(--primary)',
-        cover: './media/demo_campus_events_1.jpg',
-        reward: '完赛认证打卡 · 同步进入双周作品榜 Top 10（单件 500,000 Token）',
-        timeline: '每周三晚 19:30 线上/线下同步答疑 · 随时带标签提交实践作品',
+        cover: './media/demo_cms_web.jpg',
+        totalPoolText: '1,300,000 Token',
+        shortPoolText: '总奖池 1.3M Token',
+        tierSummary: '🥇 最佳实用奖 1×500K · 🥈 优秀实践奖 4×200K',
+        timeline: '11-12 开启征集 · 11-26 今日截稿 · 校内运营定奖结算中',
         participants: 86,
-        submissions: 19,
-        ctaText: '提交本期实践作品',
-        ctaPrimary: false,
+        tiers: [
+          { badge: '🥇 最佳实用奖', quota: '1 名', unitReward: '500,000 Token', subtotal: '500,000 Token' },
+          { badge: '🥈 优秀实践奖', quota: '4 名', unitReward: '200,000 Token', subtotal: '800,000 Token' }
+        ],
         rules: [
-          '零代码基础友好：跟着工程师现场演示，用 Codex / Claude Code 在 1 小时内完成首个可访问网页工具；',
-          '无需单独交书面报告，发布作品并勾选 #第2周Workshop实战 即视为完成本期实践打卡；',
-          '欢迎在下方评论区提前留言想做的题目或报错截图，工程师与志愿者会优先现场解答。'
+          '聚焦科研效率与日常课程学习痛点，支持单页 Web 工具、桌面脚本客户端与移动端应用参赛；',
+          '本期作品征集通道已关闭，已上架参赛作品仍可在广场在线体验与实名点赞互动；',
+          '校内运营复核作品可用性与实名点赞数据后，将在本页置顶公示获奖名单并自动发放 Token。'
+        ]
+      },
+      {
+        id: 'ch-starter',
+        status: 'settled',
+        statusBadge: '🏆 已开奖公示 · 已发 1.1M Token',
+        statusStyle: 'background:#F1F1FD; color:#624AFF; border:1px solid #D2C4FF;',
+        deadline: '已结项',
+        title: '先导期：百行代码校园小应用挑战赛',
+        subtitle: '零门槛快速上手 AI 编程的破冰挑战赛，用百行以内核心逻辑解决一个具体的校园真实小问题。',
+        tag: '#先导期小应用赛',
+        tagColor: '#624AFF',
+        cover: './media/demo_club_poster_1.jpg',
+        totalPoolText: '1,100,000 Token',
+        budgetPoolText: '1,200,000 Token（实发 1,100,000 Token）',
+        shortPoolText: '已发 1.1M Token',
+        tierSummary: '🏆 已公示：林知行(+500K) · 周予安(+300K) · 苏明澈(+300K)',
+        timeline: '11-05 开启征集 · 11-18 截稿评审 · 11-20 已开奖发奖结项',
+        participants: 94,
+        tiers: [
+          { badge: '🥇 一等奖', quota: '1 名', unitReward: '500,000 Token', subtotal: '500,000 Token' },
+          { badge: '🥈 优胜奖', quota: '2 名', unitReward: '300,000 Token', subtotal: '600,000 Token' },
+          { badge: '🎖️ 入围鼓励奖', quota: '2 名', unitReward: '50,000 Token', subtotal: '100,000 Token' }
+        ],
+        winners: [
+          { tier: '🥇 一等奖', rewardText: '+500,000 Token', author: '林知行', degree: '本科 · 大三', workId: 'w-1', workTitle: '华科选课排雷助手' },
+          { tier: '🥈 优胜奖', rewardText: '+300,000 Token', author: '周予安', degree: '研究生 · 研一', workId: 'w-2', workTitle: '论文精读卡片生成器' },
+          { tier: '🥈 优胜奖', rewardText: '+300,000 Token', author: '苏明澈', degree: '本科 · 大四', workId: 'w-6', workTitle: '毕设开题答辩模拟评委' }
+        ],
+        rules: [
+          '面向全院同学开放的首期破冰赛，不限年级与专业背景，使用浣溪网关免费算力独立或组队完成；',
+          '评审依据「真实校园场景价值 + 在线可体验完成度 + 实名点赞口碑」综合评定；',
+          '本场 3 名获奖同学共计 1,100,000 Token 激励已全部结算到账，获奖作品永久佩戴荣誉徽章展示。'
         ]
       }
     ];
@@ -1194,7 +1244,7 @@ Model   ：claude-sonnet-4
       'lesson:l-2': [
         { author: '周予安', role: '研究生 · 研一', time: '2 小时前', likes: 14, liked: false, body: '照着鱼皮这节把我的论文卡片工具 20 分钟就做出来上线了，单文件 HTML 托管到广场确实省心！' },
         { author: '陆星野', role: '本科 · 大二', time: '5 小时前', likes: 8, liked: false, body: '提示一个小技巧：首轮 Prompt 里把“示例数据写满 5 条”说清楚，生成出来的效果一眼就很有完成度。' },
-        { author: '陈一鸣', role: '校内运营', isStaff: true, time: '昨天 21:10', likes: 11, liked: false, body: '做完 Web 作品记得勾选 #第2周Workshop实战 或 #第1期校园黑客松，这样能直接参与 500K Token 激励哦～' }
+        { author: '陈一鸣', role: '校内运营', isStaff: true, time: '昨天 21:10', likes: 11, liked: false, body: '做完 Web 作品记得关联正在征集的主题挑战赛标签（如 #第1期校园黑客松），评审获奖最高直发 500K Token 激励哦～' }
       ],
       'lesson:l-3': [
         { author: '许嘉禾', role: '研究生 · 研二', time: '3 小时前', likes: 9, liked: false, body: '第 2 个文档批量提取的场景太适合处理实验数据了，配合浣溪网关速度很快。' },
@@ -1210,16 +1260,21 @@ Model   ：claude-sonnet-4
         { author: '陆星野', role: '本科 · 大二', time: '2 天前', likes: 6, liked: false, body: '适合周末一口气刷完，第 3 步状态机拆解讲得很透彻。' }
       ],
       'lesson:l-6': [
-        { author: '许嘉禾', role: '研究生 · 研二', time: '3 天前', likes: 10, liked: false, body: '准备拿这个全栈架构冲首期黑客松，冲一个前十 500K Token！' }
+        { author: '许嘉禾', role: '研究生 · 研二', time: '3 天前', likes: 10, liked: false, body: '准备拿这个全栈架构参加第 1 期校园黑客松，冲一波一等奖 500K Token！' }
       ],
       'challenge:ch-hackathon': [
-        { author: '周予安', role: '研究生 · 研一', time: '1 小时前', likes: 18, liked: false, body: '已提交「论文精读卡片生成器」参赛！欢迎大家去作品广场试用提建议，互赞交流～' },
-        { author: '苏明澈', role: '本科 · 大四', time: '4 小时前', likes: 12, liked: false, body: '想做一个「东区图书馆座位与研讨室空闲预测」小工具，有前端审美不错的同学一起组队吗？' },
-        { author: '陈一鸣', role: '校内运营', isStaff: true, time: '昨天 20:30', likes: 21, liked: false, body: '温馨提醒：支持个人或 2-3 人组队参赛，提交时附 1-2 张清晰界面截图过审最快；截稿前均可随时更新作品！' }
+        { author: '周予安', role: '研究生 · 研一', time: '1 小时前', likes: 18, liked: false, body: '已把迭代升级后的「论文精读卡片生成器」挂上 #第1期校园黑客松 参赛！欢迎大家去上方实时榜试用提建议～' },
+        { author: '苏明澈', role: '本科 · 大四', time: '4 小时前', likes: 12, liked: false, body: '想做一个「东区图书馆座位与研讨室空闲预测」小工具冲击 2.2M 奖池，有前端审美不错的同学一起组队吗？' },
+        { author: '陈一鸣', role: '校内运营', isStaff: true, time: '昨天 20:30', likes: 21, liked: false, body: '温馨提醒：本期总奖池 2.2M Token（一等奖 2 名 × 500K），12-05 截稿前均可随时提交或更新参赛作品！' }
       ],
       'challenge:ch-workshop': [
-        { author: '陆星野', role: '本科 · 大二', time: '3 小时前', likes: 11, liked: false, body: '上周三跟着现场演示做出了算法可视化沙盒，这周想问下怎么在静态页面里做本地数据导出 JSON。' },
-        { author: '陈一鸣', role: '校内运营', isStaff: true, time: '昨天 18:15', likes: 9, liked: false, body: '已记下问题！明晚 19:30 现场答疑环节会直接演示静态页导入导出和一键托管全流程。' }
+        { author: '陆星野', role: '本科 · 大二', time: '2 小时前', likes: 11, liked: false, body: '赶在截稿前提交了「算法题解可视化沙盒」，期待开奖！这期大家的科研学习工具都好实用。' },
+        { author: '陈一鸣', role: '校内运营', isStaff: true, time: '1 小时前', likes: 15, liked: false, body: '本期 #第2期科研工具赛 已于今日截稿，运营组正在核验作品可用性与实名点赞数据，1.3M Token 定奖结果即将在此置顶公示！' }
+      ],
+      'challenge:ch-starter': [
+        { author: '林知行', role: '本科 · 大三', time: '2 天前', likes: 24, liked: false, body: '500,000 Token 一等奖奖励已经秒到账 Token 门户了！用新额度把排课助手又升级了一版，继续冲第 1 期黑客松～' },
+        { author: '苏明澈', role: '本科 · 大四', time: '2 天前', likes: 16, liked: false, body: '百行代码做的开题答辩模拟评委拿了 300K 优胜奖，感谢同学们实名点赞支持！' },
+        { author: '陈一鸣', role: '校内运营', isStaff: true, time: '3 天前', likes: 29, liked: false, body: '恭喜林知行、周予安、苏明澈三位同学获奖！先导期 1,100,000 Token 算力激励已全部发放完毕，欢迎继续挑战第 1 期黑客松。' }
       ],
       'work:w-1': [
         { author: '周予安', role: '研究生 · 研一', time: '1 小时前', likes: 15, liked: false, body: '选课冲突高亮太实用了，如果能再支持导入教务处导出表格就封神了！' },
@@ -1244,14 +1299,15 @@ Model   ：claude-sonnet-4
 
     let myWorks = [
       {
-        id: 'mw-1', title: '华科选课排雷助手', type: 'Web', tag: '#第1期校园黑客松',
+        id: 'mw-1', workId: 'w-1', title: '华科选课排雷助手', type: 'Web', tag: '#第1期校园黑客松',
+        awardBadge: '🏆 先导赛一等奖',
         status: 'published', featured: true, likes: 148, rank: 1,
         cover: './media/demo_campus_events_1.jpg',
         desc: '结合历年课程口碑与时间冲突检测，AI 一键排出最优课表并支持导出日历。',
         url: 'https://apps.huanxi-lab.cn/hust-course-helper', updatedAt: '2026-11-23'
       },
       {
-        id: 'mw-2', title: '文献公式一键转 LaTeX', type: 'Web', tag: '#第2周Workshop实战',
+        id: 'mw-2', title: '文献公式一键转 LaTeX', type: 'Web', tag: '#第2期科研工具赛',
         status: 'reviewing', featured: false, likes: 0, rank: null,
         cover: './media/demo_focus_timer_1.jpg',
         desc: '截图粘贴论文复杂公式，自动输出可编译 LaTeX 代码与变量含义注释。',
@@ -1269,12 +1325,12 @@ Model   ：claude-sonnet-4
     ];
 
     let squareWorks = [
-      { id: 'w-1', title: '华科选课排雷助手', type: 'Web', tag: '#第1期校园黑客松', featured: true, likes: 148, voted: true, author: '林知行', degree: '本科 · 大三', desc: '结合历年课程口碑与时间冲突检测，AI 一键排出最优课表并支持导出日历。', createdAt: '2026-11-23', accent: '#0F4C81', cover: './media/demo_campus_events_1.jpg', url: 'https://apps.huanxi-lab.cn/hust-course-helper' },
-      { id: 'w-2', title: '论文精读卡片生成器', type: 'Web', tag: '#第1期校园黑客松', featured: true, likes: 126, voted: false, author: '周予安', degree: '研究生 · 研一', desc: '上传 PDF 自动拆解核心贡献、关键公式推导与实验复现清单，支持一键导出 Markdown。', createdAt: '2026-11-24', accent: '#0D9488', cover: './media/demo_cms_web.jpg', url: 'https://apps.huanxi-lab.cn/paper-cards' },
-      { id: 'w-3', title: '实验室值班语音助手', type: 'PC', tag: '#第2周Workshop实战', featured: true, likes: 98, voted: false, author: '陈一鸣', degree: '本科 · 大四', desc: '本地轻量桌面客户端，自动整理组会口头待办并生成飞书打卡提醒。', createdAt: '2026-11-25', accent: '#0A2540', cover: './media/demo_cms_agent.jpg', url: 'lab-voice-v1.1.zip' },
+      { id: 'w-1', title: '华科选课排雷助手', type: 'Web', tag: '#第1期校园黑客松', extraTags: ['#先导期小应用赛'], awardBadge: '🏆 先导赛一等奖', awardChallengeId: 'ch-starter', featured: true, likes: 148, voted: true, author: '林知行', degree: '本科 · 大三', desc: '结合历年课程口碑与时间冲突检测，AI 一键排出最优课表并支持导出日历。', createdAt: '2026-11-23', accent: '#0F4C81', cover: './media/demo_campus_events_1.jpg', url: 'https://apps.huanxi-lab.cn/hust-course-helper' },
+      { id: 'w-2', title: '论文精读卡片生成器', type: 'Web', tag: '#第1期校园黑客松', extraTags: ['#先导期小应用赛'], awardBadge: '🏆 先导赛优胜', awardChallengeId: 'ch-starter', featured: true, likes: 126, voted: false, author: '周予安', degree: '研究生 · 研一', desc: '上传 PDF 自动拆解核心贡献、关键公式推导与实验复现清单，支持一键导出 Markdown。', createdAt: '2026-11-24', accent: '#0D9488', cover: './media/demo_cms_web.jpg', url: 'https://apps.huanxi-lab.cn/paper-cards' },
+      { id: 'w-3', title: '实验室值班语音助手', type: 'PC', tag: '#第2期科研工具赛', featured: true, likes: 98, voted: false, author: '陈一鸣', degree: '本科 · 大四', desc: '本地轻量桌面客户端，自动整理组会口头待办并生成飞书打卡提醒。', createdAt: '2026-11-25', accent: '#0A2540', cover: './media/demo_cms_agent.jpg', url: 'lab-voice-v1.1.zip' },
       { id: 'w-4', title: '食堂档口排队实时估算', type: 'APP', tag: '#第1期校园黑客松', featured: false, likes: 84, voted: false, author: '许嘉禾', degree: '研究生 · 研二', desc: 'Android 轻量应用，基于课表下课潮汐规律预测东区各食堂窗口等待时长。', createdAt: '2026-11-25', accent: '#0F4C81', cover: './media/demo_homework_app_1.jpg', url: 'canteen-eta-v0.8.apk' },
-      { id: 'w-5', title: '算法题解可视化沙盒', type: 'Web', tag: '#第2周Workshop实战', featured: false, likes: 73, voted: false, author: '陆星野', degree: '本科 · 大二', desc: '输入动态规划或图论代码，自动生成状态转移步进动画，刷题复盘利器。', createdAt: '2026-11-26', accent: '#0D9488', cover: './media/demo_focus_timer_1.jpg', url: 'https://apps.huanxi-lab.cn/algo-sandbox' },
-      { id: 'w-6', title: '毕设开题答辩模拟评委', type: 'Web', tag: '', featured: false, likes: 61, voted: false, author: '苏明澈', degree: '本科 · 大四', desc: '导入开题 PPT 大纲，自动扮演三位严厉答辩老师进行追问与打分反馈。', createdAt: '2026-11-21', accent: '#334155', cover: './media/demo_club_poster_1.jpg', url: 'https://apps.huanxi-lab.cn/defense-mock' }
+      { id: 'w-5', title: '算法题解可视化沙盒', type: 'Web', tag: '#第2期科研工具赛', featured: false, likes: 73, voted: false, author: '陆星野', degree: '本科 · 大二', desc: '输入动态规划或图论代码，自动生成状态转移步进动画，刷题复盘利器。', createdAt: '2026-11-26', accent: '#0D9488', cover: './media/demo_focus_timer_1.jpg', url: 'https://apps.huanxi-lab.cn/algo-sandbox' },
+      { id: 'w-6', title: '毕设开题答辩模拟评委', type: 'Web', tag: '#先导期小应用赛', awardBadge: '🏆 先导赛优胜', awardChallengeId: 'ch-starter', featured: false, likes: 61, voted: false, author: '苏明澈', degree: '本科 · 大四', desc: '导入开题 PPT 大纲，自动扮演三位严厉答辩老师进行追问与打分反馈。', createdAt: '2026-11-21', accent: '#334155', cover: './media/demo_club_poster_1.jpg', url: 'https://apps.huanxi-lab.cn/defense-mock' }
     ];
 
     function initDotMatrix() {
@@ -1719,9 +1775,76 @@ Model   ：claude-sonnet-4
       }).join('') : `<div class="col-span-full cpa-card p-8 text-center text-xs" style="color:var(--muted);">没有找到匹配的教程，换个关键词试试。</div>`;
     }
 
+    let lastChallengeReturnId = null;
+
+    function workMatchesChallengeTag(w, tag) {
+      return w.tag === tag || (Array.isArray(w.extraTags) && w.extraTags.includes(tag));
+    }
+
+    function getChallengeWorks(tag) {
+      return squareWorks
+        .filter(w => workMatchesChallengeTag(w, tag))
+        .sort((a, b) => b.likes - a.likes);
+    }
+
+    function jumpToChallengeDetail(id) {
+      const ch = CHALLENGES.find(x => x.id === id);
+      if (!ch) return;
+      if (activeTab !== 'studio') switchTab('studio');
+      openChallengeDetail(id, true);
+    }
+
+    function jumpToChallengeByTag(tag) {
+      const ch = CHALLENGES.find(x => x.tag === tag);
+      if (ch) jumpToChallengeDetail(ch.id);
+    }
+
+    function syncChallengeRankKpi() {
+      const hackWorks = getChallengeWorks('#第1期校园黑客松');
+      const idx = hackWorks.findIndex(w => w.id === 'w-1');
+      const rank = idx >= 0 ? idx + 1 : 1;
+      const rankEl = document.getElementById('kpiChallengeRank');
+      const hintEl = document.getElementById('kpiChallengeHint');
+      if (rankEl) rankEl.textContent = '#' + rank;
+      if (hintEl) hintEl.textContent = rank === 1 ? '第1期黑客松暂列榜首 →' : `第1期黑客松暂列 #${rank} →`;
+      const mw1 = myWorks.find(m => m.workId === 'w-1' || m.id === 'mw-1');
+      const w1 = squareWorks.find(w => w.id === 'w-1');
+      if (mw1 && w1) {
+        mw1.likes = w1.likes;
+        mw1.rank = rank;
+      }
+    }
+
+    function populateOngoingChallengeSelects() {
+      const ongoing = CHALLENGES.filter(c => c.status === 'ongoing');
+      const promptSel = document.getElementById('promptTagSelect');
+      const manualSel = document.getElementById('pubTag');
+      if (promptSel) {
+        promptSel.innerHTML = `<option value="">不参加挑战（普通作品）</option>` +
+          ongoing.map(c => `<option value="${c.tag}">${c.tag}（进行中 · ${c.shortPoolText}）</option>`).join('');
+      }
+      if (manualSel) {
+        manualSel.innerHTML = `<option value="">不参加挑战</option>` +
+          ongoing.map(c => `<option value="${c.tag}">${c.tag}（进行中）</option>`).join('');
+      }
+    }
+
     function renderChallengeGrid() {
       document.getElementById('challengeGrid').innerHTML = CHALLENGES.map(ch => {
         const cmtCount = (DISCUSSIONS['challenge:' + ch.id] || []).length;
+        const entryCount = getChallengeWorks(ch.tag).length;
+        const actionRow = ch.status === 'ongoing'
+          ? `
+            <button onclick="event.stopPropagation(); openChallengeDetail('${ch.id}')" class="cpa-ghost-pill flex-1 py-2 text-xs font-medium">详情与实时榜</button>
+            <button onclick="event.stopPropagation(); openPublishModal('${ch.tag}')" class="cpa-pill-btn flex-1 py-2 text-xs font-medium">带标签参赛 →</button>
+          `
+          : ch.status === 'judging'
+            ? `
+              <button onclick="event.stopPropagation(); openChallengeDetail('${ch.id}')" class="cpa-ghost-pill flex-1 py-2 text-xs font-medium">查看结算进度与作品榜 →</button>
+            `
+            : `
+              <button onclick="event.stopPropagation(); openChallengeDetail('${ch.id}')" class="cpa-ghost-pill flex-1 py-2 text-xs font-semibold" style="background:#F1F1FD; color:#624AFF; border-color:#D2C4FF;">🏆 查看获奖名单公示 →</button>
+            `;
         return `
           <div onclick="openChallengeDetail('${ch.id}')" class="cpa-card lesson-card group overflow-hidden cursor-pointer flex flex-col justify-between">
             <div>
@@ -1730,18 +1853,18 @@ Model   ：claude-sonnet-4
                 <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[11px] font-semibold shadow-sm" style="${ch.statusStyle}">${ch.statusBadge}</span>
                 <span class="absolute bottom-3 right-3 px-2.5 py-0.5 rounded-full text-[11px] mono bg-black/65 text-white backdrop-blur-sm">${ch.deadline}</span>
               </div>
-              <div class="p-5 space-y-2">
-                <h3 class="text-base font-bold group-hover:text-[#624AFF] transition">${ch.title}</h3>
-                <p class="text-xs leading-relaxed" style="color:var(--muted);">${ch.subtitle}</p>
-                <div class="flex items-center justify-between pt-1 text-[11px]">
+              <div class="p-5 space-y-2.5">
+                <h3 class="text-sm sm:text-base font-bold leading-snug group-hover:text-[#624AFF] transition">${ch.title}</h3>
+                <p class="text-xs leading-relaxed line-clamp-2" style="color:var(--muted);">${ch.subtitle}</p>
+                <div class="px-3 py-2 rounded-xl bg-white border border-slate-200/80 text-[11px] truncate" style="color:var(--ink);">${ch.tierSummary}</div>
+                <div class="flex items-center justify-between pt-0.5 text-[11px]">
                   <span class="mono font-medium" style="color:${ch.tagColor};">${ch.tag}</span>
-                  <span class="mono" style="color:var(--muted);">${ch.participants} 人参与 · 💬 ${cmtCount}</span>
+                  <span class="mono" style="color:var(--muted);">参赛作品 ${entryCount} · 💬 ${cmtCount}</span>
                 </div>
               </div>
             </div>
-            <div class="px-5 pb-5 flex items-center gap-2.5">
-              <button onclick="event.stopPropagation(); openChallengeDetail('${ch.id}')" class="cpa-ghost-pill flex-1 py-2 text-xs font-medium">查看详情与评论</button>
-              <button onclick="event.stopPropagation(); openPublishModal('${ch.tag}')" class="${ch.ctaPrimary ? 'cpa-pill-btn' : 'cpa-ghost-pill'} flex-1 py-2 text-xs font-medium">${ch.ctaText}</button>
+            <div class="px-5 pb-5 flex items-center gap-2">
+              ${actionRow}
             </div>
           </div>
         `;
@@ -1754,7 +1877,7 @@ Model   ：claude-sonnet-4
       return `
         <div class="cpa-card p-5 sm:p-6 space-y-5 bg-white">
           <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold">互动评论与讨论 <span class="mono text-xs font-normal ml-1" style="color:var(--muted);">(${list.length})</span></h3>
+            <h3 class="text-sm font-bold">互动评论与组队答疑 <span class="mono text-xs font-normal ml-1" style="color:var(--muted);">(${list.length})</span></h3>
             <span class="text-[11px]" style="color:var(--muted);">文明交流 · 分享你的想法或提问</span>
           </div>
 
@@ -1836,7 +1959,7 @@ Model   ：claude-sonnet-4
       if (!mount) return;
       const placeholder = threadKey.startsWith('lesson:')
         ? '写下你的学习问题、实操心得或讨论内容...'
-        : '聊聊你的参赛想法、找队友或向组织者提问...';
+        : '聊聊你的参赛想法、找队友或向校内运营提问...';
       mount.innerHTML = renderDiscussionHtml(threadKey, placeholder);
     }
 
@@ -1913,6 +2036,55 @@ Model   ：claude-sonnet-4
       if (scrollTop) window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function renderChallengeWorksHtml(ch) {
+      const works = getChallengeWorks(ch.tag);
+      return `
+        <div class="cpa-card p-5 sm:p-6 space-y-4 bg-white">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <h2 class="text-sm font-bold">本场参赛作品实时榜（共 <span class="mono">${works.length}</span> 件）</h2>
+              <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:var(--bg-subtle); color:var(--muted);">${ch.tag}</span>
+            </div>
+            <button onclick="activeSquareTag='${ch.tag}'; squareMode='all'; switchTab('square')" class="text-xs font-medium hover:underline" style="color:var(--primary);">在作品广场筛选查看 →</button>
+          </div>
+
+          <div class="space-y-3">
+            ${works.length ? works.map((w, idx) => {
+              const rank = idx + 1;
+              const rankStyle = rank === 1
+                ? 'background:linear-gradient(135deg,#27254C,#624AFF); color:#FFFFFF;'
+                : rank === 2
+                  ? 'background:var(--accent-soft); color:var(--accent-ink); border:1px solid #99F6E4;'
+                  : rank === 3
+                    ? 'background:#F1F1FD; color:#624AFF; border:1px solid #D2C4FF;'
+                    : 'background:var(--bg-subtle); color:var(--muted);';
+              return `
+                <div onclick="lastChallengeReturnId='${ch.id}'; openWorkDetail('${w.id}')" class="p-3.5 rounded-2xl border border-slate-200/85 hover:border-[#624AFF]/45 hover:bg-[#F7F9FD] transition flex flex-wrap sm:flex-nowrap items-center justify-between gap-3.5 cursor-pointer">
+                  <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <span class="w-8 h-8 rounded-xl mono text-xs font-bold inline-flex items-center justify-center shrink-0" style="${rankStyle}">#${rank}</span>
+                    <img src="${w.cover}" alt="${w.title}" class="w-20 h-14 rounded-xl object-cover border border-slate-200 shrink-0 hidden sm:block" loading="lazy" />
+                    <div class="min-w-0 space-y-1">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-xs sm:text-sm font-bold truncate hover:text-[#624AFF] transition">${w.title}</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-medium" style="background:var(--bg-subtle); color:var(--muted);">${w.type}</span>
+                        ${w.awardBadge ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold" style="background:linear-gradient(90deg,#F1F1FD 0%,#E6FFFB 100%); color:#624AFF; border:1px solid #D9D4FF;">${w.awardBadge}</span>` : ''}
+                      </div>
+                      <p class="text-xs truncate" style="color:var(--muted);">${w.desc}</p>
+                      <div class="text-[11px]" style="color:var(--muted);"><strong style="color:var(--ink);">${w.author}</strong> · ${w.degree}</div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 text-xs shrink-0">
+                    <button onclick="event.stopPropagation(); showToast('演示原型：正在${w.type === 'Web' ? '打开在线试用' : '下载安装包'} ${w.url}')" class="cpa-ghost-pill px-3 py-1.5 text-xs font-medium">${w.type === 'Web' ? '在线试用' : '下载包'}</button>
+                    <button onclick="event.stopPropagation(); toggleVote('${w.id}')" class="px-3.5 py-1.5 rounded-full mono text-xs font-semibold border transition" style="${w.voted ? 'background:#F1F1FD; color:#624AFF; border-color:#D2C4FF;' : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);'}">▲ ${w.likes}</button>
+                  </div>
+                </div>
+              `;
+            }).join('') : `<div class="py-8 text-center text-xs rounded-2xl" style="background:var(--bg-subtle); color:var(--muted);">暂无已上架参赛作品，快来成为首位参赛者吧！</div>`}
+          </div>
+        </div>
+      `;
+    }
+
     function openChallengeDetail(id, scrollTop = true) {
       const ch = CHALLENGES.find(x => x.id === id);
       if (!ch) return;
@@ -1924,58 +2096,194 @@ Model   ：claude-sonnet-4
 
       const threadKey = 'challenge:' + ch.id;
       const otherChallenges = CHALLENGES.filter(x => x.id !== ch.id);
-      const topLessons = CMS_LESSONS.slice(0, 4);
+      const topLessons = CMS_LESSONS.slice(0, 3);
+      const entryCount = getChallengeWorks(ch.tag).length;
+
+      // 模块 ①：已开奖公示荣誉卡 或 评奖结算中提示
+      const moduleOneHtml = ch.status === 'settled' && Array.isArray(ch.winners)
+        ? `
+          <div class="rounded-3xl p-5 sm:p-6 border space-y-4" style="background:radial-gradient(ellipse 60% 75% at 100% 0%, rgba(54,207,209,0.22), transparent 72%), radial-gradient(ellipse 65% 70% at 0% 100%, rgba(98,74,255,0.14), transparent 72%), linear-gradient(180deg, #F6F5FF 0%, #FFFFFF 100%); border-color:#D6CFFF; box-shadow:0 12px 28px rgba(98,74,255,0.10);">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="space-y-1">
+                <div class="inline-flex items-center gap-2 text-xs font-semibold" style="color:#624AFF;">
+                  <span>🏆 本场挑战获奖名单公示</span>
+                  <span class="px-2 py-0.5 rounded-full text-[11px]" style="background:var(--accent-soft); color:var(--accent-ink);">奖励已发放到账</span>
+                </div>
+                <p class="text-xs" style="color:var(--muted);">校内运营已完成终审结算，获奖算力已直发至对应同学 Token 门户账户，点击作品可查看详情</p>
+              </div>
+              <div class="mono text-xs font-bold px-3.5 py-1.5 rounded-full bg-white border border-[#D6CFFF]" style="color:#27254C;">已发放总计 ${ch.totalPoolText}</div>
+            </div>
+
+            <div class="space-y-2.5">
+              ${ch.winners.map(win => `
+                <div onclick="lastChallengeReturnId='${ch.id}'; openWorkDetail('${win.workId}')" class="p-3.5 sm:px-4 rounded-2xl bg-white border border-slate-200/90 hover:border-[#624AFF] transition flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 cursor-pointer group">
+                  <div class="flex flex-wrap items-center gap-2.5 text-xs min-w-0">
+                    <span class="px-2.5 py-1 rounded-full font-bold shrink-0" style="${win.tier.includes('一等') ? 'background:#F1F1FD; color:#624AFF;' : 'background:var(--accent-soft); color:var(--accent-ink);'}">${win.tier}</span>
+                    <span class="font-semibold" style="color:var(--ink);">${win.author}</span>
+                    <span style="color:var(--muted);">（${win.degree}）</span>
+                    <span class="text-slate-300 hidden sm:inline">·</span>
+                    <span class="font-semibold truncate group-hover:underline" style="color:#624AFF;">《${win.workTitle}》 ↗</span>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <span class="mono text-xs font-bold px-3 py-1 rounded-full" style="background:var(--accent-soft); color:var(--accent-ink);">${win.rewardText}</span>
+                    <span class="text-[11px] font-medium" style="color:var(--primary);">看作品 →</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `
+        : ch.status === 'judging'
+          ? `
+            <div class="cpa-card p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3" style="background:linear-gradient(90deg, #FFFBE6 0%, #FFFFFF 100%); border-color:#FDE68A;">
+              <div class="flex items-start gap-3">
+                <span class="w-8 h-8 rounded-xl inline-flex items-center justify-center text-sm shrink-0" style="background:#FEF3C7; color:var(--warn);">⏳</span>
+                <div class="space-y-0.5">
+                  <div class="text-xs font-bold" style="color:#92400E;">评奖结算中 · 今日截稿待开奖</div>
+                  <p class="text-xs leading-relaxed" style="color:#78350F;">本场已截稿，校内运营正在根据作品质量与实名点赞热度进行定奖结算，开奖后将在此公示。</p>
+                </div>
+              </div>
+              <span class="mono text-xs font-semibold px-3 py-1 rounded-full shrink-0" style="background:#FEF3C7; color:#92400E;">总奖池 ${ch.totalPoolText}</span>
+            </div>
+          `
+          : '';
+
+      const topRightAction = ch.status === 'ongoing'
+        ? `<button onclick="openPublishModal('${ch.tag}')" class="cpa-pill-btn px-4 py-1.5 text-xs font-medium">带标签参赛赢 Token →</button>`
+        : ch.status === 'judging'
+          ? `<span class="px-3.5 py-1.5 rounded-full text-xs font-semibold" style="background:var(--warn-soft); color:var(--warn); border:1px solid #FDE68A;">⏳ 评奖结算中</span>`
+          : `<span class="px-3.5 py-1.5 rounded-full text-xs font-semibold" style="background:#F1F1FD; color:var(--primary); border:1px solid #D2C4FF;">🏆 已开奖公示</span>`;
 
       container.innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2.5 text-xs">
             <button onclick="closeStudioDetail()" class="cpa-ghost-pill px-3.5 py-1.5 font-medium bg-white">← 返回学习与挑战</button>
             <span style="color:var(--muted);">/</span>
-            <span class="font-medium truncate max-w-[260px]">${ch.title}</span>
+            <span class="font-medium truncate max-w-[280px]">${ch.title}</span>
           </div>
-          <button onclick="openPublishModal('${ch.tag}')" class="cpa-pill-btn px-4 py-1.5 text-xs font-medium">${ch.ctaText}</button>
+          ${topRightAction}
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <!-- Left (8): 封面展示 + 标题与简介 + 互动评论 -->
+          <!-- Left (8): 四模块全闭环（① 获奖公示/结算提示 → ② 封面规则与奖项档位表 → ③ 本场参赛作品实时榜 → ④ 互动评论区） -->
           <div class="lg:col-span-8 space-y-6">
+            ${moduleOneHtml}
+
+            <!-- 模块 ②：封面、挑战背景规则与「奖项激励档位表」 -->
             <div class="cpa-card overflow-hidden bg-white">
               <div class="aspect-video w-full relative bg-slate-100">
                 <img src="${ch.cover}" alt="${ch.title}" class="w-full h-full object-cover" />
                 <span class="absolute top-3.5 left-3.5 px-3 py-1 rounded-full text-xs font-semibold shadow-sm" style="${ch.statusStyle}">${ch.statusBadge}</span>
                 <span class="absolute bottom-3.5 right-3.5 px-2.5 py-0.5 rounded-full text-xs mono bg-black/65 text-white backdrop-blur-sm">${ch.deadline}</span>
               </div>
-              <div class="p-5 sm:p-6 space-y-3">
-                <div class="flex flex-wrap items-center gap-2 text-xs">
-                  <span class="mono px-2.5 py-0.5 rounded-full font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">${ch.tag}</span>
-                  <span style="color:var(--muted);">${ch.timeline}</span>
+              <div class="p-5 sm:p-6 space-y-5">
+                <div class="space-y-2.5">
+                  <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <span class="mono px-2.5 py-0.5 rounded-full font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">${ch.tag}</span>
+                    <span style="color:var(--muted);">${ch.timeline}</span>
+                  </div>
+                  <h1 class="text-xl font-bold tracking-tight">${ch.title}</h1>
+                  <p class="text-xs leading-relaxed" style="color:var(--muted);">${ch.subtitle}</p>
                 </div>
-                <h1 class="text-xl font-bold tracking-tight">${ch.title}</h1>
-                <p class="text-xs leading-relaxed" style="color:var(--muted);">${ch.subtitle} ${ch.reward}。</p>
-                <div class="pt-2 flex flex-wrap items-center gap-2.5">
-                  <button onclick="openPublishModal('${ch.tag}')" class="cpa-pill-btn px-5 py-2 text-xs font-semibold">${ch.ctaText} →</button>
-                  <button onclick="copyText('${ch.tag}', '专题标签 ${ch.tag} 已复制')" class="cpa-ghost-pill px-4 py-2 text-xs font-medium">复制专题标签</button>
+
+                <!-- 奖项激励档位表 -->
+                <div class="rounded-2xl border border-slate-200/90 overflow-hidden" style="background:#F7F9FD;">
+                  <div class="px-4 py-3 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2 bg-white">
+                    <span class="text-xs font-bold" style="color:var(--ink);">奖项激励档位表</span>
+                    <span class="mono text-xs font-semibold" style="color:var(--primary);">本场总奖池：${ch.budgetPoolText || ch.totalPoolText}</span>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left border-collapse">
+                      <thead>
+                        <tr class="border-b border-slate-200/70 text-[11px]" style="color:var(--muted);">
+                          <th class="py-2.5 px-4 font-medium">奖项名称</th>
+                          <th class="py-2.5 px-4 font-medium">获奖名额</th>
+                          <th class="py-2.5 px-4 font-medium">单人奖励</th>
+                          <th class="py-2.5 px-4 font-medium text-right">档位小计</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-200/60 bg-white/70">
+                        ${ch.tiers.map(t => `
+                          <tr>
+                            <td class="py-2.5 px-4 font-semibold" style="color:var(--ink);">${t.badge}</td>
+                            <td class="py-2.5 px-4 mono">${t.quota}</td>
+                            <td class="py-2.5 px-4 mono font-semibold" style="color:var(--accent-ink);">${t.unitReward}</td>
+                            <td class="py-2.5 px-4 mono text-right" style="color:var(--muted);">${t.subtotal}</td>
+                          </tr>
+                        `).join('')}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- 挑战背景与规则 -->
+                <div class="space-y-2">
+                  <div class="text-xs font-bold" style="color:var(--ink);">参赛与评审说明</div>
+                  <ul class="space-y-1.5 text-xs leading-relaxed list-disc pl-4" style="color:var(--muted);">
+                    ${ch.rules.map(r => `<li>${r}</li>`).join('')}
+                  </ul>
+                </div>
+
+                <div class="pt-1 flex flex-wrap items-center gap-2.5">
+                  ${ch.status === 'ongoing' ? `
+                    <button onclick="openPublishModal('${ch.tag}')" class="cpa-pill-btn px-5 py-2 text-xs font-semibold">带标签参赛赢 Token →</button>
+                    <button onclick="copyText('${ch.tag}', '挑战标签 ${ch.tag} 已复制')" class="cpa-ghost-pill px-4 py-2 text-xs font-medium">复制挑战标签</button>
+                  ` : `
+                    <button onclick="activeSquareTag='${ch.tag}'; squareMode='all'; switchTab('square')" class="cpa-ghost-pill px-4 py-2 text-xs font-medium">去作品广场浏览本场作品 →</button>
+                  `}
                 </div>
               </div>
             </div>
 
-            <div id="studioDiscussionMount">${renderDiscussionHtml(threadKey, '聊聊你的参赛想法、找队友或向组织者提问...')}</div>
+            <!-- 模块 ③：本场参赛作品实时榜 -->
+            <div id="challengeWorksMount">${renderChallengeWorksHtml(ch)}</div>
+
+            <!-- 模块 ④：互动评论与组队答疑区 -->
+            <div id="studioDiscussionMount">${renderDiscussionHtml(threadKey, '聊聊你的参赛想法、找队友或向校内运营提问...')}</div>
           </div>
 
-          <!-- Right (4): 其他活动与教程 -->
+          <!-- Right (4): 本场速览 + 其他挑战赛 + 推荐实战教程 -->
           <div class="lg:col-span-4 space-y-4">
+            <div class="cpa-card p-5 space-y-3 bg-white">
+              <div class="text-xs font-bold">本场挑战速览</div>
+              <div class="space-y-2 text-xs">
+                <div class="flex items-center justify-between">
+                  <span style="color:var(--muted);">当前状态</span>
+                  <span class="font-semibold" style="color:var(--ink);">${ch.status === 'ongoing' ? '火热征集中' : ch.status === 'judging' ? '评奖结算中' : '已开奖公示'}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span style="color:var(--muted);">时间节点</span>
+                  <span class="mono" style="color:var(--ink);">${ch.deadline}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span style="color:var(--muted);">本场总奖池</span>
+                  <span class="mono font-semibold" style="color:var(--primary);">${ch.totalPoolText}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span style="color:var(--muted);">关注 / 已上架作品</span>
+                  <span class="mono" style="color:var(--ink);">${ch.participants} 人 / ${entryCount} 件</span>
+                </div>
+              </div>
+            </div>
+
             <div class="cpa-card p-5 space-y-3.5 bg-white">
-              <div class="text-xs font-bold">其他活动与教程</div>
+              <div class="text-xs font-bold">其他主题挑战赛</div>
               <div class="space-y-3">
                 ${otherChallenges.map(oc => `
                   <div onclick="openChallengeDetail('${oc.id}')" class="flex items-center gap-3 cursor-pointer group">
                     <img src="${oc.cover}" alt="${oc.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 shrink-0" />
                     <div class="min-w-0">
                       <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#624AFF] transition">${oc.title}</div>
-                      <div class="text-[11px] mono mt-1" style="color:var(--accent-ink);">活动 · ${oc.deadline}</div>
+                      <div class="text-[11px] mono mt-1" style="color:var(--accent-ink);">${oc.shortPoolText} · ${oc.deadline}</div>
                     </div>
                   </div>
                 `).join('')}
+              </div>
+            </div>
+
+            <div class="cpa-card p-5 space-y-3.5 bg-white">
+              <div class="text-xs font-bold">备赛推荐教程</div>
+              <div class="space-y-3">
                 ${topLessons.map(o => `
                   <div onclick="openLessonDetail('${o.id}')" class="flex items-center gap-3 cursor-pointer group">
                     <img src="${o.cover}" alt="${o.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 shrink-0" />
@@ -2009,6 +2317,7 @@ Model   ：claude-sonnet-4
     }
 
     function renderMyWorks() {
+      syncChallengeRankKpi();
       const publishedCnt = myWorks.filter(w => w.status === 'published').length;
       const rejectedCnt = myWorks.filter(w => w.status === 'rejected').length;
       const totalLikes = myWorks.reduce((s, w) => s + w.likes, 0);
@@ -2032,6 +2341,7 @@ Model   ：claude-sonnet-4
                   ${statusBadge[w.status]}
                   <span class="px-2.5 py-0.5 rounded-full text-[11px]" style="background:var(--bg-subtle);">${w.type}</span>
                   ${w.featured ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:#F1F1FD; color:var(--primary);">★ 精选应用</span>` : ''}
+                  ${w.awardBadge ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold" style="background:linear-gradient(90deg,#F1F1FD 0%,#E6FFFB 100%); color:#624AFF; border:1px solid #D9D4FF;">${w.awardBadge}</span>` : ''}
                   ${w.tag ? `<span class="mono text-[11px]" style="color:var(--accent-ink);">${w.tag}</span>` : ''}
                 </div>
                 <p class="text-xs" style="color:var(--muted);">${w.desc}</p>
@@ -2039,8 +2349,8 @@ Model   ：claude-sonnet-4
             </div>
             <div class="flex items-center gap-2 text-xs shrink-0">
               ${w.status === 'published' ? `
-                <span class="px-3 py-1 rounded-full mono font-medium" style="background:var(--bg-subtle);">▲ ${w.likes} · 第 #${w.rank} 名</span>
-                <button onclick="openWorkDetail('w-1')" class="cpa-ghost-pill px-3 py-1 text-xs">查看详情</button>
+                <span class="px-3 py-1 rounded-full mono font-medium" style="background:var(--bg-subtle);">▲ ${w.likes} · 黑客松 #${w.rank}</span>
+                <button onclick="lastChallengeReturnId=null; openWorkDetail('${w.workId || 'w-1'}')" class="cpa-ghost-pill px-3 py-1 text-xs">查看详情</button>
                 <button onclick="withdrawWork('${w.id}')" class="cpa-ghost-pill px-3 py-1 text-xs">撤回</button>
               ` : w.status === 'reviewing' ? `
                 <button onclick="withdrawWork('${w.id}')" class="cpa-ghost-pill px-3 py-1 text-xs">撤回申请</button>
@@ -2055,7 +2365,7 @@ Model   ：claude-sonnet-4
             </div>
           ` : ''}
         </div>
-      `).join('') : `<div class="cpa-card p-10 text-center space-y-2 bg-white"><div class="text-sm font-semibold">还没有提交过作品</div><div class="text-xs" style="color:var(--muted);">去「学习与挑战」完成你的第一个校园 AI 项目并发布冲榜吧。</div></div>`;
+      `).join('') : `<div class="cpa-card p-10 text-center space-y-2 bg-white"><div class="text-sm font-semibold">还没有提交过作品</div><div class="text-xs" style="color:var(--muted);">去「学习与挑战」参加正在进行中的主题挑战赛赢取算力吧。</div></div>`;
     }
     function withdrawWork(id) {
       myWorks = myWorks.filter(w => w.id !== id);
@@ -2087,8 +2397,10 @@ Model   ：claude-sonnet-4
       const tags = [
         { k: 'all', label: '全部作品' },
         { k: 'featured', label: '★ 精选应用' },
+        { k: 'awarded', label: '🏆 挑战获奖' },
         { k: '#第1期校园黑客松', label: '#第1期校园黑客松' },
-        { k: '#第2周Workshop实战', label: '#第2周Workshop实战' }
+        { k: '#第2期科研工具赛', label: '#第2期科研工具赛' },
+        { k: '#先导期小应用赛', label: '#先导期小应用赛' }
       ];
       document.getElementById('tagFilters').innerHTML = tags.map(t => {
         const active = activeSquareTag === t.k;
@@ -2099,7 +2411,8 @@ Model   ：claude-sonnet-4
       const sortVal = document.getElementById('sortFilter').value;
       let list = [...squareWorks];
       if (activeSquareTag === 'featured') list = list.filter(w => w.featured);
-      else if (activeSquareTag !== 'all') list = list.filter(w => w.tag === activeSquareTag);
+      else if (activeSquareTag === 'awarded') list = list.filter(w => Boolean(w.awardBadge));
+      else if (activeSquareTag !== 'all') list = list.filter(w => workMatchesChallengeTag(w, activeSquareTag));
       if (typeVal !== 'all') list = list.filter(w => w.type === typeVal);
       if (sortVal === 'hot') list.sort((a, b) => b.likes - a.likes);
       else list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -2111,7 +2424,7 @@ Model   ：claude-sonnet-4
         const r = rankOf(w.id);
         const cmtCount = (DISCUSSIONS['work:' + w.id] || []).length;
         return `
-          <div class="cpa-card lesson-card group overflow-hidden flex flex-col justify-between cursor-pointer" onclick="openWorkDetail('${w.id}')">
+          <div class="cpa-card lesson-card group overflow-hidden flex flex-col justify-between cursor-pointer" onclick="lastChallengeReturnId=null; openWorkDetail('${w.id}')">
             <div>
               <div class="aspect-video w-full overflow-hidden relative bg-slate-100 border-b border-slate-100">
                 <img src="${w.cover}" alt="${w.title}" class="w-full h-full object-cover group-hover:scale-[1.03] transition duration-300" loading="lazy" />
@@ -2127,7 +2440,12 @@ Model   ：claude-sonnet-4
               <div class="p-4 space-y-1.5">
                 <h3 class="text-sm font-bold truncate group-hover:text-[#624AFF] transition">${w.title}</h3>
                 <p class="text-xs leading-relaxed line-clamp-2" style="color:var(--muted);">${w.desc}</p>
-                ${w.tag ? `<div class="pt-0.5"><span class="mono text-[11px]" style="color:var(--accent-ink);">${w.tag}</span></div>` : ''}
+                ${(w.awardBadge || w.tag) ? `
+                  <div class="pt-1 flex items-center gap-1.5 flex-wrap">
+                    ${w.awardBadge ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold" style="background:linear-gradient(90deg,#F1F1FD 0%,#E6FFFB 100%); color:#624AFF; border:1px solid #D9D4FF;">${w.awardBadge}</span>` : ''}
+                    ${w.tag ? `<span class="mono text-[11px]" style="color:var(--accent-ink);">${w.tag}</span>` : ''}
+                  </div>
+                ` : ''}
               </div>
             </div>
             <div class="px-4 py-3 border-t border-slate-100 flex items-center justify-between text-xs">
@@ -2145,8 +2463,14 @@ Model   ：claude-sonnet-4
       if (!w) return;
       w.voted = !w.voted;
       w.likes += w.voted ? 1 : -1;
+      syncChallengeRankKpi();
       showToast(w.voted ? `已为「${w.title}」投出实名赞（每人限 1 票）` : '已取消点赞');
-      renderSquare();
+      if (document.getElementById('squareGrid')) renderSquare();
+      if (activeStudioDetail && activeStudioDetail.type === 'challenge') {
+        const ch = CHALLENGES.find(x => x.id === activeStudioDetail.id);
+        const mount = document.getElementById('challengeWorksMount');
+        if (ch && mount) mount.innerHTML = renderChallengeWorksHtml(ch);
+      }
       if (activeWorkDetailId === id) {
         const voteBtn = document.getElementById('workDetailVoteBtn');
         if (voteBtn) {
@@ -2155,15 +2479,21 @@ Model   ：claude-sonnet-4
             ? 'background:#F1F1FD; color:#624AFF; border-color:#D2C4FF;'
             : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);';
         }
+        const rankOrder = [...squareWorks].sort((a, b) => b.likes - a.likes);
+        const r = rankOrder.findIndex(x => x.id === w.id) + 1;
+        const rankEl = document.getElementById('workDetailRankBadge');
+        if (rankEl) rankEl.textContent = `广场热度 #${r}`;
       }
     }
 
     function openWorkDetail(id, scrollTop = true) {
       const w = squareWorks.find(x => x.id === id);
       if (!w) return;
+      const returnChId = lastChallengeReturnId;
       activeWorkDetailId = id;
       if (activeTab !== 'square') switchTab('square');
       activeWorkDetailId = id;
+      lastChallengeReturnId = returnChId;
       document.getElementById('squareHomeView').classList.add('hidden');
       const container = document.getElementById('squareDetailView');
       container.classList.remove('hidden');
@@ -2175,8 +2505,9 @@ Model   ：claude-sonnet-4
 
       container.innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center gap-2.5 text-xs">
-            <button onclick="closeWorkDetail()" class="cpa-ghost-pill px-3.5 py-1.5 font-medium bg-white">← 返回作品广场</button>
+          <div class="flex items-center gap-2 text-xs flex-wrap">
+            ${returnChId ? `<button onclick="jumpToChallengeDetail('${returnChId}')" class="cpa-ghost-pill px-3.5 py-1.5 font-medium bg-white" style="color:var(--primary); border-color:#D2C4FF;">← 返回挑战赛详情</button>` : ''}
+            <button onclick="closeWorkDetail()" class="cpa-ghost-pill px-3.5 py-1.5 font-medium bg-white">${returnChId ? '作品广场' : '← 返回作品广场'}</button>
             <span style="color:var(--muted);">/</span>
             <span class="font-medium truncate max-w-[260px]">${w.title}</span>
           </div>
@@ -2191,7 +2522,7 @@ Model   ：claude-sonnet-4
                 <img src="${w.cover}" alt="${w.title}" class="w-full h-full object-cover" />
                 <div class="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between gap-2">
                   <span class="px-3 py-1 rounded-full text-xs font-medium bg-white/95 shadow-sm">${w.type === 'Web' ? 'Web · 在线体验' : w.type + ' · 安装包'}</span>
-                  <span class="mono text-xs font-bold px-2.5 py-1 rounded-full bg-black/65 text-white backdrop-blur-sm">当期第 #${r} 名</span>
+                  <span id="workDetailRankBadge" class="mono text-xs font-bold px-2.5 py-1 rounded-full bg-black/65 text-white backdrop-blur-sm">广场热度 #${r}</span>
                 </div>
               </div>
               <div class="p-5 sm:p-6 space-y-3">
@@ -2199,7 +2530,8 @@ Model   ：claude-sonnet-4
                   <span class="font-medium" style="color:var(--ink);">${w.author}</span>
                   <span style="color:var(--muted);">· ${w.degree} · ${w.createdAt}</span>
                   ${w.featured ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-medium" style="background:#F1F1FD; color:var(--primary);">★ 精选应用</span>` : ''}
-                  ${w.tag ? `<span class="mono" style="color:var(--accent-ink);">${w.tag}</span>` : ''}
+                  ${w.awardBadge ? `<button onclick="jumpToChallengeDetail('${w.awardChallengeId || 'ch-starter'}')" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold hover:opacity-85 transition" style="background:linear-gradient(90deg,#F1F1FD 0%,#E6FFFB 100%); color:#624AFF; border:1px solid #D9D4FF;">${w.awardBadge} · 查看公示 ↗</button>` : ''}
+                  ${w.tag ? `<button onclick="jumpToChallengeByTag('${w.tag}')" class="mono hover:underline" style="color:var(--accent-ink);">${w.tag} ↗</button>` : ''}
                 </div>
                 <h1 class="text-xl font-bold tracking-tight">${w.title}</h1>
                 <p class="text-xs leading-relaxed" style="color:var(--muted);">${w.desc}</p>
@@ -2240,6 +2572,7 @@ Model   ：claude-sonnet-4
 
     function closeWorkDetail(scrollTop = true) {
       activeWorkDetailId = null;
+      lastChallengeReturnId = null;
       document.getElementById('squareDetailView').classList.add('hidden');
       document.getElementById('squareDetailView').innerHTML = '';
       document.getElementById('squareHomeView').classList.remove('hidden');
@@ -2249,10 +2582,13 @@ Model   ：claude-sonnet-4
     }
 
     function openPublishModal(presetTag = '', presetTitle = '', editId = null) {
-      if (appState === 'pending') { showToast('教育邮箱核验通过后即可发布作品并参与激励榜单'); return; }
+      if (appState === 'pending') { showToast('教育邮箱核验通过后即可发布作品并报名主题挑战赛'); return; }
       editingWorkId = editId || null;
-      document.getElementById('promptTagSelect').value = presetTag || '';
-      document.getElementById('pubTag').value = presetTag || '';
+      populateOngoingChallengeSelects();
+      const ongoingTags = CHALLENGES.filter(c => c.status === 'ongoing').map(c => c.tag);
+      const validTag = ongoingTags.includes(presetTag) ? presetTag : '';
+      document.getElementById('promptTagSelect').value = validTag;
+      document.getElementById('pubTag').value = validTag;
       if (presetTitle) {
         document.getElementById('pubTitle').value = presetTitle;
         setPublishMode('manual');
@@ -2275,7 +2611,7 @@ Model   ：claude-sonnet-4
     }
     function updatePublishPrompt() {
       const tag = document.getElementById('promptTagSelect').value;
-      const tagText = tag ? `并关联活动专题标签「${tag}」` : '作为普通校园作品';
+      const tagText = tag ? `并报名参加主题挑战赛「${tag}」` : '作为普通校园作品';
       document.getElementById('publishPromptText').textContent =
         `请将当前项目打包为静态 Web 产物（或生成安装包摘要），附上一句话卖点与 2 张预览图，发布到「浣溪AI Lab」作品广场 · 我的作品${tagText}，归属账号 linzhixing@hust.edu.cn。`;
     }
@@ -2327,6 +2663,8 @@ Model   ：claude-sonnet-4
     function submitAppeal() { closeAppealModal(); showToast('解冻申诉已提交至浣溪平台风控中心'); }
 
     initDotMatrix();
+    populateOngoingChallengeSelects();
+    syncChallengeRankKpi();
     const qs = new URLSearchParams(window.location.search);
     const urlView = qs.get('view');
     const urlTab = qs.get('tab');

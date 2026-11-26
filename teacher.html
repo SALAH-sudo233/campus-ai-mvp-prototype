@@ -173,7 +173,7 @@
         <div class="flex items-center gap-4 text-xs" style="color:var(--muted);">
           <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-[3px]" style="background:var(--primary);"></span> Token 消耗 (M)</span>
           <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full" style="background:var(--accent);"></span> 活跃人数</span>
-          <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> 校内培训 / 挑战赛节点</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span> 主题挑战赛拉动节点</span>
         </div>
       </div>
 
@@ -361,7 +361,7 @@
       </div>
       <div class="p-4 rounded-xl text-xs leading-relaxed space-y-2 border border-slate-200" style="background:#F7F9FD;">
         <div><strong>一、总体推进情况：</strong>自引入「浣溪AI Lab」公益算力以来，软件学院累计认证学生 <strong>642 人</strong>（覆盖率 78.4%），其中本科生 436 人、研究生 206 人；近 30 天周活跃率达 <strong>68.2%</strong>。</div>
-        <div><strong>二、算力使用与分层表现：</strong>累计有效消耗 Token <strong>184.6M</strong>（本科生占 64%、研究生人均消耗高出 18.9%）；两场校内 AI 开发培训与黑客松活动后，周消耗环比提升 <strong>+24.8%</strong>。</div>
+        <div><strong>二、算力使用与分层表现：</strong>累计有效消耗 Token <strong>184.6M</strong>（本科生占 64%、研究生人均消耗高出 18.9%）；多期校内主题挑战赛（先导挑战赛、校园黑客松、科研工具赛）拉动下，周消耗环比提升 <strong>+24.8%</strong>。</div>
         <div><strong>三、学生实践成果：</strong>累计产出真实可运行软件作品 <strong>96 件</strong>，评选出 <strong>18 件学院精选应用</strong>（涵盖选课助手、论文精读、实验室效率工具等真实校园场景）。</div>
       </div>
       <div class="flex justify-end gap-2">
@@ -443,10 +443,10 @@
     const TREND_SERIES = [
       { w: '第1周', tok: 14.2, active: 162, event: '首批白名单上线' },
       { w: '第2周', tok: 21.8, active: 238, event: '' },
-      { w: '第3周', tok: 29.4, active: 295, event: 'W1 集体培训' },
+      { w: '第3周', tok: 29.4, active: 295, event: '先导挑战赛' },
       { w: '第4周', tok: 32.6, active: 334, event: '' },
       { w: '第5周', tok: 38.4, active: 389, event: '黑客松启动' },
-      { w: '第6周', tok: 48.2, active: 438, event: 'W2 Workshop' }
+      { w: '第6周', tok: 48.2, active: 438, event: '科研工具赛' }
     ];
 
     const STUDENTS = [
@@ -461,10 +461,10 @@
     const WALL_WORKS = [
       { id: 'fw-1', title: '华科选课排雷助手', type: 'Web', tag: '#第1期校园黑客松', author: '林知行', deg: '本科 · 大三', likes: 148, accent: '#624AFF', cover: './media/demo_campus_events_1.jpg', url: 'https://apps.huanxi-lab.cn/hust-course-helper', desc: '结合历年课程口碑与时间冲突检测，AI 一键排出最优课表并支持导出日历，上线 3 天服务本院 400+ 同学。' },
       { id: 'fw-2', title: '论文精读卡片生成器', type: 'Web', tag: '#第1期校园黑客松', author: '周予安', deg: '研究生 · 研一', likes: 126, accent: '#13C2C2', cover: './media/demo_cms_web.jpg', url: 'https://apps.huanxi-lab.cn/paper-cards', desc: '拖入 PDF 自动拆解论文创新点、公式推导与复现清单，助力研究生科研文献阅读提效。' },
-      { id: 'fw-3', title: '实验室值班语音助手', type: 'PC', tag: '#第2周Workshop实战', author: '陈一鸣', deg: '本科 · 大四', likes: 98, accent: '#0A2540', cover: './media/demo_cms_agent.jpg', url: 'lab-voice-v1.1.zip', desc: '本地轻量化桌面助手，自动整理组会口头待办并生成排班与打卡提醒。' },
+      { id: 'fw-3', title: '实验室值班语音助手', type: 'PC', tag: '#第2期科研工具赛', author: '陈一鸣', deg: '本科 · 大四', likes: 98, accent: '#0A2540', cover: './media/demo_cms_agent.jpg', url: 'lab-voice-v1.1.zip', desc: '本地轻量化桌面助手，自动整理组会口头待办并生成排班与打卡提醒。' },
       { id: 'fw-4', title: '食堂档口排队实时估算', type: 'APP', tag: '#第1期校园黑客松', author: '许嘉禾', deg: '研究生 · 研二', likes: 84, accent: '#624AFF', cover: './media/demo_homework_app_1.jpg', url: 'canteen-eta-v0.8.apk', desc: '结合课表下课潮汐规律预测东区各食堂窗口排队时长，解决校园真实高频痛点。' },
-      { id: 'fw-5', title: '算法题解可视化沙盒', type: 'Web', tag: '#第2周Workshop实战', author: '陆星野', deg: '本科 · 大二', likes: 73, accent: '#13C2C2', cover: './media/demo_focus_timer_1.jpg', url: 'https://apps.huanxi-lab.cn/algo-sandbox', desc: '输入动态规划或图论代码，自动生成状态转移步进动画，帮助低年级同学直观理解算法。' },
-      { id: 'fw-6', title: '毕设开题答辩模拟评委', type: 'Web', tag: '#第1期校园黑客松', author: '苏明澈', deg: '研究生 · 研一', likes: 61, accent: '#334155', cover: './media/demo_club_poster_1.jpg', url: 'https://apps.huanxi-lab.cn/defense-mock', desc: '导入开题 PPT 大纲，自动扮演三位评审老师进行结构化追问与改进建议打分。' }
+      { id: 'fw-5', title: '算法题解可视化沙盒', type: 'Web', tag: '#第2期科研工具赛', author: '陆星野', deg: '本科 · 大二', likes: 73, accent: '#13C2C2', cover: './media/demo_focus_timer_1.jpg', url: 'https://apps.huanxi-lab.cn/algo-sandbox', desc: '输入动态规划或图论代码，自动生成状态转移步进动画，帮助低年级同学直观理解算法。' },
+      { id: 'fw-6', title: '毕设开题答辩模拟评委', type: 'Web', tag: '#先导期小应用赛', author: '苏明澈', deg: '研究生 · 研一', likes: 61, accent: '#334155', cover: './media/demo_club_poster_1.jpg', url: 'https://apps.huanxi-lab.cn/defense-mock', desc: '导入开题 PPT 大纲，自动扮演三位评审老师进行结构化追问与改进建议打分。' }
     ];
 
     function showToast(msg) {
@@ -621,7 +621,8 @@
       const tags = [
         { k: 'all', l: '全部精选 (6)' },
         { k: '#第1期校园黑客松', l: '#第1期校园黑客松' },
-        { k: '#第2周Workshop实战', l: '#第2周Workshop实战' }
+        { k: '#第2期科研工具赛', l: '#第2期科研工具赛' },
+        { k: '#先导期小应用赛', l: '#先导期小应用赛' }
       ];
       document.getElementById('collegeTagFilters').innerHTML = tags.map(t => {
         const a = activeWallTag === t.k;
