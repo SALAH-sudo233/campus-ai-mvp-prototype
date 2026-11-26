@@ -3,205 +3,180 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>浣溪AI Lab · V1 四端统一高保真原型总览</title>
+  <title>浣溪AI Lab · 原型总览</title>
   <script src="./tailwindcss.min.js"></script>
   <style>
     :root {
-      --bg-page: #FFFFFF;
+      --bg-page: #F5F7FB;
       --bg-surface: #FFFFFF;
-      --bg-subtle: #F7F9FD;
-      --border: #ECEDF1;
-      --ink: #27254C;
-      --muted: #8284A4;
+      --border: #E5E8F0;
+      --ink: #1E2238;
+      --muted: #64748B;
       --primary: #624AFF;
       --accent: #13C2C2;
-      --accent-soft: #F1F1FD;
-      --accent-ink: #624AFF;
+      --accent-soft: #E6FFFB;
+      --accent-ink: #006D75;
       --coral: #FF4D4F;
     }
     body {
       background: var(--bg-page);
       color: var(--ink);
-      font-family: "PingFang SC", "Microsoft Yahei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft Yahei", "Segoe UI", Roboto, sans-serif;
       font-variant-numeric: tabular-nums;
       margin: 0;
     }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-variant-numeric: tabular-nums; }
-    .cpa-card {
-      background: #FFFFFF;
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      box-shadow: 0 2px 18px rgba(39, 37, 76, 0.04);
-      transition: background-color 200ms ease, border-color 200ms ease, transform 220ms cubic-bezier(0.22, 0.78, 0.2, 1), box-shadow 220ms ease;
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-variant-numeric: tabular-nums;
     }
     .portal-card {
-      background: #F7F9FD;
-      border-color: #F7F9FD;
-      box-shadow: none;
+      background: #FFFFFF;
+      border: 1px solid #E5E8F0;
+      border-radius: 14px;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
+      transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
     }
     .portal-card:hover {
-      background: #F3F5FA;
-      border-color: #D2C4FF;
-      transform: translateY(-3px);
-      box-shadow: 0 14px 28px rgba(144, 156, 234, 0.20);
+      border-color: #624AFF;
+      box-shadow: 0 8px 20px rgba(98, 74, 255, 0.10);
+      transform: translateY(-2px);
     }
-    .portal-card span.rounded-full.text-white {
-      transition: transform 240ms cubic-bezier(0.22, 0.78, 0.2, 1);
-      display: inline-block;
-    }
-    .portal-card:hover span.rounded-full.text-white {
-      transform: rotate(-4deg) scale(1.03);
-    }
-    .hero-grid-glow {
-      background:
-        linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 24%),
-        linear-gradient(180deg, rgba(242, 240, 255, 0) 32%, #F2F0FF 90%),
-        radial-gradient(ellipse 55% 55% at 0% -5%, rgba(203, 228, 255, 0.85), transparent 98%),
-        radial-gradient(ellipse 70% 60% at 100% 12%, rgba(211, 245, 254, 0.72), transparent 76%),
-        radial-gradient(ellipse 68% 48% at 0% 100%, rgba(242, 240, 255, 0.82), transparent 72%),
-        radial-gradient(ellipse 42% 36% at 8% 0%, rgba(251, 229, 255, 0.72), transparent 65%),
-        #FFFFFF;
-      box-shadow: 0 12px 32px rgba(144, 156, 234, 0.14);
-    }
-
-    /* === ModelScope Studios Visual & Micro-Interaction Layer (Element-Preserving) === */
-    @keyframes msNavPop {
-      0% { transform: scale(0.86); }
-      100% { transform: scale(1); }
-    }
-    @keyframes msPulseGlow {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(98, 74, 255, 0.28); }
-      50% { box-shadow: 0 0 0 5px rgba(98, 74, 255, 0); }
-    }
-    h1, h2, h3 {
-      font-family: 'SFMono-Regular', ui-monospace, Menlo, Monaco, Consolas, "PingFang SC", "Microsoft Yahei", sans-serif;
-      letter-spacing: -0.01em;
-    }
-    input:focus, select:focus, textarea:focus {
-      border-color: #624AFF !important;
-      box-shadow: 0 0 0 3px rgba(98, 74, 255, 0.10);
+    .mod-tag {
+      background: #F5F7FB;
+      border: 1px solid #E5E8F0;
+      color: #4E5569;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 500;
     }
   </style>
 </head>
-<body class="antialiased min-h-screen">
-  <div class="max-w-6xl mx-auto px-5 py-10 space-y-8">
-    <!-- Hero -->
-    <div class="hero-grid-glow rounded-3xl p-8 sm:p-10 border border-slate-200/80 space-y-4">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2.5">
-          <span class="w-8 h-8 rounded-xl inline-flex items-center justify-center font-bold text-sm text-white" style="background:var(--primary);">✦</span>
-          <span class="text-base font-bold tracking-tight">浣溪AI Lab</span>
-          <span class="px-2.5 py-0.5 rounded-full text-xs font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">V1 四端统一高保真原型</span>
-        </div>
-        <span class="mono text-xs" style="color:var(--muted);">设计基线：CPAMC 留白精工 + 风格 D 秩序精工 · 样板：华科软件学院</span>
-      </div>
+<body class="antialiased min-h-screen flex flex-col">
 
-      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">高校 AI 算力门户与作品实践平台</h1>
-      <p class="text-sm max-w-3xl leading-relaxed" style="color:var(--muted);">四端职责正交、数据口径串联一致、视觉语言完全统一。点击下方任意一端即可直接交互体验，或通过每页顶部导航栏在四端之间无缝切换演示。</p>
+  <!-- Top 32px Prototype Switcher Bar -->
+  <div class="h-8 bg-[#1E1D3A] text-slate-300 text-[11px] px-4 flex items-center justify-between shrink-0 border-b border-white/10">
+    <div class="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar whitespace-nowrap">
+      <a href="./overview.html" class="bg-[#624AFF] text-white rounded px-2 py-0.5 font-medium">✦ 原型总览</a>
+      <span class="text-slate-600">|</span>
+      <a href="./index.html" class="px-2 py-0.5 rounded hover:bg-white/10 text-slate-300 transition">① 学生端</a>
+      <a href="./college-dashboard.html" class="px-2 py-0.5 rounded hover:bg-white/10 text-slate-300 transition">② 学院大盘</a>
+      <a href="./school-ops.html" class="px-2 py-0.5 rounded hover:bg-white/10 text-slate-300 transition">③ 校内运营端</a>
+      <a href="./platform-admin.html" class="px-2 py-0.5 rounded hover:bg-white/10 text-slate-300 transition">④ 平台管理端</a>
+    </div>
+    <span class="mono text-[10px] text-slate-400 tracking-wider hidden sm:inline shrink-0">V1 PROTOTYPE SUITE</span>
+  </div>
+
+  <main class="flex-1 max-w-5xl w-full mx-auto px-5 py-10 space-y-6">
+    <!-- Clean Header -->
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <div class="space-y-1.5">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg inline-flex items-center justify-center font-bold text-xs text-white" style="background:var(--primary);">✦</span>
+          <span class="text-sm font-semibold tracking-tight">浣溪AI Lab</span>
+          <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-[#F1F1FD] text-[#624AFF]">V1 四端入口</span>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight">高校 AI 算力门户与创新实践平台</h1>
+      </div>
+      <div class="mono text-xs text-[#64748B]">样板学院：华中科技大学软件学院</div>
     </div>
 
-    <!-- 4 Portal Launch Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <!-- 4 Portal Entry Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <!-- 1. Student -->
-      <a href="./index.html" class="cpa-card portal-card p-6 flex flex-col justify-between gap-5 no-underline text-inherit">
-        <div class="space-y-3">
+      <a href="./index.html" class="portal-card p-5 flex flex-col justify-between gap-4 no-underline text-inherit">
+        <div class="space-y-2.5">
           <div class="flex items-center justify-between">
-            <span class="px-3 py-1 rounded-full text-xs font-semibold text-white" style="background:var(--primary);">① 学生端</span>
-            <span class="mono text-xs" style="color:var(--accent-ink);">V1-M1.1 已锁稿 ✓</span>
+            <span class="px-2.5 py-0.5 rounded-md text-xs font-semibold text-white" style="background:var(--primary);">① 学生端</span>
+            <span class="px-2 py-0.5 rounded text-[11px] font-medium mono" style="background:var(--accent-soft); color:var(--accent-ink);">已锁稿 ✓</span>
           </div>
-          <h2 class="text-lg font-bold">学生算力门户、主题挑战全闭环详情页与作品广场</h2>
-          <p class="text-xs leading-relaxed" style="color:var(--muted);">纯教育邮箱 + 验证码登录（含白名单秒通 / 待审核 / 风控冻结 4 态）；CPA 同源 Token 门户（波浪实时卡、堆叠流量图与数据表、20 格健康条）；CMS 实战教程 + 主题挑战全闭环详情页（奖项梯度、一键带 Tag 参赛、获奖公示）+ 作品广场实名互动。</p>
-          <div class="flex flex-wrap gap-1.5 text-[11px]">
-            <span class="px-2.5 py-0.5 rounded-full" style="background:#FFFFFF; color:#464D5B; box-shadow:0 1px 4px rgba(144,156,234,0.12);">纯邮箱登录</span>
-            <span class="px-2.5 py-0.5 rounded-full" style="background:#FFFFFF; color:#464D5B; box-shadow:0 1px 4px rgba(144,156,234,0.12);">Token 门户</span>
-            <span class="px-2.5 py-0.5 rounded-full" style="background:#FFFFFF; color:#464D5B; box-shadow:0 1px 4px rgba(144,156,234,0.12);">主题挑战闭环</span>
-            <span class="px-2.5 py-0.5 rounded-full" style="background:#FFFFFF; color:#464D5B; box-shadow:0 1px 4px rgba(144,156,234,0.12);">作品广场</span>
+          <h2 class="text-base font-bold">学生算力门户与作品社区</h2>
+          <p class="text-xs leading-relaxed text-[#64748B]">教育邮箱认证领用 API Key，集成实时 Token 用量看板、实战教程、主题挑战与作品广场。</p>
+          <div class="flex flex-wrap gap-1.5 pt-0.5">
+            <span class="mod-tag">邮箱登录</span>
+            <span class="mod-tag">Token 门户</span>
+            <span class="mod-tag">学习与挑战</span>
+            <span class="mod-tag">作品广场</span>
           </div>
         </div>
-        <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold" style="color:var(--primary);">
-          <span>进入学生端原型（含独立登录页入口）</span>
-          <span>打开体验 →</span>
+        <div class="pt-3 border-t border-[#EEF0F6] flex items-center justify-between text-xs font-medium text-[#624AFF]">
+          <span>student-portal</span>
+          <span>进入 →</span>
         </div>
       </a>
 
       <!-- 2. College -->
-      <a href="./college-dashboard.html" class="cpa-card portal-card p-6 flex flex-col justify-between gap-5 no-underline text-inherit">
-        <div class="space-y-3">
+      <a href="./college-dashboard.html" class="portal-card p-5 flex flex-col justify-between gap-4 no-underline text-inherit">
+        <div class="space-y-2.5">
           <div class="flex items-center justify-between">
-            <span class="px-3 py-1 rounded-full text-xs font-semibold text-white" style="background:#27254C;">② 学院端（纯只读）</span>
-            <span class="mono text-xs" style="color:var(--primary);">V1-M1.2 待验收</span>
+            <span class="px-2.5 py-0.5 rounded-md text-xs font-semibold text-white bg-[#1E2238]">② 学院大盘</span>
+            <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-[#F1F1FD] text-[#624AFF]">只读视图</span>
           </div>
-          <h2 class="text-lg font-bold">学院 AI 创新实践数据大盘</h2>
-          <p class="text-xs leading-relaxed" style="color:var(--muted);">面向学院领导向校领导投屏汇报的单页四段式只读大盘（零操作按钮、去“教研”表述）：全局成效 KPI、消耗趋势+活动节点与 8 周热力图、本科生 vs 研究生对比与脱敏标杆榜、现场可演示精选作品墙。</p>
-          <div class="flex flex-wrap gap-1.5 text-[11px]">
-            <span class="px-2.5 py-0.5 rounded-full" style="background:#FFFFFF; color:#464D5B; box-shadow:0 1px 4px rgba(144,156,234,0.12);">严格纯只读</span>
-            <span class="px-2.5 py-0.5 rounded-full" style="background:#FFFFFF; color:#464D5B; box-shadow:0 1px 4px rgba(144,156,234,0.12);">本/研分层对比</span>
-            <span class="px-2.5 py-0.5 rounded-full" style="background:#FFFFFF; color:#464D5B; box-shadow:0 1px 4px rgba(144,156,234,0.12);">8 周热力图</span>
-            <span class="px-2.5 py-0.5 rounded-full" style="background:#FFFFFF; color:#464D5B; box-shadow:0 1px 4px rgba(144,156,234,0.12);">精选成果墙</span>
+          <h2 class="text-base font-bold">学院 AI 创新实践数据大盘</h2>
+          <p class="text-xs leading-relaxed text-[#64748B]">单页汇总全院认证规模、Token 消耗趋势、8 周活跃热力、本研结构对比与精选作品墙。</p>
+          <div class="flex flex-wrap gap-1.5 pt-0.5">
+            <span class="mod-tag">成效总览</span>
+            <span class="mod-tag">趋势与热力图</span>
+            <span class="mod-tag">本研对比</span>
+            <span class="mod-tag">精选成果墙</span>
           </div>
         </div>
-        <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold" style="color:var(--primary);">
-          <span>进入学院端汇报大盘</span>
-          <span>打开体验 →</span>
+        <div class="pt-3 border-t border-[#EEF0F6] flex items-center justify-between text-xs font-medium text-[#624AFF]">
+          <span>college-dashboard</span>
+          <span>进入 →</span>
         </div>
       </a>
 
       <!-- 3. School Ops -->
-      <a href="./school-ops.html" class="cpa-card portal-card p-6 flex flex-col justify-between gap-5 no-underline text-inherit">
-        <div class="space-y-3">
+      <a href="./school-ops.html" class="portal-card p-5 flex flex-col justify-between gap-4 no-underline text-inherit">
+        <div class="space-y-2.5">
           <div class="flex items-center justify-between">
-            <span class="px-3 py-1 rounded-full text-xs font-semibold text-white" style="background:var(--accent);">③ 运营管理端（学校用）</span>
-            <span class="mono text-xs" style="color:var(--primary);">V1-M1.3 待验收</span>
+            <span class="px-2.5 py-0.5 rounded-md text-xs font-semibold text-white" style="background:var(--accent);">③ 校内运营端</span>
+            <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-[#F1F1FD] text-[#624AFF]">学校运营</span>
           </div>
-          <h2 class="text-lg font-bold">校内社团 / 志愿者轻量运营后台</h2>
-          <p class="text-xs leading-relaxed" style="color:var(--muted);">5 分钟上手管起本院日常运转：待审核邮箱核验与白名单 Excel 导入、作品审核与精选上架、独立 CMS 实战教程配置，以及采用<strong>学院激励池预算预占制</strong>的主题挑战创编、收稿定奖结算（未用预占自动回池）、志愿者激励与向浣溪申请追加预算。</p>
-          <div class="flex flex-wrap gap-1.5 text-[11px]">
-            <span class="px-2.5 py-0.5 rounded-full" style="background:#FFFFFF; color:#464D5B; box-shadow:0 1px 4px rgba(144,156,234,0.12);">成员与准入</span>
-            <span class="px-2.5 py-0.5 rounded-full" style="background:#FFFFFF; color:#464D5B; box-shadow:0 1px 4px rgba(144,156,234,0.12);">作品管理</span>
-            <span class="px-2.5 py-0.5 rounded-full" style="background:#FFFFFF; color:#464D5B; box-shadow:0 1px 4px rgba(144,156,234,0.12);">教程管理 (CMS)</span>
-            <span class="px-2.5 py-0.5 rounded-full" style="background:#FFFFFF; color:#464D5B; box-shadow:0 1px 4px rgba(144,156,234,0.12);">挑战与激励(预占池制)</span>
+          <h2 class="text-base font-bold">校内日常运营控制台</h2>
+          <p class="text-xs leading-relaxed text-[#64748B]">本院白名单准入核验、学生作品审核上架、实战教程 CMS 配置与主题挑战激励池结算。</p>
+          <div class="flex flex-wrap gap-1.5 pt-0.5">
+            <span class="mod-tag">成员准入</span>
+            <span class="mod-tag">作品管理</span>
+            <span class="mod-tag">教程 CMS</span>
+            <span class="mod-tag">挑战与激励</span>
           </div>
         </div>
-        <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold" style="color:var(--primary);">
-          <span>进入校内运营管理端</span>
-          <span>打开体验 →</span>
+        <div class="pt-3 border-t border-[#EEF0F6] flex items-center justify-between text-xs font-medium text-[#624AFF]">
+          <span>school-ops</span>
+          <span>进入 →</span>
         </div>
       </a>
 
-      <!-- 4. Huanxi Platform Admin -->
-      <a href="./platform-admin.html" class="cpa-card portal-card p-6 flex flex-col justify-between gap-5 no-underline text-inherit">
-        <div class="space-y-3">
+      <!-- 4. Platform Admin -->
+      <a href="./platform-admin.html" class="portal-card p-5 flex flex-col justify-between gap-4 no-underline text-inherit">
+        <div class="space-y-2.5">
           <div class="flex items-center justify-between">
-            <span class="px-3 py-1 rounded-full text-xs font-semibold text-white" style="background:var(--coral);">④ 平台管理端（浣溪内部）</span>
-            <span class="mono text-xs" style="color:var(--primary);">V1-M1.4 待验收</span>
+            <span class="px-2.5 py-0.5 rounded-md text-xs font-semibold text-white" style="background:var(--coral);">④ 平台管理端</span>
+            <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-[#FFF2F0] text-[#CF1322]">内部治理</span>
           </div>
-          <h2 class="text-lg font-bold">浣溪内部治理、资金审批与反倒卖审计中枢</h2>
-          <p class="text-xs leading-relaxed" style="color:var(--muted);">与校方物理隔离的内部控制台：跨院全局水位与高潜人才池、标准化开通学院与分发校方账号、基础额度/单日防刷限流与各院追加激励池二次确认审批、反倒卖告警一键冻结与全链路不可篡改日志。</p>
-          <div class="flex flex-wrap gap-1.5 text-[11px]">
-            <span class="px-2.5 py-0.5 rounded-full" style="background:#FFFFFF; color:#464D5B; box-shadow:0 1px 4px rgba(144,156,234,0.12);">全局总览与人才</span>
-            <span class="px-2.5 py-0.5 rounded-full" style="background:#FFFFFF; color:#464D5B; box-shadow:0 1px 4px rgba(144,156,234,0.12);">学院与账号</span>
-            <span class="px-2.5 py-0.5 rounded-full" style="background:#FFFFFF; color:#464D5B; box-shadow:0 1px 4px rgba(144,156,234,0.12);">额度与激励池审批</span>
-            <span class="px-2.5 py-0.5 rounded-full" style="background:#FFFFFF; color:#464D5B; box-shadow:0 1px 4px rgba(144,156,234,0.12);">审计与防倒卖</span>
+          <h2 class="text-base font-bold">平台治理与风控控制台</h2>
+          <p class="text-xs leading-relaxed text-[#64748B]">合作学院开通与账号管理、激励池追加审批、默认配额限流策略、风控冻结与操作审计日志。</p>
+          <div class="flex flex-wrap gap-1.5 pt-0.5">
+            <span class="mod-tag">总览看板</span>
+            <span class="mod-tag">合作学院</span>
+            <span class="mod-tag">额度与审批</span>
+            <span class="mod-tag">风控与审计</span>
           </div>
         </div>
-        <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold" style="color:var(--primary);">
-          <span>进入浣溪内部平台管理端</span>
-          <span>打开体验 →</span>
+        <div class="pt-3 border-t border-[#EEF0F6] flex items-center justify-between text-xs font-medium text-[#624AFF]">
+          <span>platform-admin</span>
+          <span>进入 →</span>
         </div>
       </a>
     </div>
 
-    <!-- 5 Cross-Portal Loops -->
-    <div class="cpa-card p-6 space-y-3 text-xs">
-      <div class="font-bold text-sm">五条跨端联动主链路（原型演示数据已全线打通）</div>
-      <div class="grid grid-cols-1 md:grid-cols-5 gap-3" style="color:var(--muted);">
-        <div class="p-3 rounded-xl border border-slate-100" style="background:#F7F9FD;"><strong style="color:var(--ink);">1. 开院配置</strong><br/>④ 平台端开院设规则 → 分发 ②③ 校方账号</div>
-        <div class="p-3 rounded-xl border border-slate-100" style="background:#F7F9FD;"><strong style="color:var(--ink);">2. 准入消耗</strong><br/>③ 校内导白名单 → ① 学生邮箱登录拿 Key</div>
-        <div class="p-3 rounded-xl border border-slate-100" style="background:#F7F9FD;"><strong style="color:var(--ink);">3. 挑战激励</strong><br/>③ 建挑战预占池子 → ① 参赛投作品 → ③ 定奖结算 / 找 ④ 增池</div>
-        <div class="p-3 rounded-xl border border-slate-100" style="background:#F7F9FD;"><strong style="color:var(--ink);">4. 成果汇报</strong><br/>① 消耗与精选 → ② 学院只读大盘实时呈现</div>
-        <div class="p-3 rounded-xl border border-slate-100" style="background:#F7F9FD;"><strong style="color:var(--ink);">5. 安全风控</strong><br/>全链路入日志 → ④ 抓倒卖一键冻结 → ① 同步阻断</div>
-      </div>
+    <!-- Single-Line Footer Status Bar -->
+    <div class="px-4 py-2.5 rounded-xl bg-white border border-[#E5E8F0] flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#64748B]">
+      <span>数据口径联动：平台管理端 ⇄ 校内运营端 ⇄ 学生端 ⇄ 学院大盘</span>
+      <span class="mono">HUST-SE · WHU-CS</span>
     </div>
-  </div>
+  </main>
 </body>
 </html>

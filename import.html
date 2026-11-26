@@ -3,526 +3,770 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>浣溪AI Lab · 运营管理端（学校用 · V1 原型）</title>
+  <title>浣溪AI Lab · 校内运营端</title>
   <script src="./tailwindcss.min.js"></script>
   <style>
     :root {
-      --bg-page: #FFFFFF;
+      --bg-canvas: #F5F7FB;
+      --bg-sidebar: #FAFBFF;
       --bg-surface: #FFFFFF;
-      --bg-subtle: #F7F9FD;
-      --bg-hover: #F3F5FA;
-      --border: #ECEDF1;
-      --ink: #27254C;
-      --muted: #8284A4;
+      --border: #E5E8F0;
+      --border-subtle: #EEF0F6;
+      --ink: #1E2238;
+      --ink-secondary: #4E5569;
+      --muted: #848CA4;
       --primary: #624AFF;
       --cyan: #36CFD1;
       --accent: #13C2C2;
       --accent-soft: #E6FFFB;
       --accent-ink: #006D75;
-      --selected-pill: #F1F1FD;
-      --coral: #FF4D4F;
-      --coral-soft: #FFF2F0;
       --warn: #D48806;
       --warn-soft: #FFFBE6;
+      --coral: #FF4D4F;
+      --coral-soft: #FFF2F0;
     }
+    * { box-sizing: border-box; }
     body {
-      background: var(--bg-page);
+      background: var(--bg-canvas);
       color: var(--ink);
-      font-family: "PingFang SC", "Microsoft Yahei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft Yahei", "Segoe UI", Roboto, sans-serif;
       font-variant-numeric: tabular-nums;
       margin: 0;
     }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-variant-numeric: tabular-nums; }
-    .cpa-card {
+    h1, h2, h3, h4 {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft Yahei", "Segoe UI", Roboto, sans-serif;
+      letter-spacing: -0.01em;
+    }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-variant-numeric: tabular-nums;
+    }
+    .adm-panel {
       background: var(--bg-surface);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      box-shadow: 0 2px 16px rgba(39, 37, 76, 0.04);
+      border-radius: 12px;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
     }
-    aside.cpa-card {
-      background: #F7F9FD;
-      border-color: #ECEDF1;
-      border-radius: 24px;
-    }
-    .soft-shell {
-      background: #F7F9FD;
-      border: 1px solid #ECEDF1;
-      border-radius: 16px;
-      transition: background 160ms ease, border-color 160ms ease;
-    }
-    .soft-shell:hover {
-      background: #F3F5FA;
-    }
-    .cpa-pill-btn {
-      background: linear-gradient(90deg, #27254C 0%, #624AFF 100%);
+    .adm-btn-primary {
+      background: #624AFF;
       color: #FFFFFF;
-      border-radius: 9999px;
-      box-shadow: 0 6px 16px rgba(98, 74, 255, 0.18);
-      transition: opacity 140ms cubic-bezier(0.22, 0.78, 0.2, 1), transform 140ms cubic-bezier(0.22, 0.78, 0.2, 1);
+      border: 1px solid #624AFF;
+      border-radius: 8px;
+      transition: background-color 140ms ease, border-color 140ms ease, opacity 140ms ease;
+      cursor: pointer;
     }
-    .cpa-pill-btn:hover { opacity: 0.92; }
-    .cpa-pill-btn:active { transform: scale(0.97); }
-    .cpa-pill-btn:disabled {
+    .adm-btn-primary:hover:not(:disabled) {
+      background: #5038E8;
+      border-color: #5038E8;
+    }
+    .adm-btn-primary:disabled {
       opacity: 0.45;
       cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
     }
-    .cpa-ghost-pill {
+    .adm-btn {
       background: #FFFFFF;
-      color: var(--ink);
-      border: 1px solid var(--border);
-      border-radius: 9999px;
-      transition: all 160ms ease;
+      color: #1E2238;
+      border: 1px solid #DCE0EA;
+      border-radius: 8px;
+      transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+      cursor: pointer;
     }
-    .cpa-ghost-pill:hover { background: #F3F5FA; border-color: #D2C4FF; color: var(--primary); }
-    .cpa-ghost-pill:active { transform: scale(0.97); }
-    .cpa-soft-violet-pill {
+    .adm-btn:hover:not(:disabled) {
+      background: #F7F8FC;
+      border-color: #C5CBE0;
+    }
+    .adm-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .adm-btn-soft {
       background: #F1F1FD;
       color: #624AFF;
       border: 1px solid #DDD8FF;
-      border-radius: 9999px;
-      transition: all 160ms ease;
+      border-radius: 8px;
+      transition: background-color 140ms ease, border-color 140ms ease;
+      cursor: pointer;
     }
-    .cpa-soft-violet-pill:hover { background: #E7E5FC; border-color: #C4BCFF; }
-    .side-btn { transition: all 180ms ease; border-radius: 12px; }
-    .side-btn.active { background: #F1F1FD; color: #624AFF; font-weight: 600; }
-    .side-btn:not(.active) { color: #464D5B; }
-    .side-btn:not(.active):hover { background: #FFFFFF; color: var(--ink); }
-    .section-eyebrow { display: flex; align-items: center; gap: 10px; }
-    .section-bar { width: 3.5px; height: 26px; border-radius: 999px; background: linear-gradient(180deg, #624AFF 0%, #36CFD1 100%); flex-shrink: 0; }
-    .drawer-backdrop { background: rgba(39, 37, 76, 0.30); backdrop-filter: blur(3px); }
-    #toast { transition: opacity 200ms ease, transform 200ms ease; }
-    .pool-seg-reserved {
-      background: repeating-linear-gradient(135deg, #36CFD1 0px, #36CFD1 7px, #1DB7BA 7px, #1DB7BA 14px);
+    .adm-btn-soft:hover:not(:disabled) {
+      background: #E6E3FC;
+      border-color: #C7BFFF;
+    }
+    .adm-btn-danger {
+      background: #FF4D4F;
+      color: #FFFFFF;
+      border: 1px solid #FF4D4F;
+      border-radius: 8px;
+      transition: background-color 140ms ease, opacity 140ms ease;
+      cursor: pointer;
+    }
+    .adm-btn-danger:hover:not(:disabled) {
+      background: #E03E40;
+      border-color: #E03E40;
+    }
+    .adm-btn-danger-ghost {
+      background: #FFFFFF;
+      color: #FF4D4F;
+      border: 1px solid #DCE0EA;
+      border-radius: 8px;
+      transition: background-color 140ms ease, border-color 140ms ease;
+      cursor: pointer;
+    }
+    .adm-btn-danger-ghost:hover {
+      background: #FFF2F0;
+      border-color: #FFCCC7;
+    }
+    .adm-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+    .badge-teal { background: var(--accent-soft); color: var(--accent-ink); }
+    .badge-warn { background: var(--warn-soft); color: var(--warn); }
+    .badge-coral { background: var(--coral-soft); color: var(--coral); }
+    .badge-violet { background: #F1F1FD; color: #624AFF; }
+    .badge-neutral { background: #F2F4F9; color: var(--ink-secondary); }
+
+    .adm-input, .adm-select, .adm-textarea {
+      background: #FFFFFF;
+      color: var(--ink);
+      border: 1px solid #DCE0EA;
+      border-radius: 8px;
+      font-size: 12px;
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+    .adm-input:focus, .adm-select:focus, .adm-textarea:focus {
+      outline: none;
+      border-color: #624AFF;
+      box-shadow: 0 0 0 3px rgba(98, 74, 255, 0.10);
     }
 
-    /* === ModelScope Studios Visual & Micro-Interaction Layer === */
-    @keyframes msNavPop {
-      0% { transform: scale(0.86); }
-      100% { transform: scale(1); }
+    .adm-seg {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px;
+      border-radius: 8px;
+      background: #F2F4F9;
+      border: 1px solid var(--border);
     }
-    @keyframes msPulseGlow {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(98, 74, 255, 0.28); }
-      50% { box-shadow: 0 0 0 5px rgba(98, 74, 255, 0); }
+    .adm-seg-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink-secondary);
+      transition: all 140ms ease;
+      cursor: pointer;
+      white-space: nowrap;
     }
-    h1, h2, h3 {
-      font-family: 'SFMono-Regular', ui-monospace, Menlo, Monaco, Consolas, "PingFang SC", "Microsoft Yahei", sans-serif;
-      letter-spacing: -0.01em;
+    .adm-seg-btn:hover:not(.active) {
+      color: var(--ink);
     }
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: #624AFF !important;
-      box-shadow: 0 0 0 3px rgba(98, 74, 255, 0.10);
+    .adm-seg-btn.active {
+      background: #FFFFFF;
+      color: var(--ink);
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+    }
+
+    .side-btn {
+      border-radius: 8px;
+      color: var(--ink-secondary);
+      transition: background-color 140ms ease, color 140ms ease;
+      cursor: pointer;
+    }
+    .side-btn:hover:not(.active) {
+      background: #F1F3FA;
+      color: var(--ink);
+    }
+    .side-btn.active {
+      background: #F1F1FD;
+      color: #624AFF;
+      font-weight: 600;
+    }
+
+    .adm-table thead tr {
+      background: #FAFBFE;
+      border-bottom: 1px solid var(--border);
+    }
+    .adm-table th {
+      padding: 9px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .adm-table tbody tr {
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background-color 120ms ease;
+    }
+    .adm-table tbody tr:last-child {
+      border-bottom: none;
+    }
+    .adm-table tbody tr:hover {
+      background: #F8FAFE;
+    }
+    .adm-table td {
+      padding: 11px 16px;
+      font-size: 12px;
+      color: var(--ink);
+      vertical-align: middle;
+    }
+
+    .pool-seg-reserved {
+      background: repeating-linear-gradient(135deg, #36CFD1 0px, #36CFD1 6px, #1DB7BA 6px, #1DB7BA 12px);
+    }
+    .drawer-backdrop {
+      background: rgba(15, 23, 42, 0.36);
+      backdrop-filter: blur(2px);
+    }
+    #toast {
+      transition: opacity 180ms ease, transform 180ms ease;
     }
   </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
 
-  <!-- Unified 4-Portal Prototype Switcher Bar -->
-  <div style="background:#27254C; color:#E8EAF6;" class="px-4 py-2 text-xs border-b border-white/10">
-    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-      <div class="flex items-center gap-2 flex-wrap">
-        <a href="./overview.html" class="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium">✦ 浣溪AI Lab · V1 原型总览</a>
-        <span class="text-slate-500 hidden sm:inline">|</span>
-        <a href="./index.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">① 学生端</a>
-        <a href="./college-dashboard.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">② 学院端（纯只读）</a>
-        <a href="./school-ops.html" class="px-2.5 py-1 rounded-full text-white font-semibold" style="background:#624AFF;">③ 运营管理端（学校用）</a>
-        <a href="./platform-admin.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">④ 平台管理端（浣溪内部）</a>
-      </div>
-      <span class="text-[11px] text-indigo-200 hidden md:inline">校内社团/志愿者日常运营 · 主题挑战预算预占与激励池闭环</span>
+  <!-- Top Prototype Switcher Bar (32px) -->
+  <div class="h-8 shrink-0 bg-[#1E1D3A] text-slate-300 text-[11px] px-4 flex items-center justify-between border-b border-white/10">
+    <div class="flex items-center gap-1.5 overflow-x-auto">
+      <a href="./overview.html" class="hover:text-white px-1.5 py-0.5 rounded transition whitespace-nowrap">✦ 原型总览</a>
+      <span class="text-slate-600">|</span>
+      <a href="./index.html" class="hover:text-white px-1.5 py-0.5 rounded transition whitespace-nowrap">① 学生端</a>
+      <a href="./college-dashboard.html" class="hover:text-white px-1.5 py-0.5 rounded transition whitespace-nowrap">② 学院大盘</a>
+      <a href="./school-ops.html" class="bg-[#624AFF] text-white font-medium rounded px-2 py-0.5 whitespace-nowrap">③ 校内运营端</a>
+      <a href="./platform-admin.html" class="hover:text-white px-1.5 py-0.5 rounded transition whitespace-nowrap">④ 平台管理端</a>
     </div>
+    <span class="mono text-[11px] text-slate-400 hidden sm:inline">ENV: HUST-SE</span>
   </div>
 
   <!-- Toast -->
-  <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-medium shadow-lg pointer-events-none opacity-0 -translate-y-2" style="background:#27254C; color:#FFFFFF; box-shadow:0 8px 24px rgba(39,37,76,0.20);"></div>
+  <div id="toast" class="fixed top-11 left-1/2 -translate-x-1/2 z-50 px-3.5 py-2 rounded-lg text-xs font-medium shadow-lg pointer-events-none opacity-0 -translate-y-2 bg-[#1E2238] text-white"></div>
 
-  <div class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+  <!-- App-Shell Console Skeleton -->
+  <div class="flex-1 lg:h-[calc(100vh-32px)] flex flex-col lg:flex-row overflow-hidden">
 
-    <!-- Left Sidebar (Strict 4 Menus) -->
-    <aside class="lg:col-span-3 cpa-card p-4 space-y-5 lg:sticky lg:top-6">
-      <div class="px-2 space-y-1.5">
-        <div class="flex items-center gap-2">
-          <span class="w-7 h-7 rounded-lg inline-flex items-center justify-center font-bold text-xs text-white" style="background:var(--primary);">✦</span>
-          <span class="text-sm font-bold tracking-tight">浣溪AI Lab</span>
+    <!-- Left Fixed Sidebar -->
+    <aside class="w-full lg:w-[232px] shrink-0 bg-[#FAFBFF] border-b lg:border-b-0 lg:border-r border-[#E5E8F0] flex flex-col justify-between">
+      <div>
+        <!-- Brand Header -->
+        <div class="h-14 px-4 border-b border-[#E5E8F0] flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-[26px] h-[26px] rounded-lg bg-[#624AFF] text-white inline-flex items-center justify-center font-bold text-xs">✦</span>
+            <span class="text-sm font-bold tracking-tight text-[#1E2238]">浣溪AI Lab</span>
+          </div>
+          <span class="adm-badge badge-violet">校内运营</span>
         </div>
-        <div class="text-xs font-semibold pt-1">华中科技大学软件学院</div>
-        <div class="text-[11px] px-2.5 py-0.5 rounded-full inline-block" style="background:var(--accent-soft); color:var(--accent-ink);">校内运营管理端 · 社团志愿者</div>
+
+        <!-- College Tenant Strip -->
+        <div class="mx-3 mt-3 px-3 py-2 rounded-lg bg-white border border-[#E5E8F0] flex items-center justify-between text-xs">
+          <span class="font-medium text-[#1E2238] truncate">华中科技大学软件学院</span>
+          <span class="inline-flex items-center gap-1 text-[11px] text-[#006D75] shrink-0">
+            <i class="w-1.5 h-1.5 rounded-full bg-[#13C2C2] inline-block"></i>运行中
+          </span>
+        </div>
+
+        <!-- 4 Navigation Items -->
+        <nav class="px-2.5 py-3 flex lg:block gap-1 lg:space-y-1 overflow-x-auto text-xs">
+          <button onclick="switchMenu('members')" data-menu="members" class="side-btn w-full px-2.5 py-2 flex items-center justify-between gap-2 text-left whitespace-nowrap">
+            <span class="inline-flex items-center gap-2">
+              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <span>成员与准入</span>
+            </span>
+            <span id="badgePendingMembers" class="adm-badge badge-warn mono">3</span>
+          </button>
+
+          <button onclick="switchMenu('works')" data-menu="works" class="side-btn w-full px-2.5 py-2 flex items-center justify-between gap-2 text-left whitespace-nowrap">
+            <span class="inline-flex items-center gap-2">
+              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              <span>作品审核</span>
+            </span>
+            <span id="badgePendingWorks" class="adm-badge badge-warn mono">2</span>
+          </button>
+
+          <button onclick="switchMenu('cms')" data-menu="cms" class="side-btn w-full px-2.5 py-2 flex items-center justify-between gap-2 text-left whitespace-nowrap">
+            <span class="inline-flex items-center gap-2">
+              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><polygon points="10 8 15 11 10 14 10 8"/></svg>
+              <span>教程管理</span>
+            </span>
+            <span id="badgeCmsCount" class="mono text-[11px] text-[#848CA4] px-1.5">4</span>
+          </button>
+
+          <button onclick="switchMenu('incentives')" data-menu="incentives" class="side-btn w-full px-2.5 py-2 flex items-center justify-between gap-2 text-left whitespace-nowrap">
+            <span class="inline-flex items-center gap-2">
+              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+              <span>挑战与激励</span>
+            </span>
+            <span id="badgePoolSidebar" class="adm-badge badge-teal mono">2.5M</span>
+          </button>
+        </nav>
       </div>
 
-      <nav class="space-y-1 text-xs">
-        <button onclick="switchMenu('members')" data-menu="members" class="side-btn w-full px-3 py-2.5 flex items-center justify-between text-left">
-          <span>① 成员与准入</span>
-          <span id="badgePendingMembers" class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:var(--warn-soft); color:var(--warn);">3</span>
-        </button>
-        <button onclick="switchMenu('works')" data-menu="works" class="side-btn w-full px-3 py-2.5 flex items-center justify-between text-left">
-          <span>② 作品管理</span>
-          <span id="badgePendingWorks" class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:var(--warn-soft); color:var(--warn);">2</span>
-        </button>
-        <button onclick="switchMenu('cms')" data-menu="cms" class="side-btn w-full px-3 py-2.5 flex items-center justify-between text-left">
-          <span>③ 教程管理 (CMS)</span>
-          <span id="badgeCmsCount" class="mono text-[11px] opacity-75">4</span>
-        </button>
-        <button onclick="switchMenu('incentives')" data-menu="incentives" class="side-btn w-full px-3 py-2.5 flex items-center justify-between text-left">
-          <span>④ 挑战与激励管理</span>
-          <span id="badgePoolSidebar" class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:var(--accent-soft); color:var(--accent-ink);">2.5M 可用</span>
-        </button>
-      </nav>
-
-      <!-- Clear Permission Boundary Note -->
-      <div class="p-3.5 rounded-xl text-[11px] leading-relaxed border border-slate-200 space-y-1" style="background:#FFFFFF; color:#464D5B;">
-        <div class="font-semibold" style="color:var(--ink);">校内端权限边界</div>
-        <div>• 仅操作本院成员核验、作品审核、实战教程 CMS 与主题挑战激励池闭环结算。</div>
-        <div>• 学院基础额度、限流与反倒卖审计由<strong>浣溪内部平台端</strong>统一管控；本端每笔发奖自动记入平台审计日志。</div>
+      <!-- Bottom Operator Bar -->
+      <div class="hidden lg:flex p-3 border-t border-[#E5E8F0] items-center gap-2.5 text-xs">
+        <span class="w-7 h-7 rounded-full bg-[#1E2238] text-white mono text-[11px] font-semibold inline-flex items-center justify-center shrink-0">OP</span>
+        <div class="min-w-0 flex-1">
+          <div class="mono text-xs font-medium text-[#1E2238] truncate">ops_hust_se_club</div>
+          <div class="text-[11px] text-[#848CA4]">校内管理员</div>
+        </div>
       </div>
     </aside>
 
-    <!-- Main Right Workspace -->
-    <main class="lg:col-span-9 space-y-5">
+    <!-- Right Main Workspace Column -->
+    <div class="flex-1 min-w-0 flex flex-col bg-[#F5F7FB] overflow-hidden">
 
-      <!-- ==================== MENU 1: 成员与准入 ==================== -->
-      <section id="menu-members" class="space-y-5">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="section-eyebrow">
-            <div class="section-bar"></div>
-            <div>
-              <div class="text-[11px]" style="color:var(--muted);">校内准入管理</div>
-              <h1 class="text-lg font-bold">成员与教育邮箱白名单</h1>
-            </div>
-          </div>
-          <div class="inline-flex p-0.5 rounded-full border border-slate-200 bg-white text-xs">
-            <button onclick="setMemSub('pending')" data-msub="pending" class="msub-btn px-3.5 py-1.5 rounded-full font-medium">待审核申请</button>
-            <button onclick="setMemSub('import')" data-msub="import" class="msub-btn px-3.5 py-1.5 rounded-full font-medium">白名单 Excel 导入</button>
-            <button onclick="setMemSub('list')" data-msub="list" class="msub-btn px-3.5 py-1.5 rounded-full font-medium">已认证成员 (642)</button>
-          </div>
-        </div>
+      <!-- Sticky Console Top Header -->
+      <header class="h-14 shrink-0 bg-white border-b border-[#E5E8F0] px-5 lg:px-6 flex items-center justify-between gap-4">
+        <div id="consoleBreadcrumb" class="flex items-center gap-1.5 text-xs min-w-0"></div>
+        <div id="headerPrimaryActions" class="flex items-center gap-2 shrink-0"></div>
+      </header>
 
-        <!-- Sub 1: Pending Email Applications -->
-        <div id="msub-pending" class="cpa-card overflow-hidden">
-          <div class="px-5 py-3.5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
-            <span class="font-semibold">已验证 `@hust.edu.cn` 邮箱、但未在首批白名单内的申请</span>
-            <span style="color:var(--muted);">审核通过后自动发放初始免费额度 1,000,000</span>
-          </div>
-          <div id="pendingMembersList" class="divide-y divide-slate-100 text-xs"></div>
-        </div>
+      <!-- Scrollable High-Density Data Canvas -->
+      <main class="flex-1 overflow-y-auto p-5 lg:p-6">
+        <div class="max-w-[1400px] mx-auto space-y-4">
 
-        <!-- Sub 2: Excel Roster Import -->
-        <div id="msub-import" class="hidden cpa-card p-6 space-y-5 text-xs">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 class="text-sm font-bold">批量导入学院学生邮箱白名单（Excel / CSV）</h2>
-              <p class="mt-0.5" style="color:var(--muted);">导入列：`email, name, degree(本科/研究生)`，系统先预览去重与身份分布，确认后再入库。</p>
-            </div>
-            <button onclick="showToast('已下载模板：hust-software-roster-template.csv')" class="cpa-ghost-pill px-3.5 py-1.5 font-medium">下载标准模板</button>
-          </div>
-
-          <div class="p-8 rounded-2xl border-2 border-dashed border-slate-300 text-center space-y-3" style="background:#F7F9FD;">
-            <div class="text-sm font-semibold">将学院教务处导出的学生邮箱名单拖放到此处</div>
-            <div style="color:var(--muted);">支持 UTF-8 CSV / XLSX，单次上限 10,000 行；已存在成员自动跳过不重复发额度</div>
-            <button onclick="simulateImportPreview()" class="cpa-pill-btn px-5 py-2 font-medium">模拟上传：2026秋软件学院补录名单.xlsx</button>
-          </div>
-
-          <div id="importPreviewBox" class="hidden p-4 rounded-xl border border-teal-200 space-y-3" style="background:var(--accent-soft);">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="font-semibold" style="color:var(--accent-ink);">预览校验通过：共解析 128 行</div>
-              <div class="mono text-[11px]" style="color:var(--accent-ink);">新增有效 124 人（本科 86 / 研究生 38） · 重复跳过 4 行 · 异常 0 行</div>
-            </div>
-            <div class="flex justify-end gap-2">
-              <button onclick="document.getElementById('importPreviewBox').classList.add('hidden')" class="cpa-ghost-pill px-3.5 py-1.5">取消</button>
-              <button onclick="confirmImport()" class="cpa-pill-btn px-4 py-1.5 font-medium">确认导入 124 人白名单</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Sub 3: Certified Members List -->
-        <div id="msub-list" class="hidden cpa-card overflow-hidden text-xs">
-          <div class="px-5 py-3.5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
-            <input id="memberSearch" oninput="renderMembersTable()" type="text" placeholder="搜索邮箱或姓名..." class="px-3.5 py-1.5 rounded-full border border-slate-200 text-xs w-56" />
-            <span style="color:var(--muted);">注：成员额度上限与风控冻结仅限浣溪平台端操作</span>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="border-b border-slate-100 text-[11px]" style="background:#FFFFFF; color:#464D5B;">
-                  <th class="px-5 py-2.5 font-medium">姓名与教育邮箱</th>
-                  <th class="px-4 py-2.5 font-medium">身份分层</th>
-                  <th class="px-4 py-2.5 font-medium">已消耗 Token</th>
-                  <th class="px-4 py-2.5 font-medium">作品数</th>
-                  <th class="px-5 py-2.5 font-medium text-right">状态</th>
-                </tr>
-              </thead>
-              <tbody id="certifiedMembersBody" class="divide-y divide-slate-100"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- ==================== MENU 2: 作品管理 ==================== -->
-      <section id="menu-works" class="hidden space-y-5">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="section-eyebrow">
-            <div class="section-bar" style="background:var(--primary);"></div>
-            <div>
-              <div class="text-[11px]" style="color:var(--muted);">全院作品总表审核 · 与各期主题挑战实时同源</div>
-              <h1 class="text-lg font-bold">学生作品审核与精选管理</h1>
-            </div>
-          </div>
-          <button id="batchRewardBtn" onclick="sendSelectedToIncentives()" class="hidden cpa-pill-btn px-4 py-1.5 text-xs font-medium">去挑战与激励管理发奖 →</button>
-        </div>
-
-        <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
-          <div class="flex items-center gap-2 flex-wrap" id="opsWorkTagBar"></div>
-          <select id="opsWorkStatusFilter" onchange="renderOpsWorks()" class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs">
-            <option value="all">全部审核状态</option>
-            <option value="reviewing">待审核</option>
-            <option value="published">已上架</option>
-            <option value="rejected">需修改</option>
-          </select>
-        </div>
-
-        <div id="opsWorksList" class="space-y-3"></div>
-      </section>
-
-      <!-- ==================== MENU 3: 教程管理 (CMS) ==================== -->
-      <section id="menu-cms" class="hidden space-y-5">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="section-eyebrow">
-            <div class="section-bar"></div>
-            <div>
-              <div class="text-[11px]" style="color:var(--muted);">学生端「学习与挑战」实战教程供给</div>
-              <h1 class="text-lg font-bold">实战教程与外链视频管理 (CMS)</h1>
-            </div>
-          </div>
-          <button onclick="openCmsModal()" class="cpa-pill-btn px-4 py-2 text-xs font-medium">+ 添加实战教程 / 外链视频</button>
-        </div>
-
-        <div class="flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div class="inline-flex p-0.5 rounded-full border border-slate-200 bg-white" id="cmsFilterBar">
-            <button onclick="setCmsFilter('all')" data-cfilter="all" class="cms-filter-btn px-3.5 py-1.5 rounded-full font-medium">全部教程</button>
-            <button onclick="setCmsFilter('active')" data-cfilter="active" class="cms-filter-btn px-3.5 py-1.5 rounded-full font-medium">已上架展示</button>
-            <button onclick="setCmsFilter('hidden')" data-cfilter="hidden" class="cms-filter-btn px-3.5 py-1.5 rounded-full font-medium">已下架隐藏</button>
-          </div>
-          <div class="text-[11px]" style="color:var(--muted);">
-            提示：上架教程实时同步至学生端「学习与挑战」；赛事专题 <span class="mono">#Tag</span> 与奖金预算统一在「④ 挑战与激励管理」配置。
-          </div>
-        </div>
-
-        <div id="opsLessonsList" class="space-y-3 text-xs"></div>
-      </section>
-
-      <!-- ==================== MENU 4: 挑战与激励管理 ==================== -->
-      <section id="menu-incentives" class="hidden space-y-5">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="section-eyebrow">
-            <div class="section-bar"></div>
-            <div>
-              <div class="text-[11px]" style="color:var(--muted);">机制 A · 学院激励池预算预占与闭环结算</div>
-              <h1 class="text-lg font-bold">挑战与激励管理</h1>
-            </div>
-          </div>
-          <button onclick="openPoolTopupModal()" class="cpa-soft-violet-pill px-4 py-2 text-xs font-semibold">向浣溪申请追加激励池 ↗</button>
-        </div>
-
-        <!-- Top: College Incentive Pool 3-Segment Water-Level Dashboard -->
-        <div class="cpa-card p-6 space-y-4">
-          <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <div class="text-xs font-medium" style="color:var(--muted);">华中科技大学软件学院 · 当前可自由支配激励池余额</div>
-              <div class="flex items-baseline gap-2.5 mt-1">
-                <span id="poolAvailBig" class="text-3xl font-bold mono" style="color:var(--ink);">2,500,000</span>
-                <span class="text-xs" style="color:var(--muted);">Tokens（可用于发起新主题挑战或发放社团志愿者零散激励）</span>
+          <!-- ==================== MODULE 1: 成员与准入 ==================== -->
+          <section id="menu-members" class="space-y-4">
+            <!-- 4-Column Compact KPI Strip -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+              <div class="adm-panel px-4 py-3.5">
+                <div class="text-xs text-[#848CA4]">已认证成员</div>
+                <div id="kpiCertTotal" class="text-xl font-bold mono text-[#1E2238] mt-1">642</div>
               </div>
-            </div>
-            <span id="poolWaterBadge" class="px-3 py-1 rounded-full text-xs font-semibold" style="background:var(--warn-soft); color:var(--warn);">占用 87.5% · 建议申请增池</span>
-          </div>
-
-          <!-- 4 Ledger Figures -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-            <div class="soft-shell p-3.5">
-              <div class="text-[11px]" style="color:var(--muted);">总获批激励池</div>
-              <div id="poolTotalVal" class="mono text-sm font-bold mt-1">20,000,000</div>
-              <div class="text-[11px] mt-0.5 mono" style="color:var(--muted);">20.0M 总额度</div>
-            </div>
-            <div class="soft-shell p-3.5">
-              <div class="flex items-center gap-1.5 text-[11px]" style="color:var(--muted);">
-                <span class="w-2 h-2 rounded-full inline-block" style="background:#624AFF;"></span>已结算实发
-              </div>
-              <div id="poolDispatchedVal" class="mono text-sm font-bold mt-1" style="color:#624AFF;">14,000,000</div>
-              <div id="poolDispatchedM" class="text-[11px] mt-0.5 mono" style="color:var(--muted);">14.0M 已入账学生端</div>
-            </div>
-            <div class="soft-shell p-3.5">
-              <div class="flex items-center gap-1.5 text-[11px]" style="color:var(--muted);">
-                <span class="w-2 h-2 rounded-full inline-block" style="background:#36CFD1;"></span>进行中挑战预占冻结
-              </div>
-              <div id="poolReservedVal" class="mono text-sm font-bold mt-1" style="color:var(--accent-ink);">3,500,000</div>
-              <div id="poolReservedM" class="text-[11px] mt-0.5 mono" style="color:var(--muted);">3.5M 专款锁定中</div>
-            </div>
-            <div class="soft-shell p-3.5">
-              <div class="flex items-center gap-1.5 text-[11px]" style="color:var(--muted);">
-                <span class="w-2 h-2 rounded-full inline-block border border-slate-300" style="background:#FFFFFF;"></span>当前可自由支配
-              </div>
-              <div id="poolAvailableVal" class="mono text-sm font-bold mt-1" style="color:var(--ink);">2,500,000</div>
-              <div id="poolAvailableM" class="text-[11px] mt-0.5 mono" style="color:var(--muted);">2.5M 随时可支配</div>
-            </div>
-          </div>
-
-          <!-- 3-Segment Progress Bar: Dispatched (#624AFF) + Reserved (#36CFD1 stripe) + Available (#F7F9FD track) -->
-          <div class="space-y-2">
-            <div class="h-3 rounded-full overflow-hidden flex border" style="background:#F7F9FD; border-color:#ECEDF1;">
-              <div id="poolBarDispatched" class="h-full transition-all duration-300" style="width:70%; background:#624AFF;" title="已结算实发"></div>
-              <div id="poolBarReserved" class="h-full pool-seg-reserved transition-all duration-300" style="width:17.5%;" title="进行中挑战预占冻结"></div>
-            </div>
-            <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
-              <div id="poolSummaryLine" class="font-semibold mono" style="color:var(--ink);">
-                已实发 14.0M · 挑战冻结 3.5M · 当前可用 2.5M（占用 87.5% · 建议申请增池）
-              </div>
-              <div class="flex items-center gap-3 text-[11px]" style="color:var(--muted);">
-                <span class="inline-flex items-center gap-1"><i class="w-2.5 h-2.5 rounded-sm inline-block" style="background:#624AFF;"></i>已实发</span>
-                <span class="inline-flex items-center gap-1"><i class="w-2.5 h-2.5 rounded-sm inline-block pool-seg-reserved"></i>挑战预占冻结</span>
-                <span class="inline-flex items-center gap-1"><i class="w-2.5 h-2.5 rounded-sm inline-block border border-slate-300" style="background:#F7F9FD;"></i>可用余量</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Workspace Subview Switcher Bar (Max 2 Subviews) -->
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="inline-flex p-1 rounded-full border border-slate-200 bg-white text-xs">
-            <button onclick="setIncentiveSub('challenges')" data-incsub="challenges" class="incsub-btn px-4 py-1.5 rounded-full font-medium">主题挑战闭环管理</button>
-            <button onclick="setIncentiveSub('volunteer')" data-incsub="volunteer" class="incsub-btn px-4 py-1.5 rounded-full font-medium">志愿者零散激励与增池记录</button>
-          </div>
-          <button id="btnNewChallengeTop" onclick="openChallengeModal()" class="cpa-pill-btn px-4 py-2 text-xs font-semibold">+ 发起新主题挑战</button>
-        </div>
-
-        <!-- Subview A: Theme Challenge Closed-Loop Management -->
-        <div id="incsub-challenges" class="space-y-4">
-          <!-- List View -->
-          <div id="challengeListView" class="space-y-3.5"></div>
-          <!-- Single Challenge Closed-Loop Detail Workbench -->
-          <div id="challengeWorkbenchView" class="hidden space-y-4"></div>
-        </div>
-
-        <!-- Subview B: Volunteer Ad-Hoc Incentives & Topup / Audit Logs -->
-        <div id="incsub-volunteer" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-5">
-          <!-- Left (5): Volunteer Incentive Form -->
-          <div class="lg:col-span-5 cpa-card p-5 space-y-4 text-xs">
-            <div>
-              <h2 class="text-sm font-bold">校内开发社团志愿者零散激励</h2>
-              <p class="mt-1 leading-relaxed" style="color:var(--muted);">
-                仅从<strong>当前可自由支配余额</strong>中支取，严禁挪用已被进行中主题挑战预占冻结的预算。
-              </p>
-            </div>
-
-            <div class="p-3 rounded-xl flex items-center justify-between" style="background:#F7F9FD; border:1px solid #ECEDF1;">
-              <span style="color:var(--muted);">当前可支取上限</span>
-              <span id="volAvailHint" class="mono font-bold" style="color:var(--primary);">2,500,000 Token</span>
-            </div>
-
-            <div>
-              <label class="block font-medium mb-1">志愿者激励类型</label>
-              <select id="rewType" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white">
-                <option value="校内开发社团志愿者激励">校内开发社团志愿者激励</option>
-                <option value="校园 AI 实战答疑助教补贴">校园 AI 实战答疑助教补贴</option>
-                <option value="主题挑战赛组织与初审激励">主题挑战赛组织与初审激励</option>
-              </select>
-            </div>
-            <div>
-              <label class="block font-medium mb-1">受益志愿者教育邮箱</label>
-              <input id="rewTarget" type="text" value="xujiahe@hust.edu.cn" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono text-xs" />
-            </div>
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <label class="font-medium">单次发放额度（Token）</label>
-                <div class="flex items-center gap-1 text-[11px]">
-                  <button type="button" onclick="setVolQuickAmount(100000)" class="px-2 py-0.5 rounded-full border border-slate-200 hover:border-[#624AFF]">100K</button>
-                  <button type="button" onclick="setVolQuickAmount(200000)" class="px-2 py-0.5 rounded-full border border-slate-200 hover:border-[#624AFF]">200K</button>
-                  <button type="button" onclick="setVolQuickAmount(500000)" class="px-2 py-0.5 rounded-full border border-slate-200 hover:border-[#624AFF]">500K</button>
+              <div class="adm-panel px-4 py-3.5">
+                <div class="text-xs text-[#848CA4]">本研分布</div>
+                <div class="flex items-baseline gap-1.5 mt-1">
+                  <span id="kpiDegSplit" class="text-xl font-bold mono text-[#1E2238]">436 / 206</span>
+                  <span class="text-[11px] text-[#848CA4]">本科 / 研究生</span>
                 </div>
               </div>
-              <input id="rewAmount" oninput="validateVolunteerAmountInline()" type="number" value="200000" step="50000" min="10000" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono text-xs" />
-              <div id="volAmountWarn" class="hidden mt-1.5 text-[11px] font-medium" style="color:var(--coral);"></div>
+              <div class="adm-panel px-4 py-3.5">
+                <div class="text-xs text-[#848CA4]">待审核申请</div>
+                <div class="flex items-center gap-2 mt-1">
+                  <span id="kpiPendingMemCount" class="text-xl font-bold mono text-[#D48806]">3</span>
+                  <span id="kpiPendingMemBadge" class="adm-badge badge-warn">待核验</span>
+                </div>
+              </div>
+              <div class="adm-panel px-4 py-3.5">
+                <div class="text-xs text-[#848CA4]">默认初始额度</div>
+                <div class="flex items-baseline gap-1.5 mt-1">
+                  <span class="text-xl font-bold mono text-[#1E2238]">1,000,000</span>
+                  <span class="text-[11px] text-[#848CA4] mono">Token</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <label class="block font-medium mb-1">服务贡献说明（同步写入浣溪审计日志）</label>
-              <input id="rewReason" type="text" value="负责第 1 期校园黑客松赛前 CLI 接入答疑与作品初审" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs" />
-            </div>
-            <button id="btnDispatchVol" onclick="dispatchFromPool()" class="cpa-pill-btn w-full py-2.5 text-xs font-semibold">确认从可用余额发放</button>
-          </div>
 
-          <!-- Right (7): Topup Requests + Full College Dispatch Ledger -->
-          <div class="lg:col-span-7 space-y-4 text-xs">
-            <div class="cpa-card overflow-hidden">
-              <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between gap-2">
-                <span class="font-bold">向浣溪提交的「追加激励池」审批进度</span>
-                <button onclick="openPoolTopupModal()" class="text-[11px] font-semibold hover:underline" style="color:var(--primary);">+ 提交增池申请</button>
+            <!-- Main Members Data Panel -->
+            <div class="adm-panel overflow-hidden">
+              <!-- Toolbar -->
+              <div class="px-4 py-3 border-b border-[#E5E8F0] flex flex-wrap items-center justify-between gap-3">
+                <div class="adm-seg">
+                  <button onclick="setMemSub('pending')" data-msub="pending" class="msub-btn adm-seg-btn active">待审核申请 <span id="tabPendingCnt" class="mono ml-1 text-[11px]">3</span></button>
+                  <button onclick="setMemSub('list')" data-msub="list" class="msub-btn adm-seg-btn">已认证成员 <span id="tabCertCnt" class="mono ml-1 text-[11px]">642</span></button>
+                  <button onclick="setMemSub('import')" data-msub="import" class="msub-btn adm-seg-btn">批量导入</button>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input id="memberSearch" oninput="renderMembersTable()" type="text" placeholder="搜索姓名或教育邮箱..." class="hidden adm-input px-3 py-1.5 w-52" />
+                  <button onclick="showToast('已下载模板：hust-software-roster-template.csv')" class="adm-btn px-3 py-1.5 text-xs font-medium">下载导入模板</button>
+                </div>
               </div>
-              <div id="topupRequestsList" class="divide-y divide-slate-100"></div>
-            </div>
-            <div class="cpa-card overflow-hidden">
-              <div class="px-5 py-3.5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
-                <span class="font-bold">全院激励发放流水（挑战批量结算 + 志愿者激励）</span>
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:#F1F1FD; color:var(--primary);">✓ 已实时同步浣溪审计</span>
+
+              <!-- Sub 1: Pending Applications Table -->
+              <div id="msub-pending" class="overflow-x-auto">
+                <table class="w-full text-left border-collapse adm-table">
+                  <thead>
+                    <tr>
+                      <th>姓名</th>
+                      <th>教育邮箱</th>
+                      <th>学历</th>
+                      <th>申请时间</th>
+                      <th>备注</th>
+                      <th class="text-right">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pendingMembersBody"></tbody>
+                </table>
               </div>
-              <div id="dispatchHistoryList" class="divide-y divide-slate-100"></div>
+
+              <!-- Sub 2: Certified Members Table -->
+              <div id="msub-list" class="hidden overflow-x-auto">
+                <table class="w-full text-left border-collapse adm-table">
+                  <thead>
+                    <tr>
+                      <th>姓名</th>
+                      <th>教育邮箱</th>
+                      <th>学历</th>
+                      <th class="text-right">已用 Token</th>
+                      <th class="text-right">上架作品</th>
+                      <th class="text-right">状态</th>
+                    </tr>
+                  </thead>
+                  <tbody id="certifiedMembersBody"></tbody>
+                </table>
+              </div>
+
+              <!-- Sub 3: Batch Roster Import -->
+              <div id="msub-import" class="hidden p-5 space-y-4 text-xs">
+                <div class="px-3.5 py-2 rounded-lg bg-[#F8FAFE] border border-[#E5E8F0] flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <span class="text-[#4E5569]">字段格式：</span>
+                    <code class="mono font-semibold text-[#1E2238]">email, name, degree</code>
+                  </div>
+                  <span class="mono text-[11px] text-[#848CA4]">UTF-8 CSV / XLSX · 单次 ≤ 10,000 行</span>
+                </div>
+
+                <div class="p-8 rounded-lg border border-dashed border-[#C5CBE0] bg-[#FAFBFF] text-center space-y-3">
+                  <svg class="w-7 h-7 mx-auto text-[#848CA4]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <div class="text-xs font-medium text-[#1E2238]">拖入名单文件或点击上传解析</div>
+                  <button onclick="simulateImportPreview()" class="adm-btn-primary px-4 py-1.5 text-xs font-medium">上传：2026秋软件学院补录名单.xlsx</button>
+                </div>
+
+                <div id="importPreviewBox" class="hidden px-4 py-3 rounded-lg border border-[#99F6E4] bg-[#E6FFFB] flex flex-wrap items-center justify-between gap-3">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="font-semibold text-[#006D75]">解析 128 行</span>
+                    <span class="mono text-[11px] text-[#006D75]">新增有效 124（本科 86 / 研究生 38） · 重复跳过 4 · 异常 0</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button onclick="document.getElementById('importPreviewBox').classList.add('hidden')" class="adm-btn px-3 py-1 text-xs">取消</button>
+                    <button onclick="confirmImport()" class="adm-btn-primary px-3.5 py-1 text-xs font-medium">确认导入 124 人</button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </section>
+
+          <!-- ==================== MODULE 2: 作品审核 ==================== -->
+          <section id="menu-works" class="hidden">
+            <div class="adm-panel overflow-hidden">
+              <!-- Single-Line Filter Toolbar -->
+              <div class="px-4 py-3 border-b border-[#E5E8F0] flex flex-wrap items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-2.5">
+                  <div class="adm-seg" id="opsWorkStatusSeg">
+                    <button onclick="setWorkStatusFilter('all')" data-wst="all" class="wst-btn adm-seg-btn active">全部</button>
+                    <button onclick="setWorkStatusFilter('reviewing')" data-wst="reviewing" class="wst-btn adm-seg-btn">待审核</button>
+                    <button onclick="setWorkStatusFilter('published')" data-wst="published" class="wst-btn adm-seg-btn">已上架</button>
+                    <button onclick="setWorkStatusFilter('rejected')" data-wst="rejected" class="wst-btn adm-seg-btn">需修改</button>
+                  </div>
+                  <select id="opsWorkTagSelect" onchange="opsWorkTag=this.value; renderOpsWorks()" class="adm-select px-2.5 py-1.5 mono"></select>
+                  <input id="opsWorkSearch" oninput="renderOpsWorks()" type="text" placeholder="搜索作品名、作者或邮箱..." class="adm-input px-3 py-1.5 w-52" />
+                </div>
+                <div class="flex items-center gap-2">
+                  <button id="batchRewardBtn" onclick="sendSelectedToIncentives()" class="hidden adm-btn-primary px-3 py-1.5 text-xs font-medium">批量去定奖 (0)</button>
+                </div>
+              </div>
+
+              <!-- Standard Works Data Table -->
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse adm-table">
+                  <thead>
+                    <tr>
+                      <th class="w-9"><input id="selectAllWorksChk" type="checkbox" onchange="toggleSelectAllWorks(this.checked)" class="accent-[#624AFF] rounded cursor-pointer" /></th>
+                      <th>作品名称</th>
+                      <th>形态</th>
+                      <th>作者 / 邮箱</th>
+                      <th>关联赛事</th>
+                      <th class="text-right">点赞数</th>
+                      <th>荣誉与精选</th>
+                      <th>状态</th>
+                      <th class="text-right">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="opsWorksTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- ==================== MODULE 3: 教程管理 ==================== -->
+          <section id="menu-cms" class="hidden">
+            <div class="adm-panel overflow-hidden">
+              <!-- Toolbar -->
+              <div class="px-4 py-3 border-b border-[#E5E8F0] flex flex-wrap items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-2.5">
+                  <div class="adm-seg" id="cmsFilterBar">
+                    <button onclick="setCmsFilter('all')" data-cfilter="all" class="cms-filter-btn adm-seg-btn active">全部</button>
+                    <button onclick="setCmsFilter('active')" data-cfilter="active" class="cms-filter-btn adm-seg-btn">已上架</button>
+                    <button onclick="setCmsFilter('hidden')" data-cfilter="hidden" class="cms-filter-btn adm-seg-btn">已下架</button>
+                  </div>
+                  <input id="cmsSearchInput" oninput="renderCmsLists()" type="text" placeholder="搜索教程标题..." class="adm-input px-3 py-1.5 w-52" />
+                </div>
+                <button onclick="openCmsModal()" class="adm-btn-primary px-3.5 py-1.5 text-xs font-medium">+ 新增教程</button>
+              </div>
+
+              <!-- Standard CMS Data Table -->
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse adm-table">
+                  <thead>
+                    <tr>
+                      <th>教程标题</th>
+                      <th>分类</th>
+                      <th>时长</th>
+                      <th>资源链接</th>
+                      <th class="text-right">学习人次</th>
+                      <th>状态</th>
+                      <th class="text-right">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="opsLessonsTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- ==================== MODULE 4: 挑战与激励 ==================== -->
+          <section id="menu-incentives" class="hidden space-y-4">
+            <!-- Top Financial Ledger Overview Panel -->
+            <div class="adm-panel p-4 space-y-3.5">
+              <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-[#EEF0F6]">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-semibold text-[#1E2238]">学院激励池账本</span>
+                  <span id="poolWaterBadge" class="adm-badge badge-warn mono">占用 87.5%</span>
+                </div>
+                <button onclick="openPoolTopupModal()" class="adm-btn-soft px-3 py-1 text-xs font-medium">申请追加额度</button>
+              </div>
+
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div class="px-3.5 py-2.5 rounded-lg bg-[#FAFBFE] border border-[#EEF0F6]">
+                  <div class="text-[11px] text-[#848CA4]">激励池总额</div>
+                  <div id="poolTotalVal" class="mono text-lg font-bold text-[#1E2238] mt-0.5">20,000,000</div>
+                  <div class="mono text-[11px] text-[#848CA4]">20.0M</div>
+                </div>
+                <div class="px-3.5 py-2.5 rounded-lg bg-[#FAFBFE] border border-[#EEF0F6]">
+                  <div class="flex items-center gap-1.5 text-[11px] text-[#848CA4]">
+                    <span class="w-2 h-2 rounded-sm inline-block bg-[#624AFF]"></span>已结算实发
+                  </div>
+                  <div id="poolDispatchedVal" class="mono text-lg font-bold text-[#624AFF] mt-0.5">14,000,000</div>
+                  <div id="poolDispatchedM" class="mono text-[11px] text-[#848CA4]">14.0M</div>
+                </div>
+                <div class="px-3.5 py-2.5 rounded-lg bg-[#FAFBFE] border border-[#EEF0F6]">
+                  <div class="flex items-center gap-1.5 text-[11px] text-[#848CA4]">
+                    <span class="w-2 h-2 rounded-sm inline-block bg-[#36CFD1]"></span>挑战预占冻结
+                  </div>
+                  <div id="poolReservedVal" class="mono text-lg font-bold text-[#006D75] mt-0.5">3,500,000</div>
+                  <div id="poolReservedM" class="mono text-[11px] text-[#848CA4]">3.5M · 2 场进行中</div>
+                </div>
+                <div class="px-3.5 py-2.5 rounded-lg bg-[#FAFBFE] border border-[#EEF0F6]">
+                  <div class="flex items-center gap-1.5 text-[11px] text-[#848CA4]">
+                    <span class="w-2 h-2 rounded-sm inline-block border border-[#C5CBE0] bg-white"></span>可用余额
+                  </div>
+                  <div id="poolAvailableVal" class="mono text-lg font-bold text-[#1E2238] mt-0.5">2,500,000</div>
+                  <div id="poolAvailableM" class="mono text-[11px] text-[#848CA4]">2.5M</div>
+                </div>
+              </div>
+
+              <!-- 3-Segment Progress Bar -->
+              <div class="space-y-1.5">
+                <div class="h-2.5 rounded-md overflow-hidden flex bg-[#EEF0F6]">
+                  <div id="poolBarDispatched" class="h-full transition-all duration-300 bg-[#624AFF]" style="width:70%;"></div>
+                  <div id="poolBarReserved" class="h-full pool-seg-reserved transition-all duration-300" style="width:17.5%;"></div>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#848CA4]">
+                  <span id="poolSummaryLine" class="mono text-[#4E5569]">已实发 14.0M · 冻结 3.5M · 可用 2.5M</span>
+                  <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center gap-1"><i class="w-2 h-2 rounded-sm inline-block bg-[#624AFF]"></i>已结算实发</span>
+                    <span class="inline-flex items-center gap-1"><i class="w-2 h-2 rounded-sm inline-block pool-seg-reserved"></i>挑战预占冻结</span>
+                    <span class="inline-flex items-center gap-1"><i class="w-2 h-2 rounded-sm inline-block bg-[#EEF0F6] border border-[#DCE0EA]"></i>可用余额</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Secondary View Switcher Bar -->
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="adm-seg">
+                <button onclick="switchChallengeTab()" data-incsub="challenges" class="incsub-btn adm-seg-btn active">主题挑战赛</button>
+                <button onclick="setIncentiveSub('volunteer')" data-incsub="volunteer" class="incsub-btn adm-seg-btn">志愿者激励与流水</button>
+              </div>
+              <button id="btnNewChallengeTop" onclick="openChallengeModal()" class="adm-btn-primary px-3.5 py-1.5 text-xs font-medium">+ 新建挑战赛</button>
+            </div>
+
+            <!-- Subview A: Theme Challenges (Table + Detail Workbench) -->
+            <div id="incsub-challenges" class="space-y-4">
+              <!-- A1: Challenges Data Table -->
+              <div id="challengeListView" class="adm-panel overflow-hidden">
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left border-collapse adm-table">
+                    <thead>
+                      <tr>
+                        <th>挑战名称与 #Tag</th>
+                        <th>状态</th>
+                        <th>截稿时间</th>
+                        <th>奖项配置</th>
+                        <th>预算状态</th>
+                        <th>参赛作品</th>
+                        <th class="text-right">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody id="challengeTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- A2: Single Challenge Closed-Loop Workbench -->
+              <div id="challengeWorkbenchView" class="hidden space-y-4"></div>
+            </div>
+
+            <!-- Subview B: Volunteer Incentives & Ledger -->
+            <div id="incsub-volunteer" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+              <!-- Left 4 Cols: Compact Dispatch Form -->
+              <div class="lg:col-span-4 adm-panel p-4 space-y-3.5 text-xs">
+                <div class="flex items-center justify-between pb-2.5 border-b border-[#EEF0F6]">
+                  <span class="font-semibold text-[#1E2238]">志愿者激励发放</span>
+                  <span class="text-[11px] text-[#848CA4]">可用上限 <strong id="volAvailHint" class="mono text-[#624AFF]">2,500,000</strong></span>
+                </div>
+
+                <div>
+                  <label class="block text-[#4E5569] font-medium mb-1">激励类型</label>
+                  <select id="rewType" class="adm-select w-full px-3 py-2">
+                    <option value="校内开发社团志愿者激励">校内开发社团志愿者激励</option>
+                    <option value="校园 AI 实战答疑助教补贴">校园 AI 实战答疑助教补贴</option>
+                    <option value="主题挑战赛组织与初审激励">主题挑战赛组织与初审激励</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-[#4E5569] font-medium mb-1">受益人邮箱</label>
+                  <input id="rewTarget" type="text" value="xujiahe@hust.edu.cn" class="adm-input w-full px-3 py-2 mono" />
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="text-[#4E5569] font-medium">发放额度 (Token)</label>
+                    <div class="flex items-center gap-1">
+                      <button type="button" onclick="setVolQuickAmount(100000)" class="adm-btn px-2 py-0.5 text-[11px] mono">100K</button>
+                      <button type="button" onclick="setVolQuickAmount(200000)" class="adm-btn px-2 py-0.5 text-[11px] mono">200K</button>
+                      <button type="button" onclick="setVolQuickAmount(500000)" class="adm-btn px-2 py-0.5 text-[11px] mono">500K</button>
+                    </div>
+                  </div>
+                  <input id="rewAmount" oninput="validateVolunteerAmountInline()" type="number" value="200000" step="50000" min="10000" class="adm-input w-full px-3 py-2 mono" />
+                  <div id="volAmountWarn" class="hidden mt-1.5 text-[11px] font-medium text-[#FF4D4F]"></div>
+                </div>
+
+                <div>
+                  <label class="block text-[#4E5569] font-medium mb-1">事由备注</label>
+                  <input id="rewReason" type="text" value="第 1 期校园黑客松赛前 CLI 接入答疑与初审" class="adm-input w-full px-3 py-2" />
+                </div>
+
+                <button id="btnDispatchVol" onclick="dispatchFromPool()" class="adm-btn-primary w-full py-2 text-xs font-medium">确认发放</button>
+              </div>
+
+              <!-- Right 8 Cols: Topup Requests Table + Dispatch Ledger Table -->
+              <div class="lg:col-span-8 space-y-4 text-xs">
+                <div class="adm-panel overflow-hidden">
+                  <div class="px-4 py-2.5 border-b border-[#E5E8F0] flex items-center justify-between">
+                    <span class="font-semibold text-[#1E2238]">增池申请记录</span>
+                    <button onclick="openPoolTopupModal()" class="adm-btn px-2.5 py-1 text-[11px] font-medium">+ 申请追加额度</button>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse adm-table">
+                      <thead>
+                        <tr>
+                          <th>单号</th>
+                          <th class="text-right">申请额度</th>
+                          <th>事由</th>
+                          <th>时间</th>
+                          <th class="text-right">状态</th>
+                        </tr>
+                      </thead>
+                      <tbody id="topupRequestsBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div class="adm-panel overflow-hidden">
+                  <div class="px-4 py-2.5 border-b border-[#E5E8F0] flex items-center justify-between">
+                    <span class="font-semibold text-[#1E2238]">全院激励发放流水</span>
+                    <span id="dispatchTotalCount" class="mono text-[11px] text-[#848CA4]">3 笔</span>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse adm-table">
+                      <thead>
+                        <tr>
+                          <th>类型</th>
+                          <th>发放对象</th>
+                          <th>关联事项 / 事由</th>
+                          <th>时间</th>
+                          <th class="text-right">变动额度</th>
+                        </tr>
+                      </thead>
+                      <tbody id="dispatchHistoryBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
         </div>
-      </section>
-
-    </main>
+      </main>
+    </div>
   </div>
 
-  <!-- ==================== MODALS (Zero Native Alert/Confirm) ==================== -->
+  <!-- ==================== MODALS ==================== -->
 
-  <!-- 1. Reject Work Reason Modal -->
+  <!-- 1. Reject Work Modal -->
   <div id="rejectModal" class="hidden fixed inset-0 z-50 drawer-backdrop flex items-center justify-center p-4" onclick="if(event.target===this) closeRejectModal()">
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-sm p-6 space-y-4 text-xs">
-      <h3 class="text-sm font-bold">填写作品驳回修改原因</h3>
-      <textarea id="rejectReasonInput" rows="3" placeholder="例如：作品缺少公网演示链接或运行截图，请补充后重新提交..." class="w-full p-3 rounded-xl border border-slate-300 text-xs"></textarea>
-      <div class="flex justify-end gap-2">
-        <button onclick="closeRejectModal()" class="cpa-ghost-pill px-4 py-1.5">取消</button>
-        <button onclick="confirmRejectWork()" class="px-4 py-1.5 rounded-full text-white font-semibold" style="background:var(--coral);">确认驳回</button>
+    <div class="adm-panel w-full max-w-sm p-5 space-y-3.5 text-xs shadow-xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-[#1E2238]">驳回作品</h3>
+        <button onclick="closeRejectModal()" class="text-[#848CA4] hover:text-[#1E2238]">✕</button>
       </div>
-    </div>
-  </div>
-
-  <!-- 2. Pool Topup Application Modal (#topupModal) -->
-  <div id="topupModal" class="hidden fixed inset-0 z-50 drawer-backdrop flex items-center justify-center p-4" onclick="if(event.target===this) closePoolTopupModal()">
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-4 text-xs">
       <div>
-        <h3 class="text-sm font-bold">向浣溪平台端申请追加学院激励池</h3>
-        <p class="mt-1 leading-relaxed" style="color:var(--muted);">提交后进入「浣溪内部平台管理端 · 额度审批中心」，批复后自动增加本院激励池总额与可用余量。</p>
+        <label class="block text-[#4E5569] font-medium mb-1">修改意见</label>
+        <textarea id="rejectReasonInput" rows="3" placeholder="填写需补充的演示链接、运行截图或说明项..." class="adm-textarea w-full p-2.5"></textarea>
       </div>
-      <div class="space-y-3">
-        <div>
-          <label class="block font-medium mb-1">申请追加额度（Token）</label>
-          <input id="topupAmount" type="number" value="10000000" step="1000000" min="1000000" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono text-xs" />
-        </div>
-        <div>
-          <label class="block font-medium mb-1">新挑战立项与激励用途说明</label>
-          <textarea id="topupReason" rows="3" class="w-full p-3 rounded-xl border border-slate-300 text-xs">用于第 3 期校园智能体主题挑战赛立项预算预占，以及本学期校内开发社团志愿者日常答疑与审稿激励。</textarea>
-        </div>
-      </div>
-      <div class="flex justify-end gap-2">
-        <button onclick="closePoolTopupModal()" class="cpa-ghost-pill px-4 py-1.5">取消</button>
-        <button onclick="submitPoolTopup()" class="cpa-pill-btn px-5 py-1.5 font-semibold">提交浣溪审批</button>
+      <div class="flex justify-end gap-2 pt-1">
+        <button onclick="closeRejectModal()" class="adm-btn px-3.5 py-1.5 text-xs font-medium">取消</button>
+        <button onclick="confirmRejectWork()" class="adm-btn-danger px-3.5 py-1.5 text-xs font-medium">确认驳回</button>
       </div>
     </div>
   </div>
 
-  <!-- 3. CMS Tutorial Add / Edit Modal -->
-  <div id="cmsModal" class="hidden fixed inset-0 z-50 drawer-backdrop flex items-center justify-center p-4" onclick="if(event.target===this) closeCmsModal()">
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg p-6 space-y-4 text-xs">
-      <h3 id="cmsModalTitle" class="text-sm font-bold">添加实战教程 / 外链视频</h3>
+  <!-- 2. Pool Topup Modal (#topupModal) -->
+  <div id="topupModal" class="hidden fixed inset-0 z-50 drawer-backdrop flex items-center justify-center p-4" onclick="if(event.target===this) closePoolTopupModal()">
+    <div class="adm-panel w-full max-w-md p-5 space-y-3.5 text-xs shadow-xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-[#1E2238]">申请追加激励池额度</h3>
+        <button onclick="closePoolTopupModal()" class="text-[#848CA4] hover:text-[#1E2238]">✕</button>
+      </div>
       <div class="space-y-3">
         <div>
-          <label class="block font-medium mb-1">教程标题</label>
-          <input id="cmsTitleInput" type="text" placeholder="例如：10 分钟用 Claude Code 搭建校园课表助手" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs" />
+          <label class="block text-[#4E5569] font-medium mb-1">申请额度 (Token)</label>
+          <input id="topupAmount" type="number" value="10000000" step="1000000" min="1000000" class="adm-input w-full px-3 py-2 mono" />
+        </div>
+        <div>
+          <label class="block text-[#4E5569] font-medium mb-1">申请事由</label>
+          <textarea id="topupReason" rows="3" class="adm-textarea w-full p-2.5">第 3 期校园智能体挑战赛预算预占与社团日常激励。</textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-1">
+        <button onclick="closePoolTopupModal()" class="adm-btn px-3.5 py-1.5 text-xs font-medium">取消</button>
+        <button onclick="submitPoolTopup()" class="adm-btn-primary px-4 py-1.5 text-xs font-medium">提交申请</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. CMS Add / Edit Modal -->
+  <div id="cmsModal" class="hidden fixed inset-0 z-50 drawer-backdrop flex items-center justify-center p-4" onclick="if(event.target===this) closeCmsModal()">
+    <div class="adm-panel w-full max-w-lg p-5 space-y-3.5 text-xs shadow-xl">
+      <div class="flex items-center justify-between">
+        <h3 id="cmsModalTitle" class="text-sm font-bold text-[#1E2238]">新增教程</h3>
+        <button onclick="closeCmsModal()" class="text-[#848CA4] hover:text-[#1E2238]">✕</button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-[#4E5569] font-medium mb-1">教程标题</label>
+          <input id="cmsTitleInput" type="text" placeholder="输入教程标题..." class="adm-input w-full px-3 py-2" />
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block font-medium mb-1">内容形式与来源</label>
-            <select id="cmsCategoryInput" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white">
+            <label class="block text-[#4E5569] font-medium mb-1">分类</label>
+            <select id="cmsCategoryInput" class="adm-select w-full px-3 py-2">
               <option value="图文指南 · 必看入门">图文指南 · 必看入门</option>
               <option value="浣溪自录视频">浣溪自录视频</option>
               <option value="B站实录外链">B站实录外链</option>
@@ -530,145 +774,156 @@
             </select>
           </div>
           <div>
-            <label class="block font-medium mb-1">时长 / 预计阅读耗时</label>
-            <input id="cmsDurationInput" type="text" placeholder="例如：08:30 或 预计 5 分钟" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs" />
+            <label class="block text-[#4E5569] font-medium mb-1">时长</label>
+            <input id="cmsDurationInput" type="text" placeholder="08:30 / 预计 5 分钟" class="adm-input w-full px-3 py-2" />
           </div>
         </div>
         <div>
-          <label class="block font-medium mb-1">外链视频 URL 或站内文档标识</label>
-          <input id="cmsUrlInput" type="text" placeholder="https://www.bilibili.com/video/..." class="w-full px-3 py-2 rounded-xl border border-slate-300 mono text-xs" />
+          <label class="block text-[#4E5569] font-medium mb-1">资源链接</label>
+          <input id="cmsUrlInput" type="text" placeholder="https://..." class="adm-input w-full px-3 py-2 mono" />
         </div>
         <div>
-          <label class="block font-medium mb-1">核心学习收获说明</label>
-          <textarea id="cmsSummaryInput" rows="2" placeholder="简述学生看完能做出什么作品或掌握哪项实操技能..." class="w-full p-3 rounded-xl border border-slate-300 text-xs"></textarea>
+          <label class="block text-[#4E5569] font-medium mb-1">简述</label>
+          <textarea id="cmsSummaryInput" rows="2" placeholder="输入核心内容简述..." class="adm-textarea w-full p-2.5"></textarea>
         </div>
       </div>
-      <div class="flex justify-end gap-2">
-        <button onclick="closeCmsModal()" class="cpa-ghost-pill px-4 py-1.5">取消</button>
-        <button onclick="submitCmsItem()" class="cpa-pill-btn px-5 py-1.5 font-semibold">保存并同步学生端</button>
+      <div class="flex justify-end gap-2 pt-1">
+        <button onclick="closeCmsModal()" class="adm-btn px-3.5 py-1.5 text-xs font-medium">取消</button>
+        <button onclick="submitCmsItem()" class="adm-btn-primary px-4 py-1.5 text-xs font-medium">保存</button>
       </div>
     </div>
   </div>
 
-  <!-- 4. CMS Tutorial Delete Confirm Modal -->
+  <!-- 4. CMS Delete Confirm Modal -->
   <div id="deleteCmsModal" class="hidden fixed inset-0 z-50 drawer-backdrop flex items-center justify-center p-4" onclick="if(event.target===this) closeDeleteCmsModal()">
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-sm p-6 space-y-4 text-xs">
-      <h3 class="text-sm font-bold">确认删除实战教程？</h3>
-      <p id="deleteCmsDesc" class="leading-relaxed" style="color:var(--muted);"></p>
-      <div class="flex justify-end gap-2">
-        <button onclick="closeDeleteCmsModal()" class="cpa-ghost-pill px-4 py-1.5">取消</button>
-        <button onclick="confirmDeleteCms()" class="px-4 py-1.5 rounded-full text-white font-semibold" style="background:var(--coral);">确认删除</button>
+    <div class="adm-panel w-full max-w-sm p-5 space-y-3.5 text-xs shadow-xl">
+      <h3 class="text-sm font-bold text-[#1E2238]">删除教程</h3>
+      <p id="deleteCmsDesc" class="text-[#4E5569] leading-relaxed"></p>
+      <div class="flex justify-end gap-2 pt-1">
+        <button onclick="closeDeleteCmsModal()" class="adm-btn px-3.5 py-1.5 text-xs font-medium">取消</button>
+        <button onclick="confirmDeleteCms()" class="adm-btn-danger px-3.5 py-1.5 text-xs font-medium">确认删除</button>
       </div>
     </div>
   </div>
 
-  <!-- 5. Create / Edit Theme Challenge Modal (#challengeConfigModal) -->
+  <!-- 5. Create / Edit Challenge Modal (#challengeConfigModal) -->
   <div id="challengeConfigModal" class="hidden fixed inset-0 z-50 drawer-backdrop flex items-center justify-center p-4 overflow-y-auto" onclick="if(event.target===this) closeChallengeModal()">
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl p-6 space-y-4 text-xs my-8">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <h3 id="chModalHeading" class="text-base font-bold">发起新主题挑战（激励池预算预占）</h3>
-          <p class="mt-0.5" style="color:var(--muted);">发布挑战时按奖项名额上限冻结激励池预算，截稿定奖结算后未用差额自动退回池子。</p>
-        </div>
-        <button onclick="closeChallengeModal()" class="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800">✕</button>
+    <div class="adm-panel w-full max-w-2xl p-5 space-y-4 text-xs shadow-xl my-8">
+      <div class="flex items-center justify-between">
+        <h3 id="chModalHeading" class="text-sm font-bold text-[#1E2238]">新建挑战赛</h3>
+        <button onclick="closeChallengeModal()" class="text-[#848CA4] hover:text-[#1E2238]">✕</button>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
         <div class="sm:col-span-6">
-          <label class="block font-medium mb-1">挑战名称</label>
-          <input id="chTitleInput" type="text" placeholder="例如：第 3 期校园智能体创新挑战赛" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs" />
+          <label class="block text-[#4E5569] font-medium mb-1">挑战名称</label>
+          <input id="chTitleInput" type="text" placeholder="第 3 期校园智能体创新挑战赛" class="adm-input w-full px-3 py-2" />
         </div>
         <div class="sm:col-span-3">
-          <label class="block font-medium mb-1">绑定专题 <span class="mono">#Tag</span></label>
-          <input id="chTagInput" onblur="normalizeTagInput()" type="text" placeholder="#第3期智能体赛" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono text-xs" />
+          <label class="block text-[#4E5569] font-medium mb-1">关联 <span class="mono">#Tag</span></label>
+          <input id="chTagInput" onblur="normalizeTagInput()" type="text" placeholder="#第3期智能体赛" class="adm-input w-full px-3 py-2 mono" />
         </div>
         <div class="sm:col-span-3">
-          <label class="block font-medium mb-1">截稿日期</label>
-          <input id="chDeadlineInput" type="date" value="2026-12-20" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono text-xs" />
+          <label class="block text-[#4E5569] font-medium mb-1">截稿日期</label>
+          <input id="chDeadlineInput" type="date" value="2026-12-20" class="adm-input w-full px-3 py-2 mono" />
         </div>
       </div>
 
       <div>
-        <label class="block font-medium mb-1">挑战背景与提交规则说明</label>
-        <textarea id="chDescInput" rows="2" placeholder="说明参赛作品方向、提交物要求（公网可访问链接/源码说明）与评审维度..." class="w-full p-3 rounded-xl border border-slate-300 text-xs"></textarea>
+        <label class="block text-[#4E5569] font-medium mb-1">参赛要求</label>
+        <textarea id="chDescInput" rows="2" placeholder="作品方向与提交物要求..." class="adm-textarea w-full p-2.5"></textarea>
       </div>
 
-      <!-- Dynamic Award Tiers Table -->
-      <div class="space-y-2.5">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <label class="font-bold text-xs">动态奖项档位配置（预计预占总额 = Σ 名额 × 单人奖励）</label>
-          <button type="button" onclick="addModalTierRow()" class="cpa-soft-violet-pill px-3 py-1 text-[11px] font-semibold">+ 新增奖项档位</button>
+      <!-- Dynamic Award Tiers -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <label class="font-semibold text-[#1E2238]">奖项档位配置</label>
+          <button type="button" onclick="addModalTierRow()" class="adm-btn-soft px-2.5 py-1 text-[11px] font-medium">+ 新增档位</button>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 overflow-hidden" style="background:#F7F9FD;">
-          <div class="grid grid-cols-12 gap-2 px-3.5 py-2 border-b border-slate-200 text-[11px] font-medium" style="color:var(--muted);">
-            <div class="col-span-4">奖项档位名称</div>
-            <div class="col-span-2">名额数</div>
+        <div class="rounded-lg border border-[#E5E8F0] overflow-hidden bg-[#FAFBFE]">
+          <div class="grid grid-cols-12 gap-2 px-3 py-2 border-b border-[#E5E8F0] text-[11px] font-semibold text-[#848CA4]">
+            <div class="col-span-4">档位名称</div>
+            <div class="col-span-2">名额</div>
             <div class="col-span-3">单人奖励 (Token)</div>
-            <div class="col-span-2 text-right">本档小计</div>
+            <div class="col-span-2 text-right">小计</div>
             <div class="col-span-1 text-right">操作</div>
           </div>
-          <div id="chTiersContainer" class="divide-y divide-slate-200/70"></div>
+          <div id="chTiersContainer" class="divide-y divide-[#EEF0F6]"></div>
         </div>
       </div>
 
-      <!-- Live Budget Calculation & Pool Availability Check -->
-      <div id="chBudgetCheckBox" class="p-4 rounded-2xl border space-y-1.5">
+      <!-- Live Budget Check -->
+      <div id="chBudgetCheckBox" class="px-3.5 py-3 rounded-lg border space-y-1">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <span class="font-medium">预计需预占冻结总额：</span>
+            <span class="text-[#4E5569]">需预占冻结：</span>
             <span id="chModalNeededText" class="mono text-sm font-bold">0</span>
-            <span class="text-[11px]" style="color:var(--muted);">Token</span>
+            <span class="text-[11px] text-[#848CA4] mono">Token</span>
           </div>
           <div>
-            <span style="color:var(--muted);">当前可用激励池上限：</span>
+            <span class="text-[#4E5569]">当前可用上限：</span>
             <span id="chModalAvailText" class="mono font-bold">2,500,000</span>
-            <span class="text-[11px]" style="color:var(--muted);">Token</span>
+            <span class="text-[11px] text-[#848CA4] mono">Token</span>
           </div>
         </div>
         <div id="chBudgetStatusMsg" class="text-[11px] font-medium"></div>
       </div>
 
-      <div id="chModalFormError" class="hidden text-[11px] font-semibold" style="color:var(--coral);"></div>
+      <div id="chModalFormError" class="hidden text-[11px] font-semibold text-[#FF4D4F]"></div>
 
-      <!-- Dynamic Footer Actions based on Pool Sufficiency -->
       <div class="flex flex-wrap items-center justify-end gap-2 pt-1">
-        <button type="button" onclick="closeChallengeModal()" class="cpa-ghost-pill px-4 py-2">取消</button>
-        <!-- Shown when needed <= available -->
-        <button type="button" id="btnPublishChallenge" onclick="submitChallengeModal('publish')" class="cpa-pill-btn px-5 py-2 font-semibold">冻结预算并发布挑战</button>
-        <!-- Shown when needed > available -->
-        <button type="button" id="btnSaveDraftChallenge" onclick="submitChallengeModal('draft')" class="hidden cpa-ghost-pill px-4 py-2 font-semibold">先存为待增池草稿</button>
-        <button type="button" id="btnJumpTopupFromModal" onclick="submitChallengeModal('topup')" class="hidden cpa-pill-btn px-5 py-2 font-semibold">去申请追加激励池 ↗</button>
+        <button type="button" onclick="closeChallengeModal()" class="adm-btn px-3.5 py-1.5 text-xs font-medium">取消</button>
+        <button type="button" id="btnPublishChallenge" onclick="submitChallengeModal('publish')" class="adm-btn-primary px-4 py-1.5 text-xs font-medium">冻结并发布</button>
+        <button type="button" id="btnSaveDraftChallenge" onclick="submitChallengeModal('draft')" class="hidden adm-btn px-3.5 py-1.5 text-xs font-medium">存为草稿</button>
+        <button type="button" id="btnJumpTopupFromModal" onclick="submitChallengeModal('topup')" class="hidden adm-btn-primary px-4 py-1.5 text-xs font-medium">保存草稿并申请增池</button>
       </div>
     </div>
   </div>
 
-  <!-- 6. Challenge Settlement Secondary Confirmation Modal (#settleConfirmModal) -->
+  <!-- 6. Settlement Confirmation Modal (#settleConfirmModal) -->
   <div id="settleConfirmModal" class="hidden fixed inset-0 z-50 drawer-backdrop flex items-center justify-center p-4" onclick="if(event.target===this) closeSettleConfirmModal()">
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg p-6 space-y-4 text-xs">
-      <div>
-        <div class="text-[11px] font-semibold" style="color:var(--primary);">主题挑战批量结算 · 二次核对确认</div>
-        <h3 id="settleModalTitle" class="text-base font-bold mt-0.5">确认结算并发放公示</h3>
+    <div class="adm-panel w-full max-w-lg p-5 space-y-3.5 text-xs shadow-xl">
+      <div class="flex items-center justify-between">
+        <h3 id="settleModalTitle" class="text-sm font-bold text-[#1E2238]">确认挑战结算</h3>
+        <button onclick="closeSettleConfirmModal()" class="text-[#848CA4] hover:text-[#1E2238]">✕</button>
       </div>
 
-      <div id="settleModalWinnersBox" class="rounded-xl border border-slate-200 divide-y divide-slate-100 max-h-52 overflow-y-auto"></div>
+      <div class="rounded-lg border border-[#E5E8F0] overflow-hidden max-h-52 overflow-y-auto">
+        <table class="w-full text-left border-collapse adm-table">
+          <thead>
+            <tr>
+              <th>奖项</th>
+              <th>作品名称</th>
+              <th>获奖人</th>
+              <th class="text-right">实发额度</th>
+            </tr>
+          </thead>
+          <tbody id="settleModalWinnersBody"></tbody>
+        </table>
+      </div>
 
-      <div id="settleModalLedgerBox" class="p-4 rounded-xl space-y-1.5" style="background:#F7F9FD; border:1px solid #ECEDF1;"></div>
+      <div id="settleModalLedgerBox" class="px-3.5 py-3 rounded-lg bg-[#FAFBFE] border border-[#E5E8F0] space-y-1.5"></div>
 
-      <div id="settleModalPendingWarn" class="hidden p-3 rounded-xl text-[11px]" style="background:var(--warn-soft); color:var(--warn);"></div>
+      <div id="settleModalPendingWarn" class="hidden px-3 py-2 rounded-lg text-[11px] bg-[#FFFBE6] text-[#D48806]"></div>
 
       <div class="flex justify-end gap-2 pt-1">
-        <button type="button" onclick="closeSettleConfirmModal()" class="cpa-ghost-pill px-4 py-2">返回修改</button>
-        <button type="button" onclick="executeChallengeSettlement()" class="cpa-pill-btn px-5 py-2 font-semibold">确认结算并发放公示</button>
+        <button type="button" onclick="closeSettleConfirmModal()" class="adm-btn px-3.5 py-1.5 text-xs font-medium">返回修改</button>
+        <button type="button" onclick="executeChallengeSettlement()" class="adm-btn-primary px-4 py-1.5 text-xs font-medium">确认结算并发放</button>
       </div>
     </div>
   </div>
 
   <script>
-    // ==================== STATE & ALIGNED COLLEGE LEDGER ====================
+    // ==================== STATE & DATA ====================
     let activeMenu = 'members';
     let memSub = 'pending';
+    let certifiedTotalCount = 642;
+    let degUgCount = 436;
+    let degPgCount = 206;
+
     let opsWorkTag = 'all';
+    let opsWorkStatus = 'all';
     let selectedWorkIds = new Set();
     let highlightedWorkId = null;
     let rejectingWorkId = null;
@@ -683,14 +938,13 @@
     let modalTiersDraft = [];
     let settlingChallengeId = null;
 
-    // Unified College Incentive Pool Ledger (HUST Software College)
-    // poolTotal = 20.0M | poolDispatched = 14.0M | poolReserved = dynamic sum (3.5M initial) | poolAvailable = 2.5M initial
+    // College Incentive Pool Ledger
     let poolTotal = 20000000;
     let poolDispatched = 14000000;
 
     let pendingMembers = [
-      { id: 'pm-1', email: 'new@hust.edu.cn', name: '王思远', deg: '本科', time: '10 分钟前', note: '转专业新生，未在首批教务名单内' },
-      { id: 'pm-2', email: 'chenlei@hust.edu.cn', name: '陈磊', deg: '研究生', time: '1 小时前', note: '研一联培生，教育邮箱已验证' },
+      { id: 'pm-1', email: 'new@hust.edu.cn', name: '王思远', deg: '本科', time: '10 分钟前', note: '转专业新生' },
+      { id: 'pm-2', email: 'chenlei@hust.edu.cn', name: '陈磊', deg: '研究生', time: '1 小时前', note: '研一联培生' },
       { id: 'pm-3', email: 'wangyu@hust.edu.cn', name: '王雨桐', deg: '本科', time: '3 小时前', note: '软件工程 2024 级' }
     ];
 
@@ -703,27 +957,22 @@
       { email: 'xujiahe@hust.edu.cn', name: '许嘉禾', deg: '研究生', used: '318.0K', works: 1, status: '正常' }
     ];
 
-    // Unified Works Source of Truth (Synced between Menu 2 & Menu 4 Challenge Workbenches)
-    // ch-hackathon: 4 works (1 reviewing) | ch-workshop: 3 works (1 reviewing) | ch-starter: 3 works (settled)
+    // 10 Works Aligned with Student Portal
     let opsWorks = [
-      // #第1期校园黑客松 (4 件：3 已上架 + 1 待审，与学生端作品广场实时对齐)
       { id: 'ow-1', title: '华科选课排雷助手', author: '林知行', email: 'linzhixing@hust.edu.cn', type: 'Web', tag: '#第1期校园黑客松', status: 'published', featured: true, likes: 148, awardedTier: '', awardedTokens: 0 },
       { id: 'ow-2', title: '论文精读卡片生成器', author: '周予安', email: 'zhouyuan@hust.edu.cn', type: 'Web', tag: '#第1期校园黑客松', status: 'published', featured: true, likes: 126, awardedTier: '', awardedTokens: 0 },
       { id: 'ow-3', title: '食堂档口排队实时估算', author: '许嘉禾', email: 'xujiahe@hust.edu.cn', type: 'APP', tag: '#第1期校园黑客松', status: 'published', featured: false, likes: 84, awardedTier: '', awardedTokens: 0 },
       { id: 'ow-4', title: '宿舍值日公平抽签器', author: '陆星野', email: 'luxingye@hust.edu.cn', type: 'Web', tag: '#第1期校园黑客松', status: 'reviewing', featured: false, likes: 0, awardedTier: '', awardedTokens: 0 },
 
-      // #第2期科研工具赛 (3 件：2 已上架 + 1 待审；陈一鸣 #1、陆星野 #2，林知行待审与学生端「我的作品」同源)
       { id: 'ow-5', title: '实验室值班语音助手', author: '陈一鸣', email: 'chenyiming@hust.edu.cn', type: 'PC', tag: '#第2期科研工具赛', status: 'published', featured: true, likes: 98, awardedTier: '', awardedTokens: 0 },
       { id: 'ow-6', title: '算法题解可视化沙盒', author: '陆星野', email: 'luxingye@hust.edu.cn', type: 'Web', tag: '#第2期科研工具赛', status: 'published', featured: false, likes: 73, awardedTier: '', awardedTokens: 0 },
       { id: 'ow-7', title: '文献公式一键转 LaTeX', author: '林知行', email: 'linzhixing@hust.edu.cn', type: 'Web', tag: '#第2期科研工具赛', status: 'reviewing', featured: false, likes: 0, awardedTier: '', awardedTokens: 0 },
 
-      // #先导期小应用赛 (3 件：已开奖公示，与学生端先导赛公示名单一一对应)
       { id: 'ow-8', title: '华科选课排雷助手（先导版）', author: '林知行', email: 'linzhixing@hust.edu.cn', type: 'Web', tag: '#先导期小应用赛', status: 'published', featured: true, likes: 148, awardedTier: '一等奖', awardedTokens: 500000 },
       { id: 'ow-9', title: '论文精读卡片生成器（先导版）', author: '周予安', email: 'zhouyuan@hust.edu.cn', type: 'Web', tag: '#先导期小应用赛', status: 'published', featured: true, likes: 126, awardedTier: '优胜奖', awardedTokens: 300000 },
       { id: 'ow-10', title: '毕设开题答辩模拟评委', author: '苏明澈', email: 'sumingche@hust.edu.cn', type: 'Web', tag: '#先导期小应用赛', status: 'published', featured: false, likes: 61, awardedTier: '优胜奖', awardedTokens: 300000 }
     ];
 
-    // Menu 3: CMS Practical Tutorials & External Videos
     let opsLessons = [
       {
         id: 'les-1',
@@ -731,7 +980,7 @@
         category: '图文指南 · 必看入门',
         duration: '预计 3 分钟',
         url: 'https://docs.huanxi.ai/campus/cli-quickstart',
-        summary: '一步配置学院专属 API Key 与开发终端环境，零门槛启动对话式编程。',
+        summary: '配置学院 API Key 与本地终端开发环境。',
         views: 584,
         active: true
       },
@@ -741,7 +990,7 @@
         category: '浣溪自录视频',
         duration: '08:24',
         url: 'https://www.bilibili.com/video/BV1HxCampus01',
-        summary: '完整演示从需求拆解、前端页面生成到本地预览与提交挑战赛作品全流程。',
+        summary: '演示需求拆解、前端页面生成与本地运行验证流程。',
         views: 412,
         active: true
       },
@@ -751,7 +1000,7 @@
         category: '小红书实战外链',
         duration: '06:15',
         url: 'https://www.xiaohongshu.com/explore/6740a1b2',
-        summary: '适合科研工具赛参赛参考：自动提取论文摘要、核心公式与实验结论卡片。',
+        summary: '提取论文摘要、核心公式与实验结论卡片。',
         views: 329,
         active: true
       },
@@ -761,14 +1010,12 @@
         category: 'B站实录外链',
         duration: '14:50',
         url: 'https://www.bilibili.com/video/BV1HxSciTool02',
-        summary: '软件学院社团技术沙龙实录，讲解脚本生成、异常值校验与图表一键导出。',
+        summary: '脚本生成、异常值校验与图表一键导出实录。',
         views: 218,
         active: true
       }
     ];
 
-    // Menu 4: Preset 3 Standard Theme Challenges
-    // Reserved sum of active + judging = 2,200,000 + 1,300,000 = 3,500,000
     let challenges = [
       {
         id: 'ch-hackathon',
@@ -777,7 +1024,7 @@
         status: 'active',
         deadline: '2026-12-05',
         deadlineLabel: '12-05 截稿',
-        desc: '面向全院学生征集解决选课、自习找座、宿舍协作与教材流转痛点的 AI 原生小工具，需附可交互演示链接与核心提示词说明。',
+        desc: '征集选课、自习找座、宿舍协作与教材流转场景 AI 工具。',
         tiers: [
           { id: 't-hk-1', name: '一等奖', count: 2, reward: 500000 },
           { id: 't-hk-2', name: '优胜奖', count: 4, reward: 250000 },
@@ -799,8 +1046,8 @@
         tag: '#第2期科研工具赛',
         status: 'judging',
         deadline: '2026-11-26',
-        deadlineLabel: '今日截稿 · 待定奖结算',
-        desc: '聚焦文献公式解析、实验排班与论文推导精读场景。今日已截止征集，请完成剩余待审作品核验后评定各档奖项并一键结算公示。',
+        deadlineLabel: '待定奖结算',
+        desc: '聚焦文献公式解析、实验排班与论文精读场景工具。',
         tiers: [
           { id: 't-ws-1', name: '最佳实用奖', count: 1, reward: 500000 },
           { id: 't-ws-2', name: '优秀实践奖', count: 4, reward: 200000 }
@@ -809,7 +1056,6 @@
         plannedTokens: 1300000,
         originalReserved: 1300000,
         dispatchedTokens: 0,
-        // Pre-selected #1 陈一鸣 -> 最佳实用奖 500K, #2 陆星野 -> 优秀实践奖 200K for instant closed-loop experience
         draftAwards: {
           'ow-5': 't-ws-1',
           'ow-6': 't-ws-2'
@@ -822,8 +1068,8 @@
         tag: '#先导期小应用赛',
         status: 'settled',
         deadline: '2026-11-18',
-        deadlineLabel: '11-18 已开奖公示',
-        desc: '新生破冰先导赛：用不超过百行核心逻辑快速构建可运行的桌面小组件或学习闪卡应用，验证零门槛 AI 辅助创作流程。',
+        deadlineLabel: '已结算',
+        desc: '百行核心逻辑构建桌面小组件或学习闪卡应用。',
         tiers: [
           { id: 't-st-1', name: '一等奖', count: 1, reward: 500000 },
           { id: 't-st-2', name: '优胜奖', count: 2, reward: 300000 },
@@ -844,8 +1090,8 @@
     ];
 
     let topupRequests = [
-      { id: 'REQ-1126-01', amount: 10000000, reason: '12 月主题挑战赛立项预算预占与开发社团志愿者日常激励增池', time: '今日 09:40', status: '待浣溪审批' },
-      { id: 'REQ-1116-01', amount: 20000000, reason: '华科软件学院首期主题挑战与社团激励池正式获批', time: '2026-11-16', status: '已通过到账' }
+      { id: 'REQ-1126-01', amount: 10000000, reason: '12 月挑战赛预算预占与社团日常激励增池', time: '今日 09:40', status: '待审批' },
+      { id: 'REQ-1116-01', amount: 20000000, reason: '华科软件学院首期激励池额度批复', time: '2026-11-16', status: '已到账' }
     ];
 
     let dispatchHistory = [
@@ -854,15 +1100,15 @@
         target: 'chenyiming@hust.edu.cn（陈一鸣）',
         type: '校内开发社团志愿者激励',
         amount: 300000,
-        reason: '协助核验首批 200 人教育邮箱白名单与新手接入答疑',
+        reason: '首批 200 人教育邮箱白名单核验与接入答疑',
         time: '2026-11-20 20:10'
       },
       {
         kind: 'challenge',
-        target: '林知行、周予安、苏明澈（共 3 人获奖）',
-        type: '主题挑战批量结算 · #先导期小应用赛',
+        target: '林知行、周予安、苏明澈（3 人）',
+        type: '挑战赛结算 · #先导期小应用赛',
         amount: 1100000,
-        reason: '《先导期：百行代码校园小应用挑战赛》开奖公示（原预占 1.2M，实发 1.1M，未用 100K 已自动退回激励池）',
+        reason: '《先导期：百行代码校园小应用挑战赛》结算（预占 1.2M / 实发 1.1M / 退回 100K）',
         time: '2026-11-18 20:00'
       },
       {
@@ -870,12 +1116,12 @@
         target: 'xujiahe@hust.edu.cn（许嘉禾）',
         type: '校园 AI 实战答疑助教补贴',
         amount: 200000,
-        reason: '担任秋季首场 Claude Code 校园实操沙龙现场助教',
+        reason: '秋季首场 Claude Code 实操沙龙现场助教',
         time: '2026-11-17 21:30'
       }
     ];
 
-    // ==================== HELPERS & DYNAMIC POOL COMPUTATION ====================
+    // ==================== HELPERS ====================
     function getPoolReserved() {
       return challenges
         .filter(c => c.status === 'active' || c.status === 'judging')
@@ -911,14 +1157,6 @@
         .replace(/'/g, '&#39;');
     }
 
-    function updateGlobalBadges() {
-      document.getElementById('badgePendingMembers').textContent = pendingMembers.length;
-      document.getElementById('badgePendingWorks').textContent = opsWorks.filter(w => w.status === 'reviewing').length;
-      document.getElementById('badgeCmsCount').textContent = opsLessons.length;
-      const avail = getPoolAvailable();
-      document.getElementById('badgePoolSidebar').textContent = fmtM(avail) + ' 可用';
-    }
-
     function showToast(msg) {
       const el = document.getElementById('toast');
       el.textContent = msg;
@@ -928,7 +1166,87 @@
       window.__t = setTimeout(() => {
         el.classList.add('opacity-0', '-translate-y-2');
         el.classList.remove('opacity-100', 'translate-y-0');
-      }, 2600);
+      }, 2400);
+    }
+
+    function updateGlobalBadges() {
+      const pMemCnt = pendingMembers.length;
+      const pWorkCnt = opsWorks.filter(w => w.status === 'reviewing').length;
+      const bMem = document.getElementById('badgePendingMembers');
+      bMem.textContent = pMemCnt;
+      bMem.className = pMemCnt > 0 ? 'adm-badge badge-warn mono' : 'adm-badge badge-neutral mono';
+
+      const bWork = document.getElementById('badgePendingWorks');
+      bWork.textContent = pWorkCnt;
+      bWork.className = pWorkCnt > 0 ? 'adm-badge badge-warn mono' : 'adm-badge badge-neutral mono';
+
+      document.getElementById('badgeCmsCount').textContent = opsLessons.length;
+      document.getElementById('badgePoolSidebar').textContent = fmtM(getPoolAvailable());
+
+      // Member KPI sync
+      document.getElementById('kpiCertTotal').textContent = fmtNum(certifiedTotalCount);
+      document.getElementById('kpiDegSplit').textContent = `${fmtNum(degUgCount)} / ${fmtNum(degPgCount)}`;
+      document.getElementById('tabPendingCnt').textContent = pMemCnt;
+      document.getElementById('tabCertCnt').textContent = fmtNum(certifiedTotalCount);
+      const kpiPM = document.getElementById('kpiPendingMemCount');
+      const kpiPMBadge = document.getElementById('kpiPendingMemBadge');
+      kpiPM.textContent = pMemCnt;
+      if (pMemCnt > 0) {
+        kpiPM.style.color = 'var(--warn)';
+        kpiPMBadge.className = 'adm-badge badge-warn';
+        kpiPMBadge.textContent = '待核验';
+      } else {
+        kpiPM.style.color = 'var(--ink)';
+        kpiPMBadge.className = 'adm-badge badge-teal';
+        kpiPMBadge.textContent = '已清零';
+      }
+
+      updateHeaderBar();
+    }
+
+    function updateHeaderBar() {
+      const bc = document.getElementById('consoleBreadcrumb');
+      const act = document.getElementById('headerPrimaryActions');
+      const menuLabels = {
+        members: '成员与准入',
+        works: '作品审核',
+        cms: '教程管理',
+        incentives: '挑战与激励'
+      };
+
+      if (activeMenu === 'incentives' && incSub === 'challenges' && activeChallengeId) {
+        const ch = challenges.find(c => c.id === activeChallengeId);
+        bc.innerHTML = `
+          <span class="text-[#848CA4] shrink-0">校内运营端</span>
+          <span class="text-[#C5CBE0] shrink-0">/</span>
+          <button onclick="backToChallengeList()" class="text-[#4E5569] hover:text-[#624AFF] font-medium shrink-0">挑战与激励</button>
+          <span class="text-[#C5CBE0] shrink-0">/</span>
+          <span class="font-semibold text-[#1E2238] truncate">${escHtml(ch ? ch.title : '')}</span>
+        `;
+      } else {
+        bc.innerHTML = `
+          <span class="text-[#848CA4]">校内运营端</span>
+          <span class="text-[#C5CBE0]">/</span>
+          <span class="font-semibold text-[#1E2238]">${menuLabels[activeMenu] || ''}</span>
+        `;
+      }
+
+      if (activeMenu === 'members') {
+        act.innerHTML = `<button onclick="setMemSub('import')" class="adm-btn px-3 py-1.5 text-xs font-medium">批量导入白名单</button>`;
+      } else if (activeMenu === 'works') {
+        const pCnt = opsWorks.filter(w => w.status === 'reviewing').length;
+        act.innerHTML = `
+          ${pCnt > 0 ? `<button onclick="setWorkStatusFilter('reviewing')" class="adm-btn px-3 py-1.5 text-xs font-medium">待审核 (${pCnt})</button>` : ''}
+          <button onclick="switchMenu('incentives')" class="adm-btn-soft px-3 py-1.5 text-xs font-medium">挑战定奖台</button>
+        `;
+      } else if (activeMenu === 'cms') {
+        act.innerHTML = `<button onclick="openCmsModal()" class="adm-btn-primary px-3 py-1.5 text-xs font-medium">+ 新增教程</button>`;
+      } else if (activeMenu === 'incentives') {
+        act.innerHTML = `
+          <button onclick="openPoolTopupModal()" class="adm-btn px-3 py-1.5 text-xs font-medium">申请增池</button>
+          <button onclick="openChallengeModal()" class="adm-btn-primary px-3 py-1.5 text-xs font-medium">+ 新建挑战</button>
+        `;
+      }
     }
 
     function switchMenu(m) {
@@ -944,37 +1262,35 @@
       if (m === 'incentives') renderIncentives();
     }
 
-    // ==================== MENU 1: MEMBERS ====================
+    // ==================== MODULE 1: MEMBERS ====================
     function setMemSub(s) {
       memSub = s;
       ['pending', 'import', 'list'].forEach(k => document.getElementById('msub-' + k).classList.toggle('hidden', k !== s));
-      document.querySelectorAll('.msub-btn').forEach(b => {
-        const a = b.dataset.msub === s;
-        b.style.background = a ? '#F1F1FD' : 'transparent';
-        b.style.color = a ? '#624AFF' : '#464D5B';
-      });
+      document.querySelectorAll('.msub-btn').forEach(b => b.classList.toggle('active', b.dataset.msub === s));
+      document.getElementById('memberSearch').classList.toggle('hidden', s !== 'list');
       renderPendingMembers();
       renderMembersTable();
     }
 
     function renderPendingMembers() {
       updateGlobalBadges();
-      const box = document.getElementById('pendingMembersList');
+      const tbody = document.getElementById('pendingMembersBody');
       if (!pendingMembers.length) {
-        box.innerHTML = `<div class="p-8 text-center" style="color:var(--muted);">当前没有待审核的邮箱申请 ✓</div>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-[#848CA4]">暂无待审核申请</td></tr>`;
         return;
       }
-      box.innerHTML = pendingMembers.map(m => `
-        <div class="px-5 py-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div class="font-semibold">${escHtml(m.name)} <span class="mono ml-1.5" style="color:var(--primary);">${escHtml(m.email)}</span> <span class="ml-1.5 px-2 py-0.5 rounded-full text-[11px]" style="background:var(--bg-subtle);">${escHtml(m.deg)}</span></div>
-            <div class="text-[11px] mt-1" style="color:var(--muted);">提交于 ${escHtml(m.time)} · 备注：${escHtml(m.note)}</div>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <button onclick="approveMember('${m.id}')" class="cpa-pill-btn px-3.5 py-1.5 text-xs font-medium">核验通过</button>
-            <button onclick="rejectMember('${m.id}')" class="cpa-ghost-pill px-3 py-1.5 text-xs">驳回</button>
-          </div>
-        </div>
+      tbody.innerHTML = pendingMembers.map(m => `
+        <tr>
+          <td class="font-medium text-[#1E2238]">${escHtml(m.name)}</td>
+          <td class="mono text-[#4E5569]">${escHtml(m.email)}</td>
+          <td><span class="adm-badge ${m.deg === '研究生' ? 'badge-violet' : 'badge-neutral'}">${escHtml(m.deg)}</span></td>
+          <td class="text-[#848CA4]">${escHtml(m.time)}</td>
+          <td class="text-[#4E5569]">${escHtml(m.note)}</td>
+          <td class="text-right whitespace-nowrap space-x-1.5">
+            <button onclick="approveMember('${m.id}')" class="adm-btn-primary px-2.5 py-1 text-xs font-medium">通过</button>
+            <button onclick="rejectMember('${m.id}')" class="adm-btn px-2.5 py-1 text-xs font-medium">驳回</button>
+          </td>
+        </tr>
       `).join('');
     }
 
@@ -983,14 +1299,18 @@
       if (!m) return;
       pendingMembers = pendingMembers.filter(x => x.id !== id);
       certifiedMembers.unshift({ email: m.email, name: m.name, deg: m.deg, used: '0', works: 0, status: '正常' });
+      certifiedTotalCount += 1;
+      if (m.deg === '研究生') degPgCount += 1;
+      else degUgCount += 1;
       renderPendingMembers();
-      showToast(`已通过 ${m.email}，自动发放 1,000,000 初始免费额度`);
+      renderMembersTable();
+      showToast(`已通过 ${m.name} (${m.email})`);
     }
 
     function rejectMember(id) {
       pendingMembers = pendingMembers.filter(x => x.id !== id);
       renderPendingMembers();
-      showToast('已驳回该非本院申请');
+      showToast('已驳回申请');
     }
 
     function simulateImportPreview() {
@@ -999,27 +1319,37 @@
 
     function confirmImport() {
       document.getElementById('importPreviewBox').classList.add('hidden');
-      showToast('已成功导入 124 名本院学生邮箱白名单（本科 86 / 研究生 38）');
+      certifiedTotalCount += 124;
+      degUgCount += 86;
+      degPgCount += 38;
+      updateGlobalBadges();
+      showToast('已导入 124 名白名单成员');
     }
 
     function renderMembersTable() {
       const q = (document.getElementById('memberSearch').value || '').trim().toLowerCase();
       const list = certifiedMembers.filter(m => !q || m.email.toLowerCase().includes(q) || m.name.includes(q));
-      document.getElementById('certifiedMembersBody').innerHTML = list.map(m => `
+      const tbody = document.getElementById('certifiedMembersBody');
+      if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-[#848CA4]">无匹配成员</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map(m => `
         <tr>
-          <td class="px-5 py-3"><div class="font-medium">${escHtml(m.name)}</div><div class="mono text-[11px]" style="color:var(--muted);">${escHtml(m.email)}</div></td>
-          <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full text-[11px]" style="background:var(--bg-subtle);">${escHtml(m.deg)}</span></td>
-          <td class="px-4 py-3 mono">${escHtml(m.used)}</td>
-          <td class="px-4 py-3 mono">${m.works}</td>
-          <td class="px-5 py-3 text-right"><span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">${escHtml(m.status)}</span></td>
+          <td class="font-medium text-[#1E2238]">${escHtml(m.name)}</td>
+          <td class="mono text-[#4E5569]">${escHtml(m.email)}</td>
+          <td><span class="adm-badge ${m.deg === '研究生' ? 'badge-violet' : 'badge-neutral'}">${escHtml(m.deg)}</span></td>
+          <td class="text-right mono">${escHtml(m.used)}</td>
+          <td class="text-right mono">${m.works}</td>
+          <td class="text-right"><span class="adm-badge badge-teal">${escHtml(m.status)}</span></td>
         </tr>
       `).join('');
     }
 
-    // ==================== MENU 2: WORKS MODERATION ====================
+    // ==================== MODULE 2: WORKS MODERATION ====================
     function getWorkFilterTags() {
       const base = [
-        { k: 'all', l: '全部作品' },
+        { k: 'all', l: '全部赛事 #Tag' },
         { k: '#第1期校园黑客松', l: '#第1期校园黑客松' },
         { k: '#第2期科研工具赛', l: '#第2期科研工具赛' },
         { k: '#先导期小应用赛', l: '#先导期小应用赛' }
@@ -1034,65 +1364,90 @@
       return base;
     }
 
+    function setWorkStatusFilter(st) {
+      opsWorkStatus = st;
+      renderOpsWorks();
+    }
+
+    function getFilteredWorks() {
+      const q = (document.getElementById('opsWorkSearch').value || '').trim().toLowerCase();
+      return opsWorks.filter(w => {
+        if (opsWorkTag !== 'all' && w.tag !== opsWorkTag) return false;
+        if (opsWorkStatus !== 'all' && w.status !== opsWorkStatus) return false;
+        if (q && !(w.title.toLowerCase().includes(q) || w.author.toLowerCase().includes(q) || w.email.toLowerCase().includes(q))) return false;
+        return true;
+      });
+    }
+
     function renderOpsWorks() {
       updateGlobalBadges();
-      const tags = getWorkFilterTags();
-      document.getElementById('opsWorkTagBar').innerHTML = tags.map(t => {
-        const a = opsWorkTag === t.k;
-        return `<button onclick="opsWorkTag='${escHtml(t.k)}'; renderOpsWorks()" class="px-3.5 py-1.5 rounded-full text-xs font-medium border transition" style="${a ? 'background:#F1F1FD; color:#624AFF; border-color:#D8D2FF; font-weight:600;' : 'background:#FFFFFF; color:#464D5B; border-color:var(--border);'}">${escHtml(t.l)}</button>`;
-      }).join('');
+      document.querySelectorAll('.wst-btn').forEach(b => b.classList.toggle('active', b.dataset.wst === opsWorkStatus));
 
-      const stFilter = document.getElementById('opsWorkStatusFilter').value;
-      const list = opsWorks.filter(w => (opsWorkTag === 'all' || w.tag === opsWorkTag) && (stFilter === 'all' || w.status === stFilter));
+      const tagSelect = document.getElementById('opsWorkTagSelect');
+      const tags = getWorkFilterTags();
+      if (!tags.some(t => t.k === opsWorkTag)) opsWorkTag = 'all';
+      tagSelect.innerHTML = tags.map(t => `<option value="${escHtml(t.k)}" ${opsWorkTag === t.k ? 'selected' : ''}>${escHtml(t.l)}</option>`).join('');
+
+      const list = getFilteredWorks();
 
       const batchBtn = document.getElementById('batchRewardBtn');
       batchBtn.classList.toggle('hidden', selectedWorkIds.size === 0);
       if (selectedWorkIds.size > 0) {
-        batchBtn.textContent = `去挑战与激励管理发奖（已选 ${selectedWorkIds.size} 件）→`;
+        batchBtn.textContent = `批量去定奖 (${selectedWorkIds.size})`;
       }
 
-      const stPill = {
-        reviewing: `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:var(--warn-soft); color:var(--warn);">待审核</span>`,
-        published: `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">已上架</span>`,
-        rejected: `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:var(--coral-soft); color:var(--coral);">需修改</span>`
+      const allChk = document.getElementById('selectAllWorksChk');
+      allChk.checked = list.length > 0 && list.every(w => selectedWorkIds.has(w.id));
+
+      const stBadge = {
+        reviewing: `<span class="adm-badge badge-warn">待审核</span>`,
+        published: `<span class="adm-badge badge-teal">已上架</span>`,
+        rejected: `<span class="adm-badge badge-coral">需修改</span>`
       };
 
+      const tbody = document.getElementById('opsWorksTableBody');
       if (!list.length) {
-        document.getElementById('opsWorksList').innerHTML = `<div class="cpa-card p-8 text-center text-xs" style="color:var(--muted);">当前筛选条件下暂无参赛作品</div>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-[#848CA4]">无匹配作品</td></tr>`;
         return;
       }
 
-      document.getElementById('opsWorksList').innerHTML = list.map(w => {
+      tbody.innerHTML = list.map(w => {
         const ch = challenges.find(c => c.tag === w.tag);
-        const awardBadge = w.awardedTier
-          ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold" style="background:#F1F1FD; color:#624AFF;">🏆 ${escHtml(w.awardedTier)} (+${fmtShortK(w.awardedTokens)})</span>`
-          : '';
+        const honors = [];
+        if (w.featured) honors.push(`<span class="adm-badge badge-violet">★ 精选</span>`);
+        if (w.awardedTier) honors.push(`<span class="adm-badge badge-warn mono">🏆 ${escHtml(w.awardedTier)} +${fmtShortK(w.awardedTokens)}</span>`);
+        const honorHtml = honors.length ? `<div class="flex items-center gap-1 flex-wrap">${honors.join('')}</div>` : `<span class="text-[#848CA4]">—</span>`;
+
+        let actionHtml = '';
+        if (w.status === 'reviewing') {
+          actionHtml = `
+            <button onclick="approveWork('${w.id}')" class="adm-btn-primary px-2.5 py-1 text-xs font-medium">通过</button>
+            <button onclick="openRejectModal('${w.id}')" class="adm-btn px-2.5 py-1 text-xs font-medium">驳回</button>
+          `;
+        } else if (w.status === 'published') {
+          actionHtml = `
+            <button onclick="toggleFeatured('${w.id}')" class="adm-btn px-2.5 py-1 text-xs font-medium">${w.featured ? '取消精选' : '精选'}</button>
+            <button onclick="jumpWorkToIncentives('${w.id}')" class="adm-btn-soft px-2.5 py-1 text-xs font-medium">${ch && ch.status === 'settled' ? '看公示' : '去定奖'}</button>
+          `;
+        } else {
+          actionHtml = `<button onclick="approveWork('${w.id}')" class="adm-btn px-2.5 py-1 text-xs font-medium">恢复上架</button>`;
+        }
+
         return `
-          <div class="cpa-card p-4 px-5 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div class="flex items-start gap-3">
-              <input type="checkbox" ${selectedWorkIds.has(w.id) ? 'checked' : ''} onchange="toggleSelectWork('${w.id}')" class="mt-1 accent-[#624AFF]" />
-              <div class="space-y-1">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-sm font-bold">${escHtml(w.title)}</span>
-                  ${stPill[w.status] || ''}
-                  <span class="px-2 py-0.5 rounded-full text-[11px]" style="background:var(--bg-subtle);">${escHtml(w.type)}</span>
-                  ${w.featured ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-medium" style="background:#F1F1FD; color:var(--primary);">★ 学院精选</span>` : ''}
-                  ${awardBadge}
-                  <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:var(--accent-soft); color:var(--accent-ink);">${escHtml(w.tag)}</span>
-                </div>
-                <div style="color:var(--muted);">作者：${escHtml(w.author)}（<span class="mono">${escHtml(w.email)}</span>） · 当前点赞 <strong class="mono" style="color:var(--ink);">▲ ${w.likes}</strong></div>
-              </div>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              ${w.status === 'reviewing' ? `
-                <button onclick="approveWork('${w.id}')" class="cpa-pill-btn px-3.5 py-1.5 text-xs font-medium">审核通过</button>
-                <button onclick="openRejectModal('${w.id}')" class="cpa-ghost-pill px-3 py-1.5 text-xs">驳回</button>
-              ` : `
-                <button onclick="toggleFeatured('${w.id}')" class="cpa-ghost-pill px-3 py-1.5 text-xs">${w.featured ? '取消精选' : '★ 标为精选'}</button>
-                <button onclick="jumpWorkToIncentives('${w.id}')" class="cpa-soft-violet-pill px-3.5 py-1.5 text-xs font-semibold">${ch && ch.status === 'settled' ? '查看开奖公示 →' : '去挑战与激励管理发奖 →'}</button>
-              `}
-            </div>
-          </div>
+          <tr>
+            <td><input type="checkbox" ${selectedWorkIds.has(w.id) ? 'checked' : ''} onchange="toggleSelectWork('${w.id}')" class="accent-[#624AFF] rounded cursor-pointer" /></td>
+            <td class="font-semibold text-[#1E2238]">${escHtml(w.title)}</td>
+            <td><span class="adm-badge badge-neutral mono">${escHtml(w.type)}</span></td>
+            <td>
+              <div class="font-medium text-[#1E2238]">${escHtml(w.author)}</div>
+              <div class="mono text-[11px] text-[#848CA4]">${escHtml(w.email)}</div>
+            </td>
+            <td><span class="adm-badge badge-teal mono">${escHtml(w.tag)}</span></td>
+            <td class="text-right mono font-medium">${fmtNum(w.likes)}</td>
+            <td>${honorHtml}</td>
+            <td>${stBadge[w.status] || ''}</td>
+            <td class="text-right whitespace-nowrap space-x-1.5">${actionHtml}</td>
+          </tr>
         `;
       }).join('');
     }
@@ -1103,6 +1458,15 @@
       renderOpsWorks();
     }
 
+    function toggleSelectAllWorks(checked) {
+      const list = getFilteredWorks();
+      list.forEach(w => {
+        if (checked) selectedWorkIds.add(w.id);
+        else selectedWorkIds.delete(w.id);
+      });
+      renderOpsWorks();
+    }
+
     function approveWork(id) {
       const w = opsWorks.find(x => x.id === id);
       if (!w) return;
@@ -1110,7 +1474,7 @@
       updateGlobalBadges();
       if (activeMenu === 'works') renderOpsWorks();
       if (activeMenu === 'incentives') renderIncentives();
-      showToast(`《${w.title}》已过审上架，现可参与本场挑战评奖`);
+      showToast(`已通过《${w.title}》`);
     }
 
     function toggleFeatured(id) {
@@ -1119,7 +1483,7 @@
       w.featured = !w.featured;
       if (activeMenu === 'works') renderOpsWorks();
       if (activeMenu === 'incentives') renderIncentives();
-      showToast(w.featured ? `已将《${w.title}》推上学生广场精选与学院成果墙` : '已取消精选标记');
+      showToast(w.featured ? `已设为精选：《${w.title}》` : '已取消精选');
     }
 
     function openRejectModal(id) {
@@ -1139,27 +1503,24 @@
       updateGlobalBadges();
       if (activeMenu === 'works') renderOpsWorks();
       if (activeMenu === 'incentives') renderIncentives();
-      showToast('已驳回作品并向作者发送修改说明');
+      showToast('已驳回作品');
     }
 
     function jumpWorkToIncentives(workId) {
       const w = opsWorks.find(x => x.id === workId);
       if (!w) return;
       document.getElementById('rewTarget').value = w.email;
-      document.getElementById('rewReason').value = `协助《${w.title}》（${w.tag}）校园推广与技术分享激励`;
+      document.getElementById('rewReason').value = `《${w.title}》（${w.tag}）分享激励`;
       const matchedCh = challenges.find(c => c.tag === w.tag);
       highlightedWorkId = w.id;
       if (matchedCh) {
         incSub = 'challenges';
         activeChallengeId = matchedCh.id;
         switchMenu('incentives');
-        showToast(matchedCh.status === 'settled'
-          ? `已定位至《${matchedCh.title}》开奖公示详情`
-          : `已定位至《${matchedCh.title}》定奖结算台，可为《${w.title}》评定奖项`);
+        showToast(`已定位至《${matchedCh.title}》`);
       } else {
         incSub = 'volunteer';
         switchMenu('incentives');
-        showToast('已跳转至「挑战与激励管理」');
       }
       setTimeout(() => { highlightedWorkId = null; }, 2600);
     }
@@ -1170,7 +1531,7 @@
       if (firstId) jumpWorkToIncentives(firstId);
     }
 
-    // ==================== MENU 3: TUTORIAL MANAGEMENT (CMS) ====================
+    // ==================== MODULE 3: CMS ====================
     function setCmsFilter(f) {
       cmsFilter = f;
       renderCmsLists();
@@ -1178,46 +1539,39 @@
 
     function renderCmsLists() {
       updateGlobalBadges();
-      document.querySelectorAll('.cms-filter-btn').forEach(b => {
-        const a = b.dataset.cfilter === cmsFilter;
-        b.style.background = a ? '#F1F1FD' : 'transparent';
-        b.style.color = a ? '#624AFF' : '#464D5B';
-      });
+      document.querySelectorAll('.cms-filter-btn').forEach(b => b.classList.toggle('active', b.dataset.cfilter === cmsFilter));
 
+      const q = (document.getElementById('cmsSearchInput').value || '').trim().toLowerCase();
       const filtered = opsLessons.filter(l => {
-        if (cmsFilter === 'active') return l.active;
-        if (cmsFilter === 'hidden') return !l.active;
+        if (cmsFilter === 'active' && !l.active) return false;
+        if (cmsFilter === 'hidden' && l.active) return false;
+        if (q && !(l.title.toLowerCase().includes(q) || (l.summary || '').toLowerCase().includes(q))) return false;
         return true;
       });
 
-      const box = document.getElementById('opsLessonsList');
+      const tbody = document.getElementById('opsLessonsTableBody');
       if (!filtered.length) {
-        box.innerHTML = `<div class="cpa-card p-8 text-center" style="color:var(--muted);">当前筛选下暂无实战教程，点击右上角「+ 添加实战教程 / 外链视频」新增。</div>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-[#848CA4]">无匹配教程</td></tr>`;
         return;
       }
 
-      box.innerHTML = filtered.map(l => `
-        <div class="cpa-card p-4 px-5 flex flex-wrap items-center justify-between gap-4">
-          <div class="space-y-1.5 max-w-2xl">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-sm font-bold">${escHtml(l.title)}</span>
-              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:#F1F1FD; color:#624AFF;">${escHtml(l.category)}</span>
-              <span class="px-2 py-0.5 rounded-full text-[11px] mono" style="background:var(--bg-subtle); color:var(--muted);">${escHtml(l.duration)}</span>
-              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="${l.active ? 'background:var(--accent-soft); color:var(--accent-ink);' : 'background:var(--bg-subtle); color:var(--muted);'}">${l.active ? '已上架学生端' : '已下架隐藏'}</span>
-            </div>
-            <div style="color:#464D5B;">${escHtml(l.summary || '面向本院学生的 AI 工具实操案例教程')}</div>
-            <div class="flex items-center gap-3 text-[11px]" style="color:var(--muted);">
-              <span class="mono truncate max-w-md">${escHtml(l.url)}</span>
-              <span>·</span>
-              <span class="mono">本院 ${fmtNum(l.views)} 次学习</span>
-            </div>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <button onclick="toggleLessonShelf('${l.id}')" class="cpa-ghost-pill px-3.5 py-1.5 text-xs font-medium">${l.active ? '下架隐藏' : '重新上架'}</button>
-            <button onclick="openCmsModal('${l.id}')" class="cpa-ghost-pill px-3 py-1.5 text-xs">编辑</button>
-            <button onclick="openDeleteCmsModal('${l.id}')" class="cpa-ghost-pill px-3 py-1.5 text-xs" style="color:var(--coral);">删除</button>
-          </div>
-        </div>
+      tbody.innerHTML = filtered.map(l => `
+        <tr>
+          <td>
+            <div class="font-semibold text-[#1E2238]">${escHtml(l.title)}</div>
+            <div class="text-[11px] text-[#848CA4] truncate max-w-[320px] mt-0.5">${escHtml(l.summary || '')}</div>
+          </td>
+          <td><span class="adm-badge badge-violet">${escHtml(l.category)}</span></td>
+          <td class="mono text-[#4E5569] whitespace-nowrap">${escHtml(l.duration)}</td>
+          <td><div class="mono text-[11px] text-[#4E5569] truncate max-w-[220px]" title="${escHtml(l.url)}">${escHtml(l.url)}</div></td>
+          <td class="text-right mono font-medium">${fmtNum(l.views)}</td>
+          <td>${l.active ? `<span class="adm-badge badge-teal">已上架</span>` : `<span class="adm-badge badge-neutral">已下架</span>`}</td>
+          <td class="text-right whitespace-nowrap space-x-1.5">
+            <button onclick="toggleLessonShelf('${l.id}')" class="adm-btn px-2.5 py-1 text-xs font-medium">${l.active ? '下架' : '上架'}</button>
+            <button onclick="openCmsModal('${l.id}')" class="adm-btn px-2.5 py-1 text-xs font-medium">编辑</button>
+            <button onclick="openDeleteCmsModal('${l.id}')" class="adm-btn-danger-ghost px-2.5 py-1 text-xs font-medium">删除</button>
+          </td>
+        </tr>
       `).join('');
     }
 
@@ -1226,13 +1580,13 @@
       if (!item) return;
       item.active = !item.active;
       renderCmsLists();
-      showToast(item.active ? `《${item.title}》已在学生端「学习与挑战」上架` : `《${item.title}》已从学生端下架隐藏`);
+      showToast(item.active ? `已上架《${item.title}》` : `已下架《${item.title}》`);
     }
 
     function openCmsModal(editId) {
       editingCmsId = editId || null;
       const existing = editId ? opsLessons.find(x => x.id === editId) : null;
-      document.getElementById('cmsModalTitle').textContent = existing ? '编辑实战教程 / 外链视频' : '添加实战教程 / 外链视频';
+      document.getElementById('cmsModalTitle').textContent = existing ? '编辑教程' : '新增教程';
       document.getElementById('cmsTitleInput').value = existing ? existing.title : '';
       document.getElementById('cmsCategoryInput').value = existing ? existing.category : '图文指南 · 必看入门';
       document.getElementById('cmsDurationInput').value = existing ? existing.duration : '';
@@ -1250,9 +1604,9 @@
       const category = document.getElementById('cmsCategoryInput').value;
       const duration = document.getElementById('cmsDurationInput').value.trim() || '预计 5 分钟';
       const url = document.getElementById('cmsUrlInput').value.trim() || 'https://docs.huanxi.ai/campus/tutorial';
-      const summary = document.getElementById('cmsSummaryInput').value.trim() || '学院精选 AI 编程实战指南，辅助学生快速完成主题挑战作品。';
+      const summary = document.getElementById('cmsSummaryInput').value.trim() || 'AI 工具实操指南。';
       if (!title) {
-        showToast('请填写实战教程或视频标题');
+        showToast('请填写教程标题');
         return;
       }
       if (editingCmsId) {
@@ -1264,7 +1618,7 @@
           target.url = url;
           target.summary = summary;
         }
-        showToast(`已更新教程《${title}》`);
+        showToast(`已更新《${title}》`);
       } else {
         opsLessons.unshift({
           id: 'les-' + Date.now(),
@@ -1276,7 +1630,7 @@
           views: 1,
           active: true
         });
-        showToast(`已上架实战教程《${title}》至学生端「学习与挑战」`);
+        showToast(`已新增《${title}》`);
       }
       closeCmsModal();
       renderCmsLists();
@@ -1286,7 +1640,7 @@
       const item = opsLessons.find(x => x.id === id);
       if (!item) return;
       deletingCmsId = id;
-      document.getElementById('deleteCmsDesc').textContent = `删除后，《${item.title}》将从学生端「学习与挑战」实战教程区移除。`;
+      document.getElementById('deleteCmsDesc').textContent = `确认删除教程《${item.title}》？`;
       document.getElementById('deleteCmsModal').classList.remove('hidden');
     }
 
@@ -1300,21 +1654,20 @@
       opsLessons = opsLessons.filter(x => x.id !== deletingCmsId);
       closeDeleteCmsModal();
       renderCmsLists();
-      showToast('已删除该条教程内容');
+      showToast('已删除教程');
     }
 
-    // ==================== MENU 4: CHALLENGES & INCENTIVE POOL ====================
+    // ==================== MODULE 4: CHALLENGES & INCENTIVES ====================
+    function switchChallengeTab() {
+      incSub = 'challenges';
+      setIncentiveSub('challenges');
+    }
+
     function setIncentiveSub(s) {
       incSub = s;
-      if (s === 'challenges') {
-        document.getElementById('incsub-challenges').classList.remove('hidden');
-        document.getElementById('incsub-volunteer').classList.add('hidden');
-        document.getElementById('btnNewChallengeTop').classList.remove('hidden');
-      } else {
-        document.getElementById('incsub-challenges').classList.add('hidden');
-        document.getElementById('incsub-volunteer').classList.remove('hidden');
-        document.getElementById('btnNewChallengeTop').classList.add('hidden');
-      }
+      document.getElementById('incsub-challenges').classList.toggle('hidden', s !== 'challenges');
+      document.getElementById('incsub-volunteer').classList.toggle('hidden', s !== 'volunteer');
+      document.getElementById('btnNewChallengeTop').classList.toggle('hidden', s !== 'challenges');
       renderIncentives();
     }
 
@@ -1326,46 +1679,32 @@
       const dispPct = poolTotal > 0 ? Math.min(100, (poolDispatched / poolTotal) * 100) : 0;
       const resPct = poolTotal > 0 ? Math.min(100 - dispPct, (reserved / poolTotal) * 100) : 0;
 
-      document.getElementById('poolAvailBig').textContent = fmtNum(avail);
       document.getElementById('poolTotalVal').textContent = fmtNum(poolTotal);
       document.getElementById('poolDispatchedVal').textContent = fmtNum(poolDispatched);
-      document.getElementById('poolDispatchedM').textContent = `${fmtM(poolDispatched)} 已入账学生端`;
+      document.getElementById('poolDispatchedM').textContent = fmtM(poolDispatched);
       document.getElementById('poolReservedVal').textContent = fmtNum(reserved);
       const activeCount = challenges.filter(c => c.status === 'active' || c.status === 'judging').length;
-      document.getElementById('poolReservedM').textContent = `${fmtM(reserved)}（${activeCount} 场挑战锁定中）`;
+      document.getElementById('poolReservedM').textContent = `${fmtM(reserved)} · ${activeCount} 场进行中`;
       document.getElementById('poolAvailableVal').textContent = fmtNum(avail);
-      document.getElementById('poolAvailableM').textContent = `${fmtM(avail)} 随时可支配`;
+      document.getElementById('poolAvailableM').textContent = fmtM(avail);
 
       document.getElementById('poolBarDispatched').style.width = dispPct.toFixed(2) + '%';
       document.getElementById('poolBarReserved').style.width = resPct.toFixed(2) + '%';
 
-      const suggestText = occupiedPct >= 80 ? '建议申请增池' : '可用余量充裕';
       const badgeEl = document.getElementById('poolWaterBadge');
-      badgeEl.textContent = `占用 ${occupiedPct.toFixed(1)}% · ${suggestText}`;
-      if (occupiedPct >= 80) {
-        badgeEl.style.background = 'var(--warn-soft)';
-        badgeEl.style.color = 'var(--warn)';
-      } else {
-        badgeEl.style.background = 'var(--accent-soft)';
-        badgeEl.style.color = 'var(--accent-ink)';
-      }
+      badgeEl.textContent = `占用 ${occupiedPct.toFixed(1)}%`;
+      badgeEl.className = occupiedPct >= 80 ? 'adm-badge badge-warn mono' : 'adm-badge badge-teal mono';
 
       document.getElementById('poolSummaryLine').textContent =
-        `已实发 ${fmtM(poolDispatched)} · 挑战冻结 ${fmtM(reserved)} · 当前可用 ${fmtM(avail)}（占用 ${occupiedPct.toFixed(1)}% · ${suggestText}）`;
+        `已实发 ${fmtM(poolDispatched)} · 冻结 ${fmtM(reserved)} · 可用 ${fmtM(avail)}`;
 
-      document.getElementById('volAvailHint').textContent = `${fmtNum(avail)} Token`;
+      document.getElementById('volAvailHint').textContent = fmtNum(avail);
       updateGlobalBadges();
     }
 
     function renderIncentives() {
       renderPoolWaterLevel();
-
-      document.querySelectorAll('.incsub-btn').forEach(b => {
-        const a = b.dataset.incsub === incSub;
-        b.style.background = a ? '#F1F1FD' : 'transparent';
-        b.style.color = a ? '#624AFF' : '#464D5B';
-        b.style.fontWeight = a ? '600' : '500';
-      });
+      document.querySelectorAll('.incsub-btn').forEach(b => b.classList.toggle('active', b.dataset.incsub === incSub));
 
       if (incSub === 'challenges') {
         if (activeChallengeId) {
@@ -1375,95 +1714,88 @@
         } else {
           document.getElementById('challengeWorkbenchView').classList.add('hidden');
           document.getElementById('challengeListView').classList.remove('hidden');
-          renderChallengeCardsList();
+          renderChallengeTable();
         }
       } else {
         validateVolunteerAmountInline();
         renderVolunteerAndLogs();
       }
+      updateHeaderBar();
     }
 
     function getChallengeStatusMeta(ch) {
       if (ch.status === 'active') {
         return {
-          pill: `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold" style="background:var(--accent-soft); color:var(--accent-ink);">进行中 · ${escHtml(ch.deadlineLabel || (ch.deadline + ' 截稿'))}</span>`,
-          btnText: '管理本场挑战 →',
-          btnPrimary: false
+          badge: `<span class="adm-badge badge-teal">进行中</span>`,
+          btnText: '进入结算台',
+          btnClass: 'adm-btn'
         };
       }
       if (ch.status === 'judging') {
         return {
-          pill: `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold" style="background:var(--warn-soft); color:var(--warn);">● ${escHtml(ch.deadlineLabel || '待定奖结算')}</span>`,
-          btnText: '去定奖结算 →',
-          btnPrimary: true
+          badge: `<span class="adm-badge badge-warn">待定奖结算</span>`,
+          btnText: '定奖结算',
+          btnClass: 'adm-btn-primary'
         };
       }
       if (ch.status === 'settled') {
         return {
-          pill: `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold" style="background:#F1F1FD; color:#624AFF;">✓ 已开奖公示</span>`,
-          btnText: '查看开奖公示与结算单',
-          btnPrimary: false
+          badge: `<span class="adm-badge badge-violet">已结算</span>`,
+          btnText: '查看结算单',
+          btnClass: 'adm-btn'
         };
       }
       return {
-        pill: `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold" style="background:var(--coral-soft); color:var(--coral);">待增池草稿 · 未冻结预算</span>`,
-        btnText: '管理草稿 / 发布挑战 →',
-        btnPrimary: false
+        badge: `<span class="adm-badge badge-coral">草稿</span>`,
+        btnText: '管理草稿',
+        btnClass: 'adm-btn-soft'
       };
     }
 
-    function renderChallengeCardsList() {
-      const box = document.getElementById('challengeListView');
-      box.innerHTML = challenges.map(ch => {
+    function renderChallengeTable() {
+      const tbody = document.getElementById('challengeTableBody');
+      tbody.innerHTML = challenges.map(ch => {
         const meta = getChallengeStatusMeta(ch);
         const chWorks = opsWorks.filter(w => w.tag === ch.tag);
         const pendingCnt = chWorks.filter(w => w.status === 'reviewing').length;
-        const tiersStr = ch.tiers.map(t => `${escHtml(t.name)} <span class="mono">${t.count}名×${fmtNum(t.reward)}</span>`).join(' + ');
+        const tiersStr = ch.tiers.map(t => `${escHtml(t.name)}×${t.count} <span class="mono text-[#848CA4]">(${fmtShortK(t.reward)})</span>`).join(' · ');
 
-        let budgetLine = '';
+        let budgetHtml = '';
         if (ch.status === 'active' || ch.status === 'judging') {
-          budgetLine = `已预占冻结 <strong class="mono" style="color:var(--accent-ink);">${fmtNum(ch.reservedTokens)}</strong> Token`;
+          budgetHtml = `<div class="mono font-semibold text-[#006D75]">预占 ${fmtNum(ch.reservedTokens)}</div>`;
         } else if (ch.status === 'settled') {
           const refunded = Math.max(0, (ch.originalReserved || 0) - (ch.dispatchedTokens || 0));
-          budgetLine = `原预占 <span class="mono">${fmtNum(ch.originalReserved)}</span> · <strong style="color:#624AFF;">实发 <span class="mono">${fmtNum(ch.dispatchedTokens)}</span>（未用 <span class="mono">${fmtNum(refunded)}</span> 已自动退回激励池）</strong>`;
+          budgetHtml = `
+            <div class="mono font-semibold text-[#624AFF]">实发 ${fmtNum(ch.dispatchedTokens)}</div>
+            <div class="mono text-[11px] text-[#848CA4]">预占 ${fmtShortK(ch.originalReserved)} · 退回 ${fmtShortK(refunded)}</div>
+          `;
         } else {
-          budgetLine = `预计需冻结 <strong class="mono" style="color:var(--coral);">${fmtNum(ch.plannedTokens)}</strong> Token（待补充激励池后冻结发布）`;
+          budgetHtml = `
+            <div class="mono font-semibold text-[#D48806]">计划 ${fmtNum(ch.plannedTokens)}</div>
+            <div class="text-[11px] text-[#848CA4]">未冻结</div>
+          `;
         }
 
-        const winnersBanner = (ch.status === 'settled' && ch.winners && ch.winners.length)
-          ? `<div class="mt-3 p-3 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs" style="background:#F7F9FD; border:1px solid #ECEDF1;">
-               <div>
-                 <span class="font-semibold" style="color:#624AFF;">🏆 获奖公示：</span>
-                 <span>${ch.winners.map(w => `${escHtml(w.tierName)} ${escHtml(w.author)}(<span class="mono">+${fmtShortK(w.amount)}</span>)`).join('、')}</span>
-               </div>
-               <span class="text-[11px]" style="color:var(--muted);">已同步至学生端挑战详情页</span>
-             </div>`
-          : '';
-
         return `
-          <div class="cpa-card p-5 transition hover:border-[#D2C4FF]">
-            <div class="flex flex-wrap items-start justify-between gap-4">
-              <div class="space-y-2 flex-1 min-w-[260px]">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <h2 class="text-sm font-bold">《${escHtml(ch.title)}》</h2>
-                  <span class="mono text-[11px] px-2.5 py-0.5 rounded-full font-medium" style="background:#F7F9FD; color:#27254C; border:1px solid #ECEDF1;">${escHtml(ch.tag)}</span>
-                  ${meta.pill}
-                </div>
-                <p class="text-xs leading-relaxed" style="color:#464D5B;">${escHtml(ch.desc)}</p>
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs pt-0.5" style="color:var(--muted);">
-                  <span>奖项设置：${tiersStr}</span>
-                  <span>|</span>
-                  <span>${budgetLine}</span>
-                  <span>|</span>
-                  <span>本场参赛作品 <strong class="mono" style="color:var(--ink);">${chWorks.length}</strong> 件${pendingCnt > 0 ? `（<span style="color:var(--warn); font-weight:600;">${pendingCnt} 待审</span>）` : ''}</span>
-                </div>
+          <tr>
+            <td>
+              <button onclick="openChallengeWorkbench('${ch.id}')" class="font-semibold text-[#1E2238] hover:text-[#624AFF] text-left">${escHtml(ch.title)}</button>
+              <div class="mt-0.5"><span class="mono text-[11px] text-[#848CA4]">${escHtml(ch.tag)}</span></div>
+            </td>
+            <td>${meta.badge}</td>
+            <td class="mono text-[#4E5569] whitespace-nowrap">${escHtml(ch.deadline)}</td>
+            <td class="text-xs text-[#4E5569]">${tiersStr}</td>
+            <td class="whitespace-nowrap">${budgetHtml}</td>
+            <td class="whitespace-nowrap">
+              <div class="flex items-center gap-1.5">
+                <span class="mono font-medium">${chWorks.length}</span>
+                ${pendingCnt > 0 ? `<span class="adm-badge badge-warn mono">${pendingCnt} 待审</span>` : ''}
               </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <button onclick="openChallengeWorkbench('${ch.id}')" class="${meta.btnPrimary ? 'cpa-pill-btn' : 'cpa-ghost-pill'} px-4 py-2 text-xs font-semibold">${meta.btnText}</button>
-              </div>
-            </div>
-            ${winnersBanner}
-          </div>
+            </td>
+            <td class="text-right whitespace-nowrap">
+              <button onclick="openChallengeWorkbench('${ch.id}')" class="${meta.btnClass} px-3 py-1.5 text-xs font-medium">${meta.btnText}</button>
+            </td>
+          </tr>
         `;
       }).join('');
     }
@@ -1478,7 +1810,6 @@
       renderIncentives();
     }
 
-    // Render Single-Challenge Closed-Loop Workbench (Block 1: Rules & Budget | Block 2: Works Moderation & Award Settlement)
     function renderChallengeWorkbench(chId) {
       const ch = challenges.find(c => c.id === chId);
       if (!ch) {
@@ -1494,7 +1825,6 @@
       const publishedWorks = chWorks.filter(w => w.status === 'published').sort((a, b) => b.likes - a.likes);
       const rejectedWorks = chWorks.filter(w => w.status === 'rejected');
 
-      // Compute live settlement numbers for active / judging
       if (!ch.draftAwards) ch.draftAwards = {};
       const tierCountMap = {};
       ch.tiers.forEach(t => { tierCountMap[t.id] = 0; });
@@ -1520,227 +1850,233 @@
       let validationError = '';
       if (overQuotaTiers.length > 0) {
         const t = overQuotaTiers[0];
-        validationError = `奖项名额超限：「${t.name}」最多授奖 ${t.count} 名（当前已选 ${tierCountMap[t.id]} 名），请调整拟授档位。`;
+        validationError = `名额超限：「${t.name}」限 ${t.count} 名，已选 ${tierCountMap[t.id]} 名`;
       } else if (isOverBudget) {
-        validationError = `拟实发总额（${fmtNum(proposedTotal)} Token）超出本场预占冻结上限（${fmtNum(ch.reservedTokens)} Token），严禁超预算结算。`;
+        validationError = `拟实发总额 (${fmtNum(proposedTotal)}) 超出预占冻结上限 (${fmtNum(ch.reservedTokens)})`;
       }
 
-      // Draft status publishing block
-      let block1BudgetActionHtml = '';
+      // Header right actions
+      let headerActionsHtml = '';
+      if (ch.status !== 'settled') {
+        headerActionsHtml += `<button onclick="openChallengeModal('${ch.id}')" class="adm-btn px-3 py-1.5 text-xs font-medium">编辑规则与预算</button>`;
+      }
       if (ch.status === 'draft') {
-        const canPublishNow = avail >= ch.plannedTokens;
-        block1BudgetActionHtml = `
-          <div class="p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-3" style="${canPublishNow ? 'background:var(--accent-soft); border-color:#99F6E4;' : 'background:var(--warn-soft); border-color:#FFE58F;'}">
-            <div>
-              <div class="font-bold" style="color:${canPublishNow ? 'var(--accent-ink)' : 'var(--warn)'};">
-                ${canPublishNow
-                  ? `当前可用激励池余额充裕（可用 ${fmtNum(avail)} ≥ 需冻结 ${fmtNum(ch.plannedTokens)} Token）`
-                  : `可用余额不足，请先向浣溪申请增池（需冻结 ${fmtNum(ch.plannedTokens)} Token · 当前可用 ${fmtNum(avail)} Token）`}
-              </div>
-              <div class="text-[11px] mt-0.5" style="color:#464D5B;">草稿发布后将立即锁定对应激励池预算，并向学生端开放 <span class="mono">${escHtml(ch.tag)}</span> 投稿。</div>
-            </div>
-            ${canPublishNow
-              ? `<button onclick="publishDraftChallenge('${ch.id}')" class="cpa-pill-btn px-4 py-2 text-xs font-semibold">冻结预算并正式发布</button>`
-              : `<button onclick="openTopupForChallenge('${ch.id}')" class="cpa-pill-btn px-4 py-2 text-xs font-semibold">向浣溪申请追加激励池 ↗</button>`}
-          </div>
-        `;
-      } else if (ch.status === 'settled') {
-        const refunded = Math.max(0, (ch.originalReserved || 0) - (ch.dispatchedTokens || 0));
-        block1BudgetActionHtml = `
-          <div class="p-4 rounded-2xl border space-y-3" style="background:#F7F9FD; border-color:#DDD8FF;">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="font-bold text-sm" style="color:#624AFF;">🏆 已开奖公示名单（已同步至学生端挑战详情页）</div>
-              <div class="mono text-xs" style="color:#464D5B;">
-                原预占 <strong>${fmtNum(ch.originalReserved)}</strong> · 实发 <strong style="color:#624AFF;">${fmtNum(ch.dispatchedTokens)}</strong> · 自动退回池子 <strong style="color:var(--accent-ink);">${fmtNum(refunded)}</strong> Token
-              </div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              ${(ch.winners || []).map(w => `
-                <div class="bg-white p-3 rounded-xl border border-slate-200 space-y-1">
-                  <div class="flex items-center justify-between gap-1">
-                    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold" style="background:#F1F1FD; color:#624AFF;">${escHtml(w.tierName)}</span>
-                    <span class="mono font-bold text-xs" style="color:var(--accent-ink);">+${fmtNum(w.amount)}</span>
-                  </div>
-                  <div class="font-semibold truncate">《${escHtml(w.workTitle)}》</div>
-                  <div class="text-[11px] mono truncate" style="color:var(--muted);">${escHtml(w.author)} · ${escHtml(w.email)}</div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
+        if (avail >= ch.plannedTokens) {
+          headerActionsHtml += `<button onclick="publishDraftChallenge('${ch.id}')" class="adm-btn-primary px-3 py-1.5 text-xs font-medium">冻结并发布</button>`;
+        } else {
+          headerActionsHtml += `<button onclick="openTopupForChallenge('${ch.id}')" class="adm-btn-primary px-3 py-1.5 text-xs font-medium">申请增池</button>`;
+        }
       }
 
+      // Compact 3-col Tiers Strip
       const tiersGridHtml = ch.tiers.map(t => {
         const usedCnt = ch.status === 'settled'
           ? (ch.winners || []).filter(w => w.tierName === t.name).length
           : (tierCountMap[t.id] || 0);
         const over = ch.status !== 'settled' && usedCnt > t.count;
         return `
-          <div class="soft-shell p-3.5 space-y-1" style="${over ? 'border-color:var(--coral); background:var(--coral-soft);' : ''}">
+          <div class="px-3.5 py-2.5 rounded-lg border ${over ? 'border-[#FF4D4F] bg-[#FFF2F0]' : 'border-[#EEF0F6] bg-[#FAFBFE]'}">
             <div class="flex items-center justify-between gap-2">
-              <span class="font-bold">${escHtml(t.name)}</span>
-              <span class="mono text-[11px] px-2 py-0.5 rounded-full bg-white border border-slate-200">${ch.status === 'settled' ? `实授 ${usedCnt}/${t.count} 名` : `已选 ${usedCnt}/${t.count} 名`}</span>
+              <span class="text-xs font-semibold text-[#1E2238]">${escHtml(t.name)}</span>
+              <span class="mono text-[11px] ${over ? 'text-[#FF4D4F] font-semibold' : 'text-[#4E5569]'}">${ch.status === 'settled' ? `实授 ${usedCnt}/${t.count}` : `已选 ${usedCnt}/${t.count}`}</span>
             </div>
-            <div class="mono text-sm font-bold" style="color:#624AFF;">${fmtNum(t.reward)} <span class="text-[11px] font-normal" style="color:var(--muted);">Token / 人</span></div>
-            <div class="text-[11px] mono" style="color:var(--muted);">档位预算上限：${fmtNum(t.count * t.reward)}</div>
+            <div class="flex items-baseline justify-between mt-1">
+              <span class="mono text-sm font-bold text-[#624AFF]">${fmtNum(t.reward)} <span class="text-[11px] font-normal text-[#848CA4]">Token</span></span>
+              <span class="mono text-[11px] text-[#848CA4]">小计 ${fmtShortK(t.count * t.reward)}</span>
+            </div>
           </div>
         `;
       }).join('');
 
-      // Pending works moderation strip inside workbench
-      const pendingHtml = pendingWorks.length ? `
-        <div class="px-5 py-4 border-b border-slate-100 space-y-2.5" style="background:#FFFDF5;">
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-xs" style="color:var(--warn);">待审参赛作品（${pendingWorks.length} 件 · 过审上架后即可纳入下方定奖列表）</span>
+      // Settled Winners Table (when settled)
+      let settledResultPanelHtml = '';
+      if (ch.status === 'settled') {
+        const refunded = Math.max(0, (ch.originalReserved || 0) - (ch.dispatchedTokens || 0));
+        settledResultPanelHtml = `
+          <div class="adm-panel overflow-hidden">
+            <div class="px-4 py-2.5 border-b border-[#E5E8F0] bg-[#FAFBFE] flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span class="font-semibold text-[#1E2238]">获奖结算单</span>
+              <span class="mono text-[#4E5569]">原预占 <strong>${fmtNum(ch.originalReserved)}</strong> · 实发 <strong class="text-[#624AFF]">${fmtNum(ch.dispatchedTokens)}</strong> · 退回可用池 <strong class="text-[#006D75]">${fmtNum(refunded)}</strong></span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse adm-table">
+                <thead>
+                  <tr>
+                    <th>奖项</th>
+                    <th>作品名称</th>
+                    <th>获奖学生</th>
+                    <th>教育邮箱</th>
+                    <th class="text-right">实发 Token</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(ch.winners || []).map(w => `
+                    <tr>
+                      <td><span class="adm-badge badge-violet">${escHtml(w.tierName)}</span></td>
+                      <td class="font-semibold text-[#1E2238]">${escHtml(w.workTitle)}</td>
+                      <td>${escHtml(w.author)}</td>
+                      <td class="mono text-[#4E5569]">${escHtml(w.email)}</td>
+                      <td class="text-right mono font-semibold text-[#006D75]">+${fmtNum(w.amount)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div class="space-y-2">
-            ${pendingWorks.map(w => `
-              <div class="bg-white p-3.5 rounded-xl border border-amber-200 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div class="flex items-center gap-2">
-                    <span class="font-bold">《${escHtml(w.title)}》</span>
-                    <span class="px-2 py-0.5 rounded-full text-[11px]" style="background:var(--bg-subtle);">${escHtml(w.type)}</span>
-                    <span class="px-2 py-0.5 rounded-full text-[11px]" style="background:var(--warn-soft); color:var(--warn);">待审核</span>
-                  </div>
-                  <div class="text-[11px] mt-0.5" style="color:var(--muted);">作者：${escHtml(w.author)}（<span class="mono">${escHtml(w.email)}</span>）</div>
-                </div>
-                <div class="flex items-center gap-2">
-                  <button onclick="approveWork('${w.id}')" class="cpa-pill-btn px-3.5 py-1.5 text-xs font-semibold">过审上架</button>
-                  <button onclick="openRejectModal('${w.id}')" class="cpa-ghost-pill px-3 py-1.5 text-xs">驳回</button>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      ` : '';
+        `;
+      }
 
-      // Published works award selection rows
-      const publishedRowsHtml = publishedWorks.length ? publishedWorks.map((w, idx) => {
+      // Unified Entries Moderation & Award Selection Table Rows
+      const pendingRows = pendingWorks.map(w => `
+        <tr style="background:#FFFDF2;">
+          <td><span class="adm-badge badge-warn">待审</span></td>
+          <td class="font-semibold text-[#1E2238]">${escHtml(w.title)}</td>
+          <td><span class="adm-badge badge-neutral mono">${escHtml(w.type)}</span></td>
+          <td>
+            <span class="font-medium text-[#1E2238]">${escHtml(w.author)}</span>
+            <span class="mono text-[11px] text-[#848CA4] ml-1.5">${escHtml(w.email)}</span>
+          </td>
+          <td class="text-right mono text-[#848CA4]">0</td>
+          <td><span class="text-[#848CA4]">—</span></td>
+          <td class="text-right whitespace-nowrap space-x-1.5">
+            <button onclick="approveWork('${w.id}')" class="adm-btn-primary px-2.5 py-1 text-xs font-medium">过审上架</button>
+            <button onclick="openRejectModal('${w.id}')" class="adm-btn px-2.5 py-1 text-xs font-medium">驳回</button>
+          </td>
+        </tr>
+      `);
+
+      const publishedRows = publishedWorks.map((w, idx) => {
         const isHighlighted = highlightedWorkId === w.id;
-        let rightControlHtml = '';
+        let awardControlHtml = '';
         if (ch.status === 'active' || ch.status === 'judging') {
           const selId = ch.draftAwards[w.id] || '';
           const opts = [
-            `<option value="">不授奖 (0 Token)</option>`,
+            `<option value="">不授奖 (0)</option>`,
             ...ch.tiers.map(t => `<option value="${t.id}" ${selId === t.id ? 'selected' : ''}>${escHtml(t.name)} (+${fmtNum(t.reward)}) · 限${t.count}名</option>`)
           ].join('');
-          rightControlHtml = `
-            <div class="flex items-center gap-2 shrink-0">
-              <button onclick="toggleFeatured('${w.id}')" class="cpa-ghost-pill px-2.5 py-1.5 text-[11px]">${w.featured ? '★ 已精选' : '标为精选'}</button>
-              <select onchange="setWorkDraftAward('${ch.id}', '${w.id}', this.value)" class="px-3 py-1.5 rounded-full border text-xs font-medium bg-white" style="${selId ? 'border-color:#624AFF; background:#F1F1FD; color:#624AFF;' : 'border-color:var(--border); color:var(--ink);'}">
-                ${opts}
-              </select>
-            </div>
+          awardControlHtml = `
+            <select onchange="setWorkDraftAward('${ch.id}', '${w.id}', this.value)" class="adm-select px-2.5 py-1 text-xs font-medium" style="${selId ? 'border-color:#624AFF; background:#F1F1FD; color:#624AFF;' : ''}">
+              ${opts}
+            </select>
           `;
         } else if (ch.status === 'settled') {
           const winRec = (ch.winners || []).find(x => x.workId === w.id);
-          rightControlHtml = winRec
-            ? `<span class="px-3 py-1 rounded-full text-xs font-semibold mono" style="background:#F1F1FD; color:#624AFF;">🏆 ${escHtml(winRec.tierName)} (+${fmtNum(winRec.amount)})</span>`
-            : `<span class="px-3 py-1 rounded-full text-xs" style="background:var(--bg-subtle); color:var(--muted);">未授奖</span>`;
+          awardControlHtml = winRec
+            ? `<span class="adm-badge badge-violet mono">🏆 ${escHtml(winRec.tierName)} +${fmtShortK(winRec.amount)}</span>`
+            : `<span class="text-[#848CA4]">未授奖</span>`;
         } else {
-          rightControlHtml = `<span class="text-[11px]" style="color:var(--muted);">待挑战正式发布后评定</span>`;
+          awardControlHtml = `<span class="text-[11px] text-[#848CA4]">待发布</span>`;
         }
 
         return `
-          <div class="px-5 py-4 flex flex-wrap items-center justify-between gap-3 transition" style="${isHighlighted ? 'background:#F1F1FD;' : ''}">
-            <div class="flex items-center gap-3.5">
-              <span class="w-7 h-7 rounded-full flex items-center justify-center mono text-xs font-bold shrink-0" style="${idx < 3 ? 'background:#27254C; color:#FFFFFF;' : 'background:#F7F9FD; color:#464D5B;'}">#${idx + 1}</span>
-              <div>
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-sm font-bold">${escHtml(w.title)}</span>
-                  <span class="px-2 py-0.5 rounded-full text-[11px]" style="background:var(--bg-subtle);">${escHtml(w.type)}</span>
-                  ${w.featured ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-medium" style="background:#F1F1FD; color:#624AFF;">★ 学院精选</span>` : ''}
-                </div>
-                <div class="text-[11px] mt-0.5" style="color:var(--muted);">
-                  作者：${escHtml(w.author)}（<span class="mono">${escHtml(w.email)}</span>） · 社区热度 <strong class="mono" style="color:var(--ink);">▲ ${w.likes} 赞</strong>
-                </div>
-              </div>
-            </div>
-            ${rightControlHtml}
-          </div>
+          <tr style="${isHighlighted ? 'background:#F1F1FD;' : ''}">
+            <td class="mono font-semibold ${idx < 3 ? 'text-[#624AFF]' : 'text-[#4E5569]'}">#${idx + 1}</td>
+            <td class="font-semibold text-[#1E2238]">${escHtml(w.title)}</td>
+            <td><span class="adm-badge badge-neutral mono">${escHtml(w.type)}</span></td>
+            <td>
+              <span class="font-medium text-[#1E2238]">${escHtml(w.author)}</span>
+              <span class="mono text-[11px] text-[#848CA4] ml-1.5">${escHtml(w.email)}</span>
+            </td>
+            <td class="text-right mono font-medium">${fmtNum(w.likes)}</td>
+            <td>
+              <button onclick="toggleFeatured('${w.id}')" class="${w.featured ? 'adm-btn-soft' : 'adm-btn'} px-2.5 py-1 text-[11px] font-medium">${w.featured ? '★ 精选' : '设为精选'}</button>
+            </td>
+            <td class="text-right whitespace-nowrap">${awardControlHtml}</td>
+          </tr>
         `;
-      }).join('') : `<div class="p-8 text-center text-xs" style="color:var(--muted);">当前尚无已上架的参评作品（如有待审作品请先点击上方「过审上架」）。</div>`;
+      });
 
-      // Bottom Settlement Footer Bar (for active / judging)
+      const rejectedRows = rejectedWorks.map(w => `
+        <tr>
+          <td><span class="adm-badge badge-coral">需修改</span></td>
+          <td class="font-medium text-[#848CA4]">${escHtml(w.title)}</td>
+          <td><span class="adm-badge badge-neutral mono">${escHtml(w.type)}</span></td>
+          <td>
+            <span class="text-[#4E5569]">${escHtml(w.author)}</span>
+            <span class="mono text-[11px] text-[#848CA4] ml-1.5">${escHtml(w.email)}</span>
+          </td>
+          <td class="text-right mono text-[#848CA4]">${fmtNum(w.likes)}</td>
+          <td><span class="text-[#848CA4]">—</span></td>
+          <td class="text-right whitespace-nowrap">
+            <button onclick="approveWork('${w.id}')" class="adm-btn px-2.5 py-1 text-xs font-medium">恢复上架</button>
+          </td>
+        </tr>
+      `);
+
+      const allRows = [...pendingRows, ...publishedRows, ...rejectedRows];
+      const entriesBodyHtml = allRows.length
+        ? allRows.join('')
+        : `<tr><td colspan="7" class="py-8 text-center text-[#848CA4]">暂无参赛作品</td></tr>`;
+
+      // Settlement Footer Bar (active / judging)
       const settlementBarHtml = (ch.status === 'active' || ch.status === 'judging') ? `
-        <div class="px-5 py-4 border-t border-slate-200 space-y-2.5" style="background:#F7F9FD;">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="space-y-1">
-              <div class="text-xs font-semibold" style="color:var(--ink);">
-                本场原预占冻结 <span class="mono" style="color:var(--accent-ink);">${fmtNum(ch.reservedTokens)}</span> Token ·
-                当前拟实发 <span class="mono" style="color:#624AFF;">${fmtNum(proposedTotal)}</span> Token ·
-                结算后自动释放退回池子 <span class="mono" style="color:${refundPreview >= 0 ? 'var(--accent-ink)' : 'var(--coral)'};">${fmtNum(Math.max(0, refundPreview))}</span> Token
-              </div>
-              <div class="text-[11px]" style="color:var(--muted);">
-                确认结算后：实发 Token 立即汇入获奖学生账户并记入浣溪审计流水，未用完的预占预算自动解冻回学院可用余额。
-              </div>
+        <div class="px-4 py-3 border-t border-[#E5E8F0] bg-[#FAFBFE] flex flex-wrap items-center justify-between gap-3">
+          <div class="space-y-0.5 text-xs">
+            <div class="font-medium text-[#1E2238]">
+              预占冻结 <strong class="mono text-[#006D75]">${fmtNum(ch.reservedTokens)}</strong> ·
+              拟实发 <strong class="mono text-[#624AFF]">${fmtNum(proposedTotal)}</strong> ·
+              结算退回 <strong class="mono ${refundPreview >= 0 ? 'text-[#006D75]' : 'text-[#FF4D4F]'}">${fmtNum(Math.max(0, refundPreview))}</strong> Token
             </div>
-            <button onclick="openSettleConfirmModal('${ch.id}')" ${validationError || proposedTotal <= 0 ? 'disabled' : ''} class="cpa-pill-btn px-5 py-2.5 text-xs font-semibold shrink-0">
-              确认结算并发放公示
-            </button>
+            ${validationError ? `<div class="text-[11px] font-semibold text-[#FF4D4F]">${escHtml(validationError)}</div>` : ''}
+            ${!validationError && proposedTotal === 0 ? `<div class="text-[11px] text-[#D48806]">请至少选择 1 件获奖作品</div>` : ''}
           </div>
-          ${validationError ? `<div class="p-2.5 rounded-xl text-xs font-semibold" style="background:var(--coral-soft); color:var(--coral);">⚠️ ${escHtml(validationError)}</div>` : ''}
-          ${!validationError && proposedTotal === 0 ? `<div class="text-[11px]" style="color:var(--warn);">提示：请至少为 1 件已上架参赛作品选择拟授奖项档位后再执行结算。</div>` : ''}
+          <button onclick="openSettleConfirmModal('${ch.id}')" ${validationError || proposedTotal <= 0 ? 'disabled' : ''} class="adm-btn-primary px-4 py-2 text-xs font-medium">
+            确认结算并发放
+          </button>
         </div>
       ` : '';
 
       document.getElementById('challengeWorkbenchView').innerHTML = `
-        <!-- Top Navigation Strip -->
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <button onclick="backToChallengeList()" class="cpa-ghost-pill px-4 py-1.5 text-xs font-semibold">← 返回挑战列表</button>
-          <div class="flex items-center gap-2">
-            ${ch.status !== 'settled' ? `<button onclick="openChallengeModal('${ch.id}')" class="cpa-ghost-pill px-3.5 py-1.5 text-xs font-medium">编辑挑战规则与奖项</button>` : ''}
-          </div>
-        </div>
-
-        <!-- Block 1: Challenge Rules & Award Budget Card -->
-        <div class="cpa-card p-6 space-y-4 text-xs">
-          <div class="flex flex-wrap items-start justify-between gap-4">
-            <div class="flex items-start gap-3.5">
-              <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-base shrink-0" style="background:linear-gradient(135deg,#27254C 0%,#624AFF 65%,#36CFD1 100%);">✦</div>
-              <div class="space-y-1">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <h2 class="text-base font-bold">《${escHtml(ch.title)}》</h2>
-                  <span class="mono text-[11px] px-2.5 py-0.5 rounded-full font-medium" style="background:#F7F9FD; border:1px solid #ECEDF1;">${escHtml(ch.tag)}</span>
-                  ${meta.pill}
-                </div>
-                <p class="leading-relaxed" style="color:#464D5B;">${escHtml(ch.desc)}</p>
-              </div>
+        <!-- Header & Tiers Panel -->
+        <div class="adm-panel p-4 space-y-3.5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="backToChallengeList()" class="adm-btn px-2.5 py-1 text-xs font-medium">← 返回挑战列表</button>
+              <h2 class="text-sm font-bold text-[#1E2238]">${escHtml(ch.title)}</h2>
+              <span class="adm-badge badge-neutral mono">${escHtml(ch.tag)}</span>
+              ${meta.badge}
+              <span class="mono text-[11px] text-[#848CA4]">截稿 ${escHtml(ch.deadline)}</span>
             </div>
-            <div class="text-right shrink-0">
-              <div class="text-[11px]" style="color:var(--muted);">${ch.status === 'settled' ? '本场最终实发总额' : (ch.status === 'draft' ? '计划冻结预算' : '当前已预占冻结预算')}</div>
-              <div class="mono text-xl font-bold mt-0.5" style="color:${ch.status === 'settled' ? '#624AFF' : 'var(--accent-ink)'};">
-                ${fmtNum(ch.status === 'settled' ? ch.dispatchedTokens : (ch.status === 'draft' ? ch.plannedTokens : ch.reservedTokens))}
-                <span class="text-xs font-normal" style="color:var(--muted);">Tokens</span>
-              </div>
+            <div class="flex items-center gap-2">
+              ${headerActionsHtml}
             </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             ${tiersGridHtml}
           </div>
-
-          ${block1BudgetActionHtml}
         </div>
 
-        <!-- Block 2: Entries Moderation & Award Settlement Desk -->
-        <div class="cpa-card overflow-hidden text-xs">
-          <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h3 class="text-sm font-bold">本场参赛作品审核与定奖结算台</h3>
-              <p class="text-[11px] mt-0.5" style="color:var(--muted);">自动聚合全院携带 <span class="mono">${escHtml(ch.tag)}</span> 标签的提交作品（与「② 作品管理」实时同源，已上架作品按点赞数从高到低排序）</p>
-            </div>
-            <div class="mono text-[11px] px-3 py-1 rounded-full" style="background:#F7F9FD; border:1px solid #ECEDF1;">
-              参评已上架 ${publishedWorks.length} · 待审 ${pendingWorks.length}${rejectedWorks.length ? ` · 需修改 ${rejectedWorks.length}` : ''}
+        ${settledResultPanelHtml}
+
+        <!-- Entries Moderation & Award Selection Table -->
+        <div class="adm-panel overflow-hidden">
+          <div class="px-4 py-2.5 border-b border-[#E5E8F0] flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span class="font-semibold text-[#1E2238]">参赛作品审核与定奖</span>
+            <div class="flex items-center gap-2 text-[11px] mono">
+              <span class="text-[#4E5569]">已上架 ${publishedWorks.length}</span>
+              ${pendingWorks.length ? `<span class="adm-badge badge-warn">${pendingWorks.length} 待审</span>` : ''}
+              ${rejectedWorks.length ? `<span class="adm-badge badge-coral">${rejectedWorks.length} 需修改</span>` : ''}
             </div>
           </div>
-
-          ${pendingHtml}
-
-          <div class="divide-y divide-slate-100">
-            ${publishedRowsHtml}
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse adm-table">
+              <thead>
+                <tr>
+                  <th>排名 / 状态</th>
+                  <th>作品名称</th>
+                  <th>形态</th>
+                  <th>作者 / 邮箱</th>
+                  <th class="text-right">点赞数</th>
+                  <th>精选操作</th>
+                  <th class="text-right">拟授奖项</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${entriesBodyHtml}
+              </tbody>
+            </table>
           </div>
-
           ${settlementBarHtml}
         </div>
       `;
@@ -1760,14 +2096,14 @@
       if (!ch || ch.status !== 'draft') return;
       const avail = getPoolAvailable();
       if (avail < ch.plannedTokens) {
-        showToast('可用激励池余额不足，请先向浣溪申请增池');
+        showToast('可用余额不足，请先申请追加额度');
         return;
       }
       ch.status = 'active';
       ch.reservedTokens = ch.plannedTokens;
       ch.originalReserved = ch.plannedTokens;
       renderIncentives();
-      showToast(`已冻结 ${fmtNum(ch.reservedTokens)} Token 预算，《${ch.title}》正式发布！`);
+      showToast(`已冻结 ${fmtNum(ch.reservedTokens)} Token 并发布《${ch.title}》`);
     }
 
     function openTopupForChallenge(chId) {
@@ -1776,7 +2112,7 @@
       const avail = getPoolAvailable();
       const gap = Math.max(1000000, ch.plannedTokens - avail);
       const rec = Math.max(5000000, Math.ceil(gap / 1000000) * 1000000);
-      openPoolTopupModal(rec, `用于发布新主题挑战《${ch.title}》（${ch.tag}，需预占冻结 ${fmtNum(ch.plannedTokens)} Token）及社团志愿者日常运营激励。`);
+      openPoolTopupModal(rec, `挑战《${ch.title}》（${ch.tag}）预算预占（需 ${fmtNum(ch.plannedTokens)} Token）。`);
     }
 
     // ==================== SETTLEMENT CONFIRMATION MODAL ====================
@@ -1809,13 +2145,13 @@
       });
 
       if (!winners.length) {
-        showToast('请先为至少 1 件作品选择拟授奖项档位');
+        showToast('请至少选择 1 件获奖作品');
         return;
       }
       const overTier = ch.tiers.find(t => (tierCountMap[t.id] || 0) > t.count);
       const proposedTotal = winners.reduce((s, x) => s + x.amount, 0);
       if (overTier || proposedTotal > ch.reservedTokens) {
-        showToast('奖项名额或预算校验未通过，请核对后再试');
+        showToast('名额或预算校验未通过');
         return;
       }
 
@@ -1825,32 +2161,30 @@
       const refund = X - Y;
       const nextAvail = getPoolAvailable() + refund;
 
-      document.getElementById('settleModalTitle').textContent = `确认结算《${ch.title}》并发放公示`;
-      document.getElementById('settleModalWinnersBox').innerHTML = winners.map(w => `
-        <div class="px-4 py-2.5 flex items-center justify-between gap-2">
-          <div>
-            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold mr-1.5" style="background:#F1F1FD; color:#624AFF;">${escHtml(w.tierName)}</span>
-            <span class="font-semibold">《${escHtml(w.workTitle)}》</span>
-            <span class="text-[11px] ml-1" style="color:var(--muted);">· ${escHtml(w.author)} (<span class="mono">${escHtml(w.email)}</span>)</span>
-          </div>
-          <span class="mono font-bold shrink-0" style="color:var(--accent-ink);">+${fmtNum(w.amount)}</span>
-        </div>
+      document.getElementById('settleModalTitle').textContent = `确认结算 · ${ch.title}`;
+      document.getElementById('settleModalWinnersBody').innerHTML = winners.map(w => `
+        <tr>
+          <td><span class="adm-badge badge-violet">${escHtml(w.tierName)}</span></td>
+          <td class="font-medium text-[#1E2238]">${escHtml(w.workTitle)}</td>
+          <td>${escHtml(w.author)} <span class="mono text-[11px] text-[#848CA4]">(${escHtml(w.email)})</span></td>
+          <td class="text-right mono font-semibold text-[#006D75]">+${fmtNum(w.amount)}</td>
+        </tr>
       `).join('');
 
       document.getElementById('settleModalLedgerBox').innerHTML = `
-        <div class="flex justify-between"><span>本场原预占冻结预算（全额核销解冻）：</span><strong class="mono">${fmtNum(X)} Token</strong></div>
-        <div class="flex justify-between"><span>本次实际发放奖金（共 ${winners.length} 件获奖作品）：</span><strong class="mono" style="color:#624AFF;">${fmtNum(Y)} Token</strong></div>
-        <div class="flex justify-between"><span>未用完自动退回激励池差额：</span><strong class="mono" style="color:var(--accent-ink);">+${fmtNum(refund)} Token</strong></div>
-        <div class="pt-1.5 border-t border-slate-200 flex justify-between text-[11px]" style="color:var(--muted);">
-          <span>结算后学院可自由支配余额将更新为：</span>
-          <strong class="mono" style="color:var(--ink);">${fmtNum(nextAvail)} Token (${fmtM(nextAvail)})</strong>
+        <div class="flex justify-between"><span class="text-[#4E5569]">原预占冻结</span><strong class="mono">${fmtNum(X)} Token</strong></div>
+        <div class="flex justify-between"><span class="text-[#4E5569]">本次实发总额 (${winners.length} 人)</span><strong class="mono text-[#624AFF]">${fmtNum(Y)} Token</strong></div>
+        <div class="flex justify-between"><span class="text-[#4E5569]">退回可用池</span><strong class="mono text-[#006D75]">+${fmtNum(refund)} Token</strong></div>
+        <div class="pt-1.5 border-t border-[#E5E8F0] flex justify-between text-[11px]">
+          <span class="text-[#848CA4]">结算后可用余额</span>
+          <strong class="mono text-[#1E2238]">${fmtNum(nextAvail)} Token (${fmtM(nextAvail)})</strong>
         </div>
       `;
 
       const warnEl = document.getElementById('settleModalPendingWarn');
       if (pendingWorks.length > 0) {
         warnEl.classList.remove('hidden');
-        warnEl.textContent = `提示：本场仍有 ${pendingWorks.length} 件待审作品未上架，确认结算后本场挑战将正式收官并同步公示名单至学生端。`;
+        warnEl.textContent = `本场仍有 ${pendingWorks.length} 件待审作品未纳入评奖。`;
       } else {
         warnEl.classList.add('hidden');
       }
@@ -1898,7 +2232,7 @@
       ch.dispatchedTokens = Y;
       ch.reservedTokens = 0;
       ch.status = 'settled';
-      ch.deadlineLabel = '刚刚已开奖公示';
+      ch.deadlineLabel = '已结算';
       ch.winners = winners;
 
       poolDispatched += Y;
@@ -1906,33 +2240,33 @@
       const winnerSummary = winners.map(w => `${w.tierName} ${w.author} +${fmtShortK(w.amount)}`).join(' / ');
       dispatchHistory.unshift({
         kind: 'challenge',
-        target: `${winners.map(w => w.author).join('、')}（共 ${winners.length} 人获奖）`,
-        type: `主题挑战批量结算 · ${ch.tag}`,
+        target: `${winners.map(w => w.author).join('、')}（${winners.length} 人）`,
+        type: `挑战赛结算 · ${ch.tag}`,
         amount: Y,
-        reason: `《${ch.title}》开奖公示（${winnerSummary}；原预占 ${fmtShortK(X)}，未用 ${fmtShortK(refund)} 已自动退回激励池）`,
+        reason: `《${ch.title}》结算（${winnerSummary}；预占 ${fmtShortK(X)} / 退回 ${fmtShortK(refund)}）`,
         time: '刚刚'
       });
 
       closeSettleConfirmModal();
       renderIncentives();
-      showToast(`《${ch.title}》已完成结算公示！实发 ${fmtNum(Y)} Token，退回池子 ${fmtNum(refund)} Token`);
+      showToast(`已结算《${ch.title}》：实发 ${fmtNum(Y)}，退回 ${fmtNum(refund)} Token`);
     }
 
-    // ==================== CREATE / EDIT CHALLENGE MODAL (#challengeConfigModal) ====================
+    // ==================== CREATE / EDIT CHALLENGE MODAL ====================
     function openChallengeModal(editChId) {
       editingChallengeId = editChId || null;
       const existing = editChId ? challenges.find(c => c.id === editChId) : null;
       document.getElementById('chModalFormError').classList.add('hidden');
 
       if (existing) {
-        document.getElementById('chModalHeading').textContent = `编辑挑战规则与奖项预算 · 《${existing.title}》`;
+        document.getElementById('chModalHeading').textContent = `编辑挑战赛 · ${existing.title}`;
         document.getElementById('chTitleInput').value = existing.title;
         document.getElementById('chTagInput').value = existing.tag;
         document.getElementById('chDeadlineInput').value = existing.deadline || '2026-12-20';
         document.getElementById('chDescInput').value = existing.desc;
         modalTiersDraft = existing.tiers.map(t => ({ id: t.id, name: t.name, count: t.count, reward: t.reward }));
       } else {
-        document.getElementById('chModalHeading').textContent = '发起新主题挑战（激励池预算预占）';
+        document.getElementById('chModalHeading').textContent = '新建挑战赛';
         document.getElementById('chTitleInput').value = '';
         document.getElementById('chTagInput').value = '';
         document.getElementById('chDeadlineInput').value = '2026-12-20';
@@ -1971,23 +2305,23 @@
     function renderModalTierRows() {
       const box = document.getElementById('chTiersContainer');
       box.innerHTML = modalTiersDraft.map((t, i) => `
-        <div class="grid grid-cols-12 gap-2 px-3.5 py-2.5 items-center bg-white">
+        <div class="grid grid-cols-12 gap-2 px-3 py-2 items-center bg-white">
           <div class="col-span-4">
-            <input type="text" value="${escHtml(t.name)}" oninput="updateModalTier(${i}, 'name', this.value)" placeholder="奖项名称" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs" />
+            <input type="text" value="${escHtml(t.name)}" oninput="updateModalTier(${i}, 'name', this.value)" placeholder="奖项名称" class="adm-input w-full px-2.5 py-1.5" />
           </div>
           <div class="col-span-2">
-            <input type="number" min="1" step="1" value="${t.count}" oninput="updateModalTier(${i}, 'count', this.value)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 mono text-xs" />
+            <input type="number" min="1" step="1" value="${t.count}" oninput="updateModalTier(${i}, 'count', this.value)" class="adm-input w-full px-2.5 py-1.5 mono" />
           </div>
           <div class="col-span-3">
-            <input type="number" min="10000" step="50000" value="${t.reward}" oninput="updateModalTier(${i}, 'reward', this.value)" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 mono text-xs" />
+            <input type="number" min="10000" step="50000" value="${t.reward}" oninput="updateModalTier(${i}, 'reward', this.value)" class="adm-input w-full px-2.5 py-1.5 mono" />
           </div>
-          <div id="tierRowSub-${i}" class="col-span-2 text-right mono font-semibold text-xs" style="color:var(--ink);">
+          <div id="tierRowSub-${i}" class="col-span-2 text-right mono font-semibold text-xs text-[#1E2238]">
             ${fmtNum((Number(t.count) || 0) * (Number(t.reward) || 0))}
           </div>
           <div class="col-span-1 text-right">
             ${modalTiersDraft.length > 1
-              ? `<button type="button" onclick="removeModalTierRow(${i})" class="w-6 h-6 rounded-full hover:bg-rose-50 text-xs font-bold" style="color:var(--coral);" title="删除此档">✕</button>`
-              : `<span class="text-[11px]" style="color:var(--muted);">-</span>`}
+              ? `<button type="button" onclick="removeModalTierRow(${i})" class="w-6 h-6 rounded hover:bg-[#FFF2F0] text-xs font-bold text-[#FF4D4F]">✕</button>`
+              : `<span class="text-[11px] text-[#848CA4]">—</span>`}
           </div>
         </div>
       `).join('');
@@ -2049,22 +2383,22 @@
         checkBox.style.borderColor = '#FFE58F';
         document.getElementById('chModalNeededText').style.color = '#D48806';
         msgEl.style.color = '#AD6800';
-        msgEl.textContent = `⚠️ 超出当前可用激励池余额（还差 ${fmtNum(gap)} Token）！可先存为「待增池草稿」，或直接向浣溪提交追加激励池申请。`;
+        msgEl.textContent = `超出可用余额，差额 ${fmtNum(gap)} Token`;
 
         btnPublish.classList.add('hidden');
         btnDraft.classList.remove('hidden');
         btnTopup.classList.remove('hidden');
-        btnDraft.textContent = isEditingActive ? '转为待增池草稿并释放原冻结' : '先存为待增池草稿';
+        btnDraft.textContent = isEditingActive ? '转为草稿并释放原冻结' : '存为草稿';
       } else {
         checkBox.style.background = '#E6FFFB';
         checkBox.style.borderColor = '#99F6E4';
         document.getElementById('chModalNeededText').style.color = '#006D75';
         msgEl.style.color = '#006D75';
-        msgEl.textContent = `✓ 可用激励池余额充足：${isEditingActive ? '保存后将更新本场预占冻结预算' : '发布后将立即从可用池预占冻结 ' + fmtNum(needed) + ' Token'}，剩余可自由支配 ${fmtNum(effAvail - needed)} Token。`;
+        msgEl.textContent = `余额充足，冻结后剩余可用 ${fmtNum(effAvail - needed)} Token`;
 
         btnPublish.classList.remove('hidden');
         btnPublish.disabled = needed <= 0;
-        btnPublish.textContent = isEditingActive ? '保存规则并更新预占预算' : '冻结预算并发布挑战';
+        btnPublish.textContent = isEditingActive ? '保存并更新预算' : '冻结并发布';
         btnDraft.classList.add('hidden');
         btnTopup.classList.add('hidden');
       }
@@ -2075,7 +2409,7 @@
       const title = document.getElementById('chTitleInput').value.trim();
       let tag = document.getElementById('chTagInput').value.trim();
       const deadline = document.getElementById('chDeadlineInput').value || '2026-12-20';
-      const desc = document.getElementById('chDescInput').value.trim() || '面向全院学生征集 AI 创新实践作品，提交可体验演示链接参与评奖。';
+      const desc = document.getElementById('chDescInput').value.trim() || '提交可交互演示链接参与评奖。';
 
       if (!title) {
         errEl.textContent = '请填写挑战名称';
@@ -2098,7 +2432,7 @@
         .filter(t => t.count > 0 && t.reward > 0);
 
       if (!validTiers.length) {
-        errEl.textContent = '请至少配置 1 个名额与奖励大于 0 的有效奖项档位';
+        errEl.textContent = '请至少配置 1 个有效奖项档位';
         errEl.classList.remove('hidden');
         return;
       }
@@ -2106,7 +2440,7 @@
       const needed = validTiers.reduce((s, t) => s + t.count * t.reward, 0);
       const effAvail = getEffectiveModalAvail();
       if (mode === 'publish' && needed > effAvail) {
-        errEl.textContent = '预计预占总额超出当前可用余额，请选择存为草稿或申请增池';
+        errEl.textContent = '超出当前可用余额，请存为草稿或申请增池';
         errEl.classList.remove('hidden');
         return;
       }
@@ -2129,11 +2463,11 @@
           if (existing.status === 'draft') existing.status = 'active';
           existing.reservedTokens = needed;
           existing.originalReserved = needed;
-          existing.deadlineLabel = existing.status === 'judging' ? '今日截稿 · 待定奖结算' : `${shortDate} 截稿`;
+          existing.deadlineLabel = existing.status === 'judging' ? '待定奖结算' : `${shortDate} 截稿`;
         } else {
           existing.status = 'draft';
           existing.reservedTokens = 0;
-          existing.deadlineLabel = '待增池草稿';
+          existing.deadlineLabel = '草稿';
         }
       } else {
         const newCh = {
@@ -2142,7 +2476,7 @@
           tag,
           status: mode === 'publish' ? 'active' : 'draft',
           deadline,
-          deadlineLabel: mode === 'publish' ? `${shortDate} 截稿` : '待增池草稿',
+          deadlineLabel: mode === 'publish' ? `${shortDate} 截稿` : '草稿',
           desc,
           tiers: validTiers,
           reservedTokens: mode === 'publish' ? needed : 0,
@@ -2162,16 +2496,16 @@
       if (mode === 'topup') {
         const gap = Math.max(1000000, needed - getPoolAvailable());
         const rec = Math.max(5000000, Math.ceil(gap / 1000000) * 1000000);
-        openPoolTopupModal(rec, `为新立项挑战《${title}》（${tag}，需预占冻结 ${fmtNum(needed)} Token）申请追加学院激励池额度。`);
-        showToast(`已将《${title}》自动保存为待增池草稿，请提交增池申请`);
+        openPoolTopupModal(rec, `挑战《${title}》（${tag}）预算预占（需 ${fmtNum(needed)} Token）。`);
+        showToast(`已存为草稿：《${title}》`);
       } else if (mode === 'draft') {
-        showToast(`《${title}》已保存为「待增池草稿」（未扣减当前可用池）`);
+        showToast(`已存为草稿：《${title}》`);
       } else {
-        showToast(`《${title}》已发布并冻结 ${fmtNum(needed)} Token 激励池预算`);
+        showToast(`已发布《${title}》并冻结 ${fmtNum(needed)} Token`);
       }
     }
 
-    // ==================== SUBVIEW B: VOLUNTEER INCENTIVES & TOPUP ====================
+    // ==================== SUBVIEW B: VOLUNTEER & LOGS ====================
     function setVolQuickAmount(val) {
       document.getElementById('rewAmount').value = val;
       validateVolunteerAmountInline();
@@ -2184,7 +2518,7 @@
       const btn = document.getElementById('btnDispatchVol');
       if (amount > avail) {
         warnEl.classList.remove('hidden');
-        warnEl.textContent = `超出当前可自由支配余额（${fmtNum(avail)} Token）！进行中挑战冻结的 ${fmtNum(getPoolReserved())} Token 不可挪用。`;
+        warnEl.textContent = `超出可用余额 (${fmtNum(avail)} Token)`;
         btn.disabled = true;
       } else {
         warnEl.classList.add('hidden');
@@ -2193,31 +2527,31 @@
     }
 
     function renderVolunteerAndLogs() {
-      document.getElementById('topupRequestsList').innerHTML = topupRequests.map(r => `
-        <div class="px-5 py-3.5 flex items-center justify-between gap-3">
-          <div>
-            <div class="font-semibold mono">${escHtml(r.id)} · +${fmtM(r.amount)} Token（${fmtNum(r.amount)}）</div>
-            <div class="text-[11px] mt-0.5" style="color:var(--muted);">${escHtml(r.reason)} · ${escHtml(r.time)}</div>
-          </div>
-          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium shrink-0" style="${r.status.includes('待') ? 'background:var(--warn-soft); color:var(--warn);' : 'background:var(--accent-soft); color:var(--accent-ink);'}">${escHtml(r.status)}</span>
-        </div>
+      document.getElementById('topupRequestsBody').innerHTML = topupRequests.map(r => `
+        <tr>
+          <td class="mono font-medium text-[#1E2238] whitespace-nowrap">${escHtml(r.id)}</td>
+          <td class="text-right mono font-semibold text-[#624AFF] whitespace-nowrap">+${fmtNum(r.amount)}</td>
+          <td class="text-[#4E5569]">${escHtml(r.reason)}</td>
+          <td class="mono text-[#848CA4] whitespace-nowrap">${escHtml(r.time)}</td>
+          <td class="text-right whitespace-nowrap">
+            <span class="adm-badge ${r.status.includes('待') ? 'badge-warn' : 'badge-teal'}">${escHtml(r.status)}</span>
+          </td>
+        </tr>
       `).join('');
 
-      document.getElementById('dispatchHistoryList').innerHTML = dispatchHistory.map(d => {
+      document.getElementById('dispatchTotalCount').textContent = `${dispatchHistory.length} 笔`;
+      document.getElementById('dispatchHistoryBody').innerHTML = dispatchHistory.map(d => {
         const isChallenge = d.kind === 'challenge';
         return `
-          <div class="px-5 py-3.5 flex items-start justify-between gap-3">
-            <div class="space-y-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold" style="${isChallenge ? 'background:#F1F1FD; color:#624AFF;' : 'background:var(--accent-soft); color:var(--accent-ink);'}">${isChallenge ? '挑战批量结算' : '志愿者零散激励'}</span>
-                <span class="font-semibold">${escHtml(d.target)}</span>
-                <span class="text-[11px]" style="color:var(--muted);">· ${escHtml(d.type)}</span>
-              </div>
-              <div class="text-[11px] leading-relaxed" style="color:#464D5B;">${escHtml(d.reason)}</div>
-              <div class="text-[11px]" style="color:var(--muted);">${escHtml(d.time)} · 已同步浣溪审计</div>
-            </div>
-            <span class="mono font-bold text-xs shrink-0" style="color:${isChallenge ? '#624AFF' : 'var(--accent-ink)'};">+${fmtNum(d.amount)}</span>
-          </div>
+          <tr>
+            <td class="whitespace-nowrap">
+              <span class="adm-badge ${isChallenge ? 'badge-violet' : 'badge-teal'}">${isChallenge ? '挑战结算' : '志愿者激励'}</span>
+            </td>
+            <td class="font-medium text-[#1E2238]">${escHtml(d.target)}</td>
+            <td class="text-[#4E5569]">${escHtml(d.reason)}</td>
+            <td class="mono text-[#848CA4] whitespace-nowrap">${escHtml(d.time)}</td>
+            <td class="text-right mono font-semibold whitespace-nowrap ${isChallenge ? 'text-[#624AFF]' : 'text-[#006D75]'}">+${fmtNum(d.amount)}</td>
+          </tr>
         `;
       }).join('');
     }
@@ -2230,12 +2564,12 @@
       const avail = getPoolAvailable();
 
       if (!target || amount <= 0) {
-        showToast('请填写有效的志愿者教育邮箱与正整数发放额度');
+        showToast('请填写有效邮箱与发放额度');
         return;
       }
       if (amount > avail) {
         validateVolunteerAmountInline();
-        showToast(`可用余额不足（当前仅剩 ${fmtNum(avail)} Token 可自由支配），不可动用挑战冻结资金`);
+        showToast(`超出可用余额 (${fmtNum(avail)} Token)`);
         return;
       }
 
@@ -2249,7 +2583,7 @@
         time: '刚刚'
       });
       renderIncentives();
-      showToast(`已从可用余额向 ${target} 发放 ${fmtNum(amount)} Token（已同步浣溪审计）`);
+      showToast(`已向 ${target} 发放 ${fmtNum(amount)} Token`);
     }
 
     function openPoolTopupModal(prefillAmount, prefillReason) {
@@ -2264,20 +2598,20 @@
 
     function submitPoolTopup() {
       const amount = Math.max(1000000, Math.floor(Number(document.getElementById('topupAmount').value) || 10000000));
-      const reason = document.getElementById('topupReason').value.trim() || '学院主题挑战赛立项与社团志愿者激励池补充';
+      const reason = document.getElementById('topupReason').value.trim() || '学院挑战赛与志愿者激励池增补';
       topupRequests.unshift({
         id: 'REQ-1126-0' + (topupRequests.length + 1),
         amount,
         reason,
         time: '刚刚',
-        status: '待浣溪审批'
+        status: '待审批'
       });
       closePoolTopupModal();
       if (activeMenu === 'incentives') {
         incSub = 'volunteer';
         renderIncentives();
       }
-      showToast('追加激励池申请已提交至「浣溪内部平台管理端」审批进度列表');
+      showToast(`已提交增池申请 (+${fmtM(amount)})`);
     }
 
     // Boot
