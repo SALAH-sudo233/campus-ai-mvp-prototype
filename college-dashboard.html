@@ -3,44 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>浣溪AI Lab · 学院 AI 实训与创新成果数据大盘</title>
+  <title>浣溪AI Lab · 学生 AI 创作实践看板</title>
   <script src="./tailwindcss.min.js"></script>
   <style>
     :root {
-      --bg-page: #F6F8FC;
+      --bg-page: #F7F9FC;
       --bg-mesh:
-        radial-gradient(ellipse 55% 36% at 14% 0%, rgba(98, 74, 255, 0.07), transparent 70%),
-        radial-gradient(ellipse 48% 32% at 88% 4%, rgba(19, 194, 194, 0.07), transparent 70%),
-        #F6F8FC;
+        radial-gradient(ellipse 52% 34% at 15% 0%, rgba(98, 74, 255, 0.07), transparent 70%),
+        radial-gradient(ellipse 46% 30% at 86% 4%, rgba(19, 194, 194, 0.07), transparent 70%),
+        #F7F9FC;
       --bg-surface: #FFFFFF;
-      --bg-subtle: #F7F9FD;
-      --bg-chip: #F1F3FA;
-      --bg-hover: #EEF1FA;
-      --border: #E5E8F2;
-      --border-strong: #D3D8EC;
-      --grid-line: #ECEFF7;
+      --bg-subtle: #F6F8FD;
+      --bg-chip: #F0F3FA;
+      --border: #E8ECF4;
+      --border-strong: #D5DCF0;
+      --grid-line: #EEF1F8;
       --ink: #1E1D3A;
-      --ink-sub: #4A5068;
-      --muted: #7C84A3;
+      --ink-sub: #4E556E;
+      --muted: #848CA8;
       --primary: #624AFF;
-      --primary-soft: #F1F0FF;
+      --primary-soft: #F1EFFF;
       --cyan: #13C2C2;
-      --cyan-bright: #36CFD1;
       --cyan-soft: #E6FFFB;
-      --cyan-ink: #006D75;
+      --cyan-ink: #007A82;
       --blue: #3B82F6;
-      --blue-soft: #EFF6FF;
       --amber: #F59E0B;
-      --amber-soft: #FEF3C7;
-      --amber-ink: #B45309;
-      --card-shadow: 0 4px 24px -4px rgba(30, 29, 58, 0.05), 0 1px 2px rgba(30, 29, 58, 0.03);
-      --card-hover-shadow: 0 14px 32px -6px rgba(98, 74, 255, 0.13);
-      --work-shell: #F7F9FD;
-      --work-shell-hover: #F1F4FC;
+      --card-shadow: 0 6px 28px -6px rgba(30, 29, 58, 0.05), 0 1px 2px rgba(30, 29, 58, 0.03);
+      --card-hover-shadow: 0 16px 36px -8px rgba(98, 74, 255, 0.14);
+      --work-shell: #FFFFFF;
       --work-thumb-border: #FFFFFF;
       --drawer-bg: #FFFFFF;
       --tooltip-bg: rgba(24, 24, 52, 0.94);
-      --backdrop: rgba(20, 20, 43, 0.36);
+      --backdrop: rgba(20, 20, 43, 0.34);
     }
 
     body.theme-dark {
@@ -48,34 +42,27 @@
       --bg-mesh:
         radial-gradient(ellipse 58% 42% at 15% 6%, rgba(98, 74, 255, 0.22), transparent 68%),
         radial-gradient(ellipse 50% 38% at 86% 12%, rgba(54, 207, 209, 0.15), transparent 66%),
-        radial-gradient(ellipse 60% 45% at 50% 92%, rgba(98, 74, 255, 0.12), transparent 72%),
         #090B1A;
-      --bg-surface: rgba(19, 22, 48, 0.80);
-      --bg-subtle: rgba(29, 34, 68, 0.72);
-      --bg-chip: rgba(40, 46, 88, 0.76);
-      --bg-hover: rgba(52, 59, 108, 0.82);
-      --border: rgba(129, 140, 248, 0.18);
-      --border-strong: rgba(129, 140, 248, 0.36);
-      --grid-line: rgba(148, 163, 218, 0.13);
+      --bg-surface: rgba(19, 22, 48, 0.82);
+      --bg-subtle: rgba(28, 33, 66, 0.72);
+      --bg-chip: rgba(40, 46, 88, 0.78);
+      --border: rgba(129, 140, 248, 0.16);
+      --border-strong: rgba(129, 140, 248, 0.34);
+      --grid-line: rgba(148, 163, 218, 0.12);
       --ink: #F4F6FF;
-      --ink-sub: #C5CCE8;
+      --ink-sub: #C6CDE8;
       --muted: #8A93B8;
-      --primary: #816BFF;
-      --primary-soft: rgba(129, 107, 255, 0.18);
+      --primary: #8470FF;
+      --primary-soft: rgba(132, 112, 255, 0.18);
       --cyan: #2CE0E2;
-      --cyan-bright: #49F2F4;
       --cyan-soft: rgba(44, 224, 226, 0.15);
       --cyan-ink: #5CF3F5;
       --blue: #60A5FA;
-      --blue-soft: rgba(96, 165, 250, 0.16);
       --amber: #FBBF24;
-      --amber-soft: rgba(251, 191, 36, 0.16);
-      --amber-ink: #FCD34D;
       --card-shadow: 0 20px 44px -10px rgba(3, 4, 15, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-      --card-hover-shadow: 0 22px 48px -8px rgba(98, 74, 255, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-      --work-shell: rgba(24, 28, 58, 0.84);
-      --work-shell-hover: rgba(33, 38, 76, 0.94);
-      --work-thumb-border: rgba(255, 255, 255, 0.18);
+      --card-hover-shadow: 0 22px 48px -8px rgba(98, 74, 255, 0.32);
+      --work-shell: rgba(21, 25, 54, 0.86);
+      --work-thumb-border: rgba(255, 255, 255, 0.16);
       --drawer-bg: #11142B;
       --tooltip-bg: rgba(12, 14, 34, 0.96);
       --backdrop: rgba(4, 5, 14, 0.68);
@@ -97,16 +84,15 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-variant-numeric: tabular-nums;
     }
-    h1, h2, h3 { letter-spacing: -0.015em; }
 
     .exec-card {
       background: var(--bg-surface);
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 24px;
       box-shadow: var(--card-shadow);
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
-      transition: background-color 220ms ease, border-color 220ms ease, box-shadow 220ms ease, transform 220ms cubic-bezier(0.22, 0.78, 0.2, 1);
+      transition: border-color 220ms ease, box-shadow 220ms ease, transform 220ms cubic-bezier(0.22, 0.78, 0.2, 1);
     }
     .kpi-card:hover {
       border-color: var(--border-strong);
@@ -118,37 +104,17 @@
       position: relative;
       overflow: hidden;
       background:
-        radial-gradient(ellipse 52% 90% at 88% 16%, rgba(54, 207, 209, 0.28), transparent 66%),
-        radial-gradient(ellipse 46% 80% at 12% 96%, rgba(129, 107, 255, 0.38), transparent 68%),
-        linear-gradient(132deg, #171633 0%, #272162 52%, #3E2EC9 100%);
+        radial-gradient(ellipse 50% 90% at 88% 18%, rgba(54, 207, 209, 0.26), transparent 66%),
+        radial-gradient(ellipse 46% 80% at 14% 96%, rgba(129, 107, 255, 0.36), transparent 68%),
+        linear-gradient(132deg, #181736 0%, #282166 54%, #4131CE 100%);
       border-bottom: 1px solid rgba(255, 255, 255, 0.10);
     }
     body.theme-dark .hero-banner {
       background:
-        radial-gradient(ellipse 55% 95% at 86% 18%, rgba(44, 224, 226, 0.22), transparent 65%),
-        radial-gradient(ellipse 50% 85% at 14% 90%, rgba(129, 107, 255, 0.28), transparent 68%),
+        radial-gradient(ellipse 55% 95% at 86% 18%, rgba(44, 224, 226, 0.20), transparent 65%),
+        radial-gradient(ellipse 50% 85% at 14% 90%, rgba(129, 107, 255, 0.26), transparent 68%),
         linear-gradient(180deg, rgba(16, 18, 42, 0.92) 0%, rgba(11, 13, 30, 0.78) 100%);
-      border-bottom: 1px solid rgba(129, 140, 248, 0.18);
-    }
-    .hero-grid-pattern {
-      background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
-      background-size: 22px 22px;
-      mask-image: linear-gradient(90deg, rgba(0,0,0,0.2), rgba(0,0,0,0.85) 50%, rgba(0,0,0,0.2));
-      -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,0.2), rgba(0,0,0,0.85) 50%, rgba(0,0,0,0.2));
-    }
-
-    .section-eyebrow { display: flex; align-items: center; gap: 10px; }
-    .section-icon-box {
-      width: 30px;
-      height: 30px;
-      border-radius: 9px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, rgba(98, 74, 255, 0.14), rgba(19, 194, 194, 0.14));
-      border: 1px solid var(--border);
-      color: var(--primary);
-      flex-shrink: 0;
+      border-bottom: 1px solid rgba(129, 140, 248, 0.16);
     }
 
     .chart-tooltip {
@@ -157,77 +123,40 @@
       pointer-events: none;
       background: var(--tooltip-bg);
       color: #F8FAFC;
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 12px;
-      padding: 8px 11px;
-      font-size: 11px;
-      box-shadow: 0 12px 28px rgba(8, 10, 28, 0.36);
+      padding: 8px 12px;
+      font-size: 11.5px;
+      box-shadow: 0 12px 28px rgba(8, 10, 28, 0.32);
       backdrop-filter: blur(10px);
-      transition: opacity 120ms ease, transform 120ms ease;
+      white-space: nowrap;
     }
-
-    .spotlight-card {
-      position: relative;
-      border-radius: 20px;
-      padding: 12px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      cursor: pointer;
-      transition: transform 220ms cubic-bezier(0.22, 0.78, 0.2, 1), box-shadow 220ms ease, border-color 220ms ease;
-    }
-    .spotlight-card:hover {
-      transform: translateY(-3px);
-      border-color: var(--border-strong);
-      box-shadow: var(--card-hover-shadow);
-    }
-    .spotlight-inner {
-      position: relative;
-      z-index: 2;
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px 18px;
-      width: 64%;
-      backdrop-filter: blur(12px);
-    }
-    .spotlight-cover {
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 45%;
-      height: 100%;
-      object-fit: cover;
-      mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.55) 26%, #000 58%);
-      -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.55) 26%, #000 58%);
-      transition: transform 320ms cubic-bezier(0.22, 0.78, 0.2, 1);
-    }
-    .spotlight-card:hover .spotlight-cover { transform: scale(1.05); }
 
     .work-card {
       background: var(--work-shell);
       border: 1px solid var(--border);
       border-radius: 24px;
+      box-shadow: var(--card-shadow);
       overflow: visible !important;
-      transition: background-color 200ms ease, border-color 220ms ease, transform 220ms cubic-bezier(0.22, 0.78, 0.2, 1), box-shadow 220ms ease;
+      transition: border-color 200ms ease, transform 220ms cubic-bezier(0.22, 0.78, 0.2, 1), box-shadow 220ms ease;
     }
     .work-card:hover {
-      background: var(--work-shell-hover);
       border-color: var(--border-strong);
-      transform: translateY(-3px);
+      transform: translateY(-4px);
       box-shadow: var(--card-hover-shadow);
     }
     .work-card .thumb-wrap {
-      margin: -14px 12px 0 12px;
-      width: calc(100% - 24px);
+      margin: -14px 14px 0 14px;
+      width: calc(100% - 28px);
       border-radius: 18px;
       border: 2px solid var(--work-thumb-border);
-      box-shadow: 0 12px 24px rgba(62, 52, 148, 0.20);
+      box-shadow: 0 12px 24px rgba(62, 52, 148, 0.18);
       transform-origin: 50% 50%;
       transition: transform 240ms cubic-bezier(0.22, 0.78, 0.2, 1), box-shadow 240ms ease;
     }
     .work-card:hover .thumb-wrap {
-      transform: translateY(-4px) rotate(-2.4deg);
-      box-shadow: 0 18px 30px rgba(98, 74, 255, 0.28);
+      transform: translateY(-4px) rotate(-2.2deg);
+      box-shadow: 0 18px 30px rgba(98, 74, 255, 0.26);
     }
 
     .drawer-backdrop {
@@ -236,17 +165,6 @@
       -webkit-backdrop-filter: blur(5px);
     }
     #toast { transition: opacity 200ms ease, transform 200ms ease; }
-
-    @keyframes pulseDot {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.45); opacity: 0.55; }
-    }
-    .live-dot { animation: pulseDot 2.2s ease-in-out infinite; }
-
-    @media (max-width: 640px) {
-      .spotlight-inner { width: 100%; }
-      .spotlight-cover { opacity: 0.18; width: 100%; mask-image: none; -webkit-mask-image: none; }
-    }
   </style>
 </head>
 <body class="antialiased min-h-screen">
@@ -261,688 +179,295 @@
       <a href="./school-ops.html" class="px-2 py-0.5 rounded hover:bg-white/10 text-slate-300 transition">③ 校内运营端</a>
       <a href="./platform-admin.html" class="px-2 py-0.5 rounded hover:bg-white/10 text-slate-300 transition">④ 平台管理端</a>
     </div>
-    <span class="mono text-[10px] text-slate-400 tracking-wider hidden sm:inline shrink-0">ENV: COLLEGE-DASHBOARD · READONLY</span>
+    <span class="mono text-[10px] text-slate-400 tracking-wider hidden sm:inline shrink-0">COLLEGE VIEW</span>
   </div>
 
   <!-- Toast -->
-  <div id="toast" class="fixed top-12 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-medium shadow-xl pointer-events-none opacity-0 -translate-y-2" style="background:#27254C; color:#FFFFFF; border:1px solid rgba(255,255,255,0.14);"></div>
+  <div id="toast" class="fixed top-12 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-medium shadow-xl pointer-events-none opacity-0 -translate-y-2" style="background:#27254C; color:#FFFFFF;"></div>
 
-  <!-- Executive Header Banner -->
+  <!-- Header -->
   <header class="hero-banner text-white">
-    <div class="hero-grid-pattern absolute inset-0 pointer-events-none"></div>
-    <div class="relative z-10 max-w-7xl mx-auto px-5 py-6">
+    <div class="max-w-6xl mx-auto px-5 py-7">
       <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="space-y-2">
-          <div class="flex flex-wrap items-center gap-2.5 text-xs">
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-medium bg-white/12 border border-white/15 text-cyan-200">
-              <span class="w-1.5 h-1.5 rounded-full bg-[#36CFD1] live-dot"></span>
-              2026 秋季学期 · 实训遥测直连
-            </span>
-            <span class="mono text-indigo-200/90">2026-11-26 16:15</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-white/20" style="background:linear-gradient(135deg,rgba(98,74,255,0.65),rgba(54,207,209,0.45)); box-shadow:0 8px 20px rgba(18,16,46,0.35);">
-              <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3L2 8l10 5 10-5-10-5z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 10.5v5.2c0 1.7 2.7 3.3 6 3.3s6-1.6 6-3.3v-5.2"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M22 8v6"/>
-              </svg>
-            </div>
-            <h1 class="text-xl sm:text-2xl lg:text-[26px] font-bold tracking-tight leading-snug">华中科技大学软件学院 · AI 实训与创新成果数据大盘</h1>
-          </div>
+        <div class="space-y-1.5">
+          <div class="text-xs text-indigo-200 font-medium">华中科技大学软件学院 · 2026 秋</div>
+          <h1 class="text-2xl sm:text-[28px] font-bold tracking-tight">学生 AI 创作与成长看板</h1>
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5 text-xs">
           <div class="inline-flex p-1 rounded-full bg-white/10 border border-white/15 backdrop-blur">
-            <button onclick="setPeriod('7d')" data-period="7d" class="period-btn px-3 py-1.5 rounded-full font-medium transition">近 7 天</button>
-            <button onclick="setPeriod('30d')" data-period="30d" class="period-btn px-3 py-1.5 rounded-full font-medium transition">近 30 天</button>
-            <button onclick="setPeriod('term')" data-period="term" class="period-btn px-3 py-1.5 rounded-full font-medium transition">本学期累计</button>
+            <button onclick="setPeriod('7d')" data-period="7d" class="period-btn px-3.5 py-1.5 rounded-full font-medium transition">近 7 天</button>
+            <button onclick="setPeriod('30d')" data-period="30d" class="period-btn px-3.5 py-1.5 rounded-full font-medium transition">近 30 天</button>
+            <button onclick="setPeriod('term')" data-period="term" class="period-btn px-3.5 py-1.5 rounded-full font-medium transition">本学期</button>
           </div>
 
-          <button id="themeToggleBtn" onclick="toggleProjectionMode()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full font-semibold border border-cyan-300/35 bg-white/12 hover:bg-white/20 text-white transition">
+          <button id="themeToggleBtn" onclick="toggleProjectionMode()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-semibold border border-cyan-300/35 bg-white/12 hover:bg-white/20 text-white transition">
             <span id="themeToggleIcon" class="inline-flex"></span>
-            <span id="themeToggleLabel">沉浸投屏大屏</span>
-          </button>
-
-          <button onclick="openBriefModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white text-[#1E1D3A] font-semibold hover:bg-indigo-50 transition shadow-sm">
-            <svg class="w-3.5 h-3.5 text-[#624AFF]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            <span>数据简报</span>
+            <span id="themeToggleLabel">沉浸投屏</span>
           </button>
         </div>
       </div>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-5 py-7 space-y-8">
+  <main class="max-w-6xl mx-auto px-5 py-8 space-y-8">
 
-    <!-- ==================== SECTION 1: 核心实训与产出硬指标（4 种专属微缩图表） ==================== -->
-    <section class="space-y-3.5">
-      <div class="flex items-center justify-between gap-3">
-        <div class="section-eyebrow">
-          <span class="section-icon-box">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5h4l3-7 4 11 3-6h4"/>
-            </svg>
-          </span>
-          <h2 class="text-base font-bold leading-tight">实训覆盖、成果交付与校内服务总览</h2>
+    <!-- ==================== 1. 顶部 4 个极简核心数字 ==================== -->
+    <section id="kpiGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5"></section>
+
+    <!-- ==================== 2. 成长趋势：左「用 AI 人数曲线」 + 右「累计诞生作品柱图」 ==================== -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Left: Weekly Active AI Users Curve -->
+      <div class="exec-card p-6 sm:p-7 space-y-4">
+        <div class="flex items-baseline justify-between gap-2">
+          <div>
+            <h2 class="text-base font-bold">每周在用 AI 的同学</h2>
+            <p class="text-xs mt-0.5" style="color:var(--muted);">越来越多同学把 AI 融入日常学习与开发</p>
+          </div>
+          <span id="activeCurveStat" class="mono text-sm font-bold px-2.5 py-1 rounded-full" style="background:var(--primary-soft); color:var(--primary);">438 人/周</span>
         </div>
-        <span id="periodScopeHint" class="mono text-[11px]" style="color:var(--muted);">口径：近 30 天</span>
+
+        <div class="relative pt-1" onmouseleave="hideTip('userCurveTip')">
+          <div id="userCurveSvg" class="w-full"></div>
+          <div id="userCurveTip" class="chart-tooltip hidden"></div>
+        </div>
       </div>
 
-      <div id="kpiGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
-    </section>
-
-    <!-- ==================== SECTION 2: 赛训拉动归因双轴图 + 居中梯形漏斗 + 时段热力矩阵 ==================== -->
-    <section class="space-y-3.5">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="section-eyebrow">
-          <span class="section-icon-box">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 19h16M5 15l4-5 4 3 6-8"/>
-            </svg>
-          </span>
-          <h2 class="text-base font-bold leading-tight">赛训活动产出拉动与五阶实训转化漏斗</h2>
-        </div>
-        <div id="trendLegendBar" class="flex flex-wrap items-center gap-4 text-xs" style="color:var(--muted);"></div>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        <!-- Left (7): Interactive Dual-Axis Chart + Floating Tooltip + Visual Ratio Gauges -->
-        <div class="lg:col-span-7 exec-card overflow-hidden flex flex-col justify-between">
-          <div class="p-5 sm:p-6 space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="flex items-center gap-2 flex-wrap">
-                <div class="inline-flex p-0.5 rounded-xl border text-xs" style="background:var(--bg-subtle); border-color:var(--border);">
-                  <button onclick="setTrendMode('works')" id="trendBtnWorks" class="px-2.5 py-1 rounded-lg font-semibold transition">新增作品 × 编码人数</button>
-                  <button onclick="setTrendMode('runs')" id="trendBtnRuns" class="px-2.5 py-1 rounded-lg font-semibold transition">校内运行 × 调用次数</button>
-                </div>
-                <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold mono" style="background:var(--amber-soft); color:var(--amber-ink);">赛事周产出 21.3 件 · 非赛周 8.5 件 (2.5×)</span>
-              </div>
-              <span class="mono text-[11px]" style="color:var(--muted);">点击柱条可筛选当周赛事成果</span>
-            </div>
-
-            <!-- Relative Container for Floating Glass Tooltip -->
-            <div class="relative" onmouseleave="hideTrendTooltip()">
-              <div id="collegeTrendChart" class="w-full"></div>
-              <div id="trendFloatTip" class="chart-tooltip hidden"></div>
-            </div>
-
-            <!-- 3 Mini Visual Gauge Cards (No Plain Text Boxes) -->
-            <div id="trendSubGauges" class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1"></div>
+      <!-- Right: Cumulative Student Works Bar Chart -->
+      <div class="exec-card p-6 sm:p-7 space-y-4">
+        <div class="flex items-baseline justify-between gap-2">
+          <div>
+            <h2 class="text-base font-bold">累计诞生的学生作品</h2>
+            <p class="text-xs mt-0.5" style="color:var(--muted);">同学们从会用工具走向独立做出完整软件</p>
           </div>
-
-          <div style="border-top:1px solid var(--border);">
-            <button onclick="toggleTrendTable()" class="w-full px-6 py-2.5 flex items-center justify-between text-xs font-medium transition hover:opacity-85" style="color:var(--muted);">
-              <span>展开周度实测数据明细表</span>
-              <span id="trendTableArrow" class="mono">▾</span>
-            </button>
-            <div id="collegeTrendTable" class="hidden px-6 pb-4 overflow-x-auto"></div>
-          </div>
+          <span id="worksBarStat" class="mono text-sm font-bold px-2.5 py-1 rounded-full" style="background:var(--cyan-soft); color:var(--cyan-ink);">96 件</span>
         </div>
 
-        <!-- Right (5): Interactive SVG Centered Tapered Funnel + Switchable 7x24h / 12w Heatmap -->
-        <div class="lg:col-span-5 exec-card p-5 sm:p-6 flex flex-col justify-between gap-4">
-          <!-- True SVG Tapered Flow Funnel -->
-          <div class="space-y-2">
-            <div class="flex items-center justify-between gap-2">
-              <span class="text-sm font-bold">五阶实训转化率梯形漏斗</span>
-              <span id="funnelTopBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold mono" style="background:var(--cyan-soft); color:var(--cyan-ink);">交付率 14.5%</span>
-            </div>
-            <div id="svgFunnelBox" class="w-full"></div>
-            <div id="funnelHoverBar" class="px-3 py-1.5 rounded-xl text-[11px] mono border flex items-center justify-between" style="background:var(--bg-subtle); border-color:var(--border); color:var(--ink-sub);">
-              <span>悬停漏斗阶梯查看层间留存与折损率</span>
-            </div>
-          </div>
-
-          <!-- Dual-View Coding Heatmap -->
-          <div class="pt-3.5 space-y-2.5" style="border-top:1px solid var(--border);">
-            <div class="flex items-center justify-between gap-2 text-xs">
-              <div class="flex items-center gap-2">
-                <span class="font-bold">校园编码活跃热力</span>
-                <div class="inline-flex p-0.5 rounded-lg border text-[10px]" style="background:var(--bg-subtle); border-color:var(--border);">
-                  <button onclick="setHeatMode('slot')" id="heatBtnSlot" class="px-2 py-0.5 rounded-md font-semibold transition">7×24h 时段</button>
-                  <button onclick="setHeatMode('week')" id="heatBtnWeek" class="px-2 py-0.5 rounded-md font-semibold transition">12 周日历</button>
-                </div>
-              </div>
-              <span id="heatmapHoverInfo" class="mono text-[11px]" style="color:var(--muted);">18–24点占全天 58.4%</span>
-            </div>
-
-            <div id="heatmapBody"></div>
-          </div>
+        <div class="relative pt-1" onmouseleave="hideTip('worksBarTip')">
+          <div id="worksBarSvg" class="w-full"></div>
+          <div id="worksBarTip" class="chart-tooltip hidden"></div>
         </div>
       </div>
     </section>
 
-    <!-- ==================== SECTION 3: 同心双环赛道图+阶梯遴选图 · 象限气泡图 · 交互数据条排行 ==================== -->
-    <section class="space-y-3.5">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="section-eyebrow">
-          <span class="section-icon-box">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
-              <circle cx="12" cy="12" r="9"/>
-              <path stroke-linecap="round" d="M12 3v18M3 12h18"/>
-            </svg>
-          </span>
-          <h2 class="text-base font-bold leading-tight">教研赛道供需双环、创客投入产出象限与多维排序榜</h2>
+    <!-- ==================== 3. 创造方向单环图 + 活跃创造者风采 ==================== -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Left (5): Simple Single-Ring Category Chart -->
+      <div class="lg:col-span-5 exec-card p-6 sm:p-7 flex flex-col justify-between gap-5">
+        <div>
+          <h2 class="text-base font-bold">同学们用 AI 做了什么</h2>
+          <p class="text-xs mt-0.5" style="color:var(--muted);">点击分类可筛选下方作品墙</p>
         </div>
 
-        <label class="inline-flex items-center gap-2 text-xs cursor-pointer select-none px-3.5 py-1.5 rounded-full border transition" style="background:var(--bg-surface); border-color:var(--border);">
-          <input id="maskNameToggle" type="checkbox" onchange="onMaskToggle()" class="accent-[#624AFF] rounded" />
-          <span class="font-medium">投屏姓名脱敏（林*行）</span>
-        </label>
+        <div class="flex items-center gap-6 my-auto py-1">
+          <div class="relative w-36 h-36 shrink-0">
+            <div id="catDonutSvg" class="w-full h-full"></div>
+            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+              <div id="donutBigVal" class="text-2xl font-bold mono leading-none">96</div>
+              <div id="donutSubLbl" class="text-[11px] mt-1" style="color:var(--muted);">原创作品</div>
+            </div>
+          </div>
+
+          <div id="catLegendList" class="flex-1 space-y-2.5 text-xs min-w-0"></div>
+        </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-
-        <!-- Col 1 (4): Concentric Dual-Ring (Inner=Works, Outer=Runs) + SVG Stepped Selection Funnel -->
-        <div class="lg:col-span-4 exec-card p-5 sm:p-6 flex flex-col justify-between gap-4">
-          <div class="space-y-3">
-            <div class="flex items-center justify-between gap-2">
-              <h3 class="text-sm font-bold">四大赛道双环（内:作品 / 外:运行量）</h3>
-              <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold mono" style="background:var(--primary-soft); color:var(--primary);">教研占 61.5%</span>
-            </div>
-
-            <div class="flex items-center gap-3.5">
-              <div class="relative w-32 h-32 shrink-0">
-                <div id="trackDonutSvg" class="w-full h-full"></div>
-                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-1">
-                  <div id="trackCenterTop" class="text-[9.5px] truncate max-w-[74px]" style="color:var(--muted);">篇均运行</div>
-                  <div id="trackCenterVal" class="text-sm font-bold mono leading-tight mt-0.5">129次</div>
-                  <div id="trackCenterSub" class="text-[9.5px] mono" style="color:var(--cyan-ink);">12.4K 总运行</div>
-                </div>
-              </div>
-
-              <div id="trackBarsList" class="flex-1 space-y-1.5 text-xs min-w-0"></div>
-            </div>
+      <!-- Right (7): Active Student Creators -->
+      <div class="lg:col-span-7 exec-card p-6 sm:p-7 space-y-4">
+        <div class="flex items-center justify-between gap-2">
+          <div>
+            <h2 class="text-base font-bold">校园活跃创造者</h2>
+            <p class="text-xs mt-0.5" style="color:var(--muted);">动手做出多件实用作品、受同学欢迎的创作者</p>
           </div>
-
-          <!-- Interactive SVG Stepped Selection Funnel (128 -> 96 -> 26 -> 18) -->
-          <div class="pt-3.5 space-y-2" style="border-top:1px solid var(--border);">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-bold">双创种子四级遴选阶梯图</span>
-              <span id="pyramidHoverHint" class="mono text-[10.5px]" style="color:var(--cyan-ink);">点击层级联动筛选</span>
-            </div>
-            <div id="selectionPyramidSvg" class="w-full"></div>
-          </div>
+          <label class="inline-flex items-center gap-1.5 text-xs cursor-pointer select-none px-3 py-1.5 rounded-full border" style="background:var(--bg-subtle); border-color:var(--border); color:var(--ink-sub);">
+            <input id="maskNameToggle" type="checkbox" onchange="onMaskToggle()" class="accent-[#624AFF] rounded" />
+            <span>姓名脱敏</span>
+          </label>
         </div>
 
-        <!-- Col 2 (4): Interactive 2D Quadrant Bubble Scatter with Quadrant Filter Pills -->
-        <div class="lg:col-span-4 exec-card p-5 sm:p-6 flex flex-col justify-between gap-3">
-          <div class="space-y-2">
-            <div class="flex items-center justify-between gap-2">
-              <h3 class="text-sm font-bold">创客「编码天数 × 作品运行量」象限</h3>
-              <span class="px-2 py-0.5 rounded-full text-[11px] mono font-semibold" style="background:var(--cyan-soft); color:var(--cyan-ink);">圆径 = 作品数</span>
-            </div>
-            <div id="quadFilterBar" class="flex items-center gap-1 flex-wrap text-[10.5px]"></div>
-          </div>
-
-          <div class="relative" onmouseleave="hideScatterTooltip()">
-            <div id="quadrantScatterSvg" class="w-full"></div>
-            <div id="scatterFloatTip" class="chart-tooltip hidden"></div>
-          </div>
-
-          <div id="scatterSummaryBar" class="px-3 py-2 rounded-xl text-[11px] mono flex items-center justify-between gap-2 border" style="background:var(--bg-subtle); border-color:var(--border); color:var(--ink-sub);"></div>
-        </div>
-
-        <!-- Col 3 (4): Multi-Metric Sortable Data-Bar Leaderboard -->
-        <div class="lg:col-span-4 exec-card p-5 sm:p-6 flex flex-col justify-between gap-3">
-          <div class="flex items-center justify-between gap-2">
-            <h3 class="text-sm font-bold">拔尖创客实测产出榜</h3>
-            <div class="inline-flex p-0.5 rounded-lg border text-[10.5px]" style="background:var(--bg-subtle); border-color:var(--border);">
-              <button onclick="setRankSort('runs')" id="sortBtnRuns" class="px-2 py-0.5 rounded-md font-semibold transition">按运行</button>
-              <button onclick="setRankSort('likes')" id="sortBtnLikes" class="px-2 py-0.5 rounded-md font-semibold transition">按获赞</button>
-              <button onclick="setRankSort('days')" id="sortBtnDays" class="px-2 py-0.5 rounded-md font-semibold transition">按天数</button>
-            </div>
-          </div>
-
-          <div id="leaderboardBarsContainer" class="space-y-2 text-xs"></div>
-
-          <div class="pt-2 flex items-center justify-between text-[11px] mono" style="border-top:1px solid var(--border); color:var(--muted);">
-            <span>悬停与左图散点双向高亮</span>
-            <span>点击行打开代表作</span>
-          </div>
-        </div>
-
+        <div id="creatorsList" class="space-y-2.5"></div>
       </div>
+
     </section>
 
-    <!-- ==================== SECTION 4: 院级精选种子作品墙（带多维筛选排序 + 抽屉7日运行柱图） ==================== -->
-    <section id="worksWallSection" class="space-y-5">
+    <!-- ==================== 4. 学生原创作品墙（视觉主角） ==================== -->
+    <section id="worksWallSection" class="space-y-6 pt-2">
       <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="section-eyebrow">
-          <span class="section-icon-box">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 2l2.6 5.4L20.5 8l-4.2 4.1 1 5.9L12 15.2 6.7 18l1-5.9L3.5 8l5.9-.6L12 2z"/>
-            </svg>
-          </span>
-          <h2 class="text-base font-bold leading-tight">院级精选种子作品墙（18 件精选 · 展示 Top 6）</h2>
+        <div>
+          <h2 class="text-lg font-bold">学生原创 AI 作品展</h2>
+          <p class="text-xs mt-0.5" style="color:var(--muted);">点击任意卡片即可预览体验同学们的真实作品</p>
         </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-          <div id="collegeCatFilters" class="flex items-center gap-1.5 flex-wrap"></div>
-          <span class="h-4 w-[1px] hidden sm:inline-block" style="background:var(--border);"></span>
-          <div id="collegeTagFilters" class="flex items-center gap-1 flex-wrap"></div>
-          <span class="h-4 w-[1px] hidden sm:inline-block" style="background:var(--border);"></span>
-          <select id="wallSortSelect" onchange="renderWall()" class="px-2.5 py-1.5 rounded-full text-xs font-medium border focus:outline-none" style="background:var(--bg-surface); color:var(--ink-sub); border-color:var(--border);">
-            <option value="runs">按校内运行量 ▾</option>
-            <option value="likes">按实名有效赞 ▾</option>
-            <option value="week">按近7日增速 ▾</option>
-          </select>
-        </div>
+        <div id="wallCatPills" class="flex items-center gap-2 flex-wrap"></div>
       </div>
 
-      <!-- Top 2 Split-Tint Seed Spotlight Cards -->
-      <div id="spotlightRow" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
-
-      <!-- Overhanging Thumbnail Works Grid -->
-      <div id="featuredWorksGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-8 pt-4"></div>
+      <div id="worksGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-9 pt-3"></div>
     </section>
 
   </main>
 
-  <!-- Live Demo Work Showcase Drawer (with 7-Day Real Runs Chart) -->
+  <!-- Clean Work Preview Drawer -->
   <div id="workDrawer" class="hidden fixed inset-0 z-40 drawer-backdrop flex justify-end" onclick="if(event.target===this) closeWorkDrawer()">
-    <div class="w-full max-w-xl h-full shadow-2xl flex flex-col justify-between overflow-y-auto" style="background:var(--drawer-bg); border-left:1px solid var(--border);">
-      <div id="workDrawerBody" class="p-6 space-y-5"></div>
-      <div id="workDrawerFooter" class="p-4 px-6 flex items-center justify-between gap-3" style="border-top:1px solid var(--border); background:var(--bg-subtle);"></div>
-    </div>
-  </div>
-
-  <!-- Pure-Data Brief Modal -->
-  <div id="briefModal" class="hidden fixed inset-0 z-50 drawer-backdrop flex items-center justify-center p-4" onclick="if(event.target===this) closeBriefModal()">
-    <div class="rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-4" style="background:var(--drawer-bg); border:1px solid var(--border);">
-      <div class="flex items-start justify-between gap-3">
-        <div class="flex items-center gap-2.5">
-          <span class="section-icon-box">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-          </span>
-          <h3 class="text-sm font-bold">华中科技大学软件学院 · AI 实训与创新成果数据简报</h3>
-        </div>
-        <button onclick="closeBriefModal()" class="text-xl leading-none opacity-60 hover:opacity-100">×</button>
-      </div>
-
-      <div id="briefContentBox" class="p-4 rounded-xl text-xs leading-relaxed space-y-2.5 border mono" style="background:var(--bg-subtle); border-color:var(--border); color:var(--ink-sub);"></div>
-
-      <div class="flex justify-end gap-2 pt-1">
-        <button onclick="closeBriefModal()" class="px-4 py-2 rounded-full text-xs font-medium border" style="border-color:var(--border); color:var(--ink-sub);">关闭</button>
-        <button onclick="copyBrief()" class="px-5 py-2 rounded-full text-xs font-semibold text-white shadow-md hover:opacity-95 transition" style="background:linear-gradient(90deg,#27254C,#624AFF);">复制数据简报</button>
-      </div>
+    <div class="w-full max-w-lg h-full shadow-2xl flex flex-col justify-between overflow-y-auto" style="background:var(--drawer-bg); border-left:1px solid var(--border);">
+      <div id="workDrawerBody" class="p-6 sm:p-7 space-y-5"></div>
+      <div id="workDrawerFooter" class="p-4 px-7 flex items-center justify-between gap-3" style="border-top:1px solid var(--border); background:var(--bg-subtle);"></div>
     </div>
   </div>
 
   <script>
     let period = '30d';
     let darkMode = false;
-    let trendMode = 'works'; // 'works' (new works + active coders) | 'runs' (campus runs + calls)
-    let heatMode = 'slot';   // 'slot' (7x6 time-of-day) | 'week' (12x7 weeks)
-    let quadFilter = 'all';  // 'all' | 'q1' (high-high) | 'q4' (high days) | 'q2' (high impact)
-    let rankSort = 'runs';   // 'runs' | 'likes' | 'days'
-    let activePyramidTier = 'all'; // 'all' | 'awarded' | 'featured'
-    let trendTableOpen = false;
-    let activeWallCat = 'all';
-    let activeWallTag = 'all';
-    let activeTrackIdx = -1;
-    let highlightStudentName = '';
+    let activeCat = 'all';
+    let hoverCatIdx = -1;
 
-    const PERIOD_META = {
+    const PERIOD_DATA = {
       '7d': {
-        label: '口径：近 7 天',
-        deliverBadge: '本周交付率 10.7%',
         kpis: [
-          {
-            kind: 'ring',
-            icon: 'users',
-            badge: '本周 +38 人',
-            badgeTone: 'cyan',
-            label: '算力普惠覆盖率',
-            val: '78.5%',
-            unit: '',
-            pct: 78.5,
-            ringText: '642人',
-            sub: '已激活 642 / 在籍名单 818 人'
-          },
-          {
-            kind: 'bars',
-            icon: 'pulse',
-            badge: '日均 6,840 次',
-            badgeTone: 'violet',
-            label: '周活跃实训率',
-            val: '68.2%',
-            unit: '',
-            pct: 68.2,
-            bars: [52, 60, 68, 76, 85, 92, 96],
-            sub: '本周 438 人编码 · 晚间占 58.4%'
-          },
-          {
-            kind: 'pyramid',
-            icon: 'cube',
-            badge: '本周 +24 件',
-            badgeTone: 'amber',
-            label: '累计上架软件作品',
-            val: '96',
-            unit: '件',
-            pct: 75,
-            sub: '74 人独立交付 · 获奖 26 · 精选 18'
-          },
-          {
-            kind: 'spark',
-            icon: 'run',
-            badge: '周环比 +38.6%',
-            badgeTone: 'cyan',
-            label: '近 7 日作品校内运行',
-            val: '3,860',
-            unit: '次',
-            pct: 84,
-            spark: [1420, 1890, 2240, 2680, 3210, 3860],
-            sub: '累计总运行 12,400 次 · 篇均 129 次'
-          }
+          { icon: 'users', color: '#624AFF', label: '加入平台的同学', val: '642', unit: '人', sub: '本周新加入 +38 人' },
+          { icon: 'spark', color: '#13C2C2', label: '本周在用 AI', val: '438', unit: '人', sub: '本周消耗 48.2M Token' },
+          { icon: 'cube', color: '#3B82F6', label: '本周新诞生作品', val: '22', unit: '件', sub: '累计已诞生 96 件' },
+          { icon: 'heart', color: '#F59E0B', label: '本周被同学试玩', val: '3,860', unit: '次', sub: '累计试玩 12,400 次' }
         ],
-        funnel: [
-          { stage: '在籍白名单', num: 818, unit: '人', conv: '基数 100%', drop: '未激活 176 人', ratio: 1.00, c1: '#4F46E5', c2: '#624AFF' },
-          { stage: '开通算力账户', num: 642, unit: '人', conv: '激活率 78.5%', drop: '本周未调用 204 人', ratio: 0.785, c1: '#624AFF', c2: '#7C5CFF' },
-          { stage: '本周实际编码', num: 438, unit: '人', conv: '周活率 68.2%', drop: '纯日常编码 242 人', ratio: 0.54, c1: '#2563EB', c2: '#13C2C2' },
-          { stage: '赛训实操参与', num: 196, unit: '人', conv: '参训率 44.7%', drop: '在研未交稿 175 人', ratio: 0.35, c1: '#13C2C2', c2: '#10B981' },
-          { stage: '本周交付作品', num: 21, extra: '24件', unit: '人', conv: '周交付 10.7%', drop: '过审上架 24 件', ratio: 0.20, c1: '#10B981', c2: '#F59E0B' }
+        curveBadge: '本周 438 人',
+        usersSeries: [
+          { x: '周二', v: 310 }, { x: '周三', v: 342 }, { x: '周四', v: 368 },
+          { x: '周五', v: 395 }, { x: '周六', v: 426 }, { x: '周日', v: 438 }
         ],
-        trackScale: 0.31
+        worksBadge: '本周 +22 件',
+        worksSeries: [
+          { x: '周二', total: 77, add: 3 }, { x: '周三', total: 80, add: 3 },
+          { x: '周四', total: 84, add: 4 }, { x: '周五', total: 88, add: 4 },
+          { x: '周六', total: 93, add: 5 }, { x: '周日', total: 96, add: 3 }
+        ]
       },
       '30d': {
-        label: '口径：近 30 天',
-        deliverBadge: '实训交付率 14.5%',
         kpis: [
-          {
-            kind: 'ring',
-            icon: 'users',
-            badge: '642 / 818 人',
-            badgeTone: 'cyan',
-            label: '算力普惠覆盖率',
-            val: '78.5%',
-            unit: '',
-            pct: 78.5,
-            ringText: '642人',
-            sub: '在籍基数 818 人 · 本月新增 146 人'
-          },
-          {
-            kind: 'bars',
-            icon: 'pulse',
-            badge: '月活 ≥8天 246人',
-            badgeTone: 'violet',
-            label: '持续工程实训率',
-            val: '79.8%',
-            unit: '',
-            pct: 79.8,
-            bars: [44, 55, 64, 72, 81, 89, 96],
-            sub: '512 人月度持续编码 · 42.8K 次调用'
-          },
-          {
-            kind: 'pyramid',
-            icon: 'cube',
-            badge: '过审率 75.0%',
-            badgeTone: 'amber',
-            label: '有效上架软件作品',
-            val: '96',
-            unit: '件',
-            pct: 75,
-            sub: '74 人完成 0→1 交付 · 精选种子 18 件'
-          },
-          {
-            kind: 'spark',
-            icon: 'run',
-            badge: '环比 +34.2%',
-            badgeTone: 'cyan',
-            label: '作品校内累计运行',
-            val: '12,400',
-            unit: '次',
-            pct: 86,
-            spark: [980, 2150, 4320, 6580, 9240, 12400],
-            sub: '在线访问 9,680 次 · 安装下载 2,720 次'
-          }
+          { icon: 'users', color: '#624AFF', label: '加入平台的同学', val: '642', unit: '人', sub: '覆盖学院 78% 在校同学' },
+          { icon: 'spark', color: '#13C2C2', label: '每周在用 AI', val: '438', unit: '人', sub: '近 30 天消耗 184.6M Token' },
+          { icon: 'cube', color: '#3B82F6', label: '学生原创作品', val: '96', unit: '件', sub: '74 位同学做出了自己的应用' },
+          { icon: 'heart', color: '#F59E0B', label: '被同学试玩次数', val: '12,400', unit: '次', sub: '同学间真实使用与点赞' }
         ],
-        funnel: [
-          { stage: '在籍白名单', num: 818, unit: '人', conv: '基数 100%', drop: '未激活 176 人', ratio: 1.00, c1: '#4F46E5', c2: '#624AFF' },
-          { stage: '开通算力账户', num: 642, unit: '人', conv: '激活率 78.5%', drop: '低频休眠 130 人', ratio: 0.785, c1: '#624AFF', c2: '#7C5CFF' },
-          { stage: '月度持续编码', num: 512, unit: '人', conv: '留存率 79.8%', drop: '自主练习 223 人', ratio: 0.62, c1: '#2563EB', c2: '#13C2C2' },
-          { stage: '赛训实操参与', num: 289, unit: '人', conv: '参训率 56.4%', drop: '实训练手 215 人', ratio: 0.42, c1: '#13C2C2', c2: '#10B981' },
-          { stage: '独立交付作品', num: 74, extra: '96件', unit: '人', conv: '转化率 25.6%', drop: '人均交付 1.30 件', ratio: 0.24, c1: '#10B981', c2: '#F59E0B' }
+        curveBadge: '438 人/周',
+        usersSeries: [
+          { x: '第1周', v: 162 }, { x: '第2周', v: 238 }, { x: '第3周', v: 295 },
+          { x: '第4周', v: 342 }, { x: '第5周', v: 396 }, { x: '第6周', v: 438 }
         ],
-        trackScale: 1
+        worksBadge: '累计 96 件',
+        worksSeries: [
+          { x: '第1周', total: 6, add: 6 }, { x: '第2周', total: 16, add: 10 },
+          { x: '第3周', total: 34, add: 18 }, { x: '第4周', total: 52, add: 18 },
+          { x: '第5周', total: 74, add: 22 }, { x: '第6周', total: 96, add: 22 }
+        ]
       },
       'term': {
-        label: '口径：2026 秋季学期累计',
-        deliverBadge: '深度交付率 15.5%',
         kpis: [
-          {
-            kind: 'ring',
-            icon: 'users',
-            badge: '642 / 818 人',
-            badgeTone: 'cyan',
-            label: '学期累计覆盖率',
-            val: '78.5%',
-            unit: '',
-            pct: 78.5,
-            ringText: '642人',
-            sub: '全院白名单 818 人 · 邮箱自动核验'
-          },
-          {
-            kind: 'bars',
-            icon: 'pulse',
-            badge: '51.4K 次工程调用',
-            badgeTone: 'violet',
-            label: '深度编码实训率',
-            val: '74.5%',
-            unit: '',
-            pct: 74.5,
-            bars: [38, 48, 59, 70, 81, 90, 98],
-            sub: '478 人累计编码 ≥10 天 · 214.8M Token'
-          },
-          {
-            kind: 'pyramid',
-            icon: 'cube',
-            badge: '3 期主题赛训',
-            badgeTone: 'amber',
-            label: '学期软件成果总数',
-            val: '96',
-            unit: '件',
-            pct: 75,
-            sub: '提交 128 → 上架 96 → 获奖 26 → 精选 18'
-          },
-          {
-            kind: 'spark',
-            icon: 'run',
-            badge: '篇均 148 次',
-            badgeTone: 'cyan',
-            label: '学期成果累计运行',
-            val: '14,210',
-            unit: '次',
-            pct: 90,
-            spark: [820, 2400, 4900, 7600, 10800, 14210],
-            sub: '课程助学与科研文献占总运行 63.1%'
-          }
+          { icon: 'users', color: '#624AFF', label: '加入平台的同学', val: '642', unit: '人', sub: '覆盖学院 78% 在校同学' },
+          { icon: 'spark', color: '#13C2C2', label: '持续用 AI 创作', val: '512', unit: '人', sub: '学期累计消耗 214.8M Token' },
+          { icon: 'cube', color: '#3B82F6', label: '学生原创作品', val: '96', unit: '件', sub: '74 位同学独立完成开发' },
+          { icon: 'heart', color: '#F59E0B', label: '被同学试玩次数', val: '14,210', unit: '次', sub: '平均每件作品被体验 148 次' }
         ],
-        funnel: [
-          { stage: '在籍白名单', num: 818, unit: '人', conv: '基数 100%', drop: '未激活 176 人', ratio: 1.00, c1: '#4F46E5', c2: '#624AFF' },
-          { stage: '开通算力账户', num: 642, unit: '人', conv: '激活率 78.5%', drop: '浅层试用 164 人', ratio: 0.785, c1: '#624AFF', c2: '#7C5CFF' },
-          { stage: '累计深度编码', num: 478, unit: '人', conv: '深度率 74.5%', drop: '课程日常实训 166 人', ratio: 0.60, c1: '#2563EB', c2: '#13C2C2' },
-          { stage: '报名主题赛训', num: 312, unit: '人', conv: '参赛率 65.3%', drop: '组队打磨 238 人', ratio: 0.43, c1: '#13C2C2', c2: '#10B981' },
-          { stage: '独立交付作品', num: 74, extra: '96件', unit: '人', conv: '交付率 23.7%', drop: '沉淀精选种子 18 件', ratio: 0.24, c1: '#10B981', c2: '#F59E0B' }
+        curveBadge: '峰值 512 人',
+        usersSeries: [
+          { x: '9月下', v: 128 }, { x: '10月上', v: 215 }, { x: '10月下', v: 318 },
+          { x: '11月上', v: 412 }, { x: '11月中', v: 468 }, { x: '11月下', v: 512 }
         ],
-        trackScale: 1.15
+        worksBadge: '累计 96 件',
+        worksSeries: [
+          { x: '9月下', total: 4, add: 4 }, { x: '10月上', total: 14, add: 10 },
+          { x: '10月下', total: 32, add: 18 }, { x: '11月上', total: 54, add: 22 },
+          { x: '11月中', total: 76, add: 22 }, { x: '11月下', total: 96, add: 20 }
+        ]
       }
     };
 
-    const TREND_SERIES = [
-      { w: '第 1 周', works: 6, submitted: 9, active: 162, calls: 3820, runs: 640, event: '首批开通', eventTag: '' },
-      { w: '第 2 周', works: 8, submitted: 11, active: 238, calls: 5410, runs: 1180, event: '', eventTag: '' },
-      { w: '第 3 周', works: 18, submitted: 24, active: 295, calls: 7650, runs: 2140, event: '先导期小应用赛', eventTag: '#先导期小应用赛' },
-      { w: '第 4 周', works: 9, submitted: 13, active: 334, calls: 6980, runs: 1920, event: '', eventTag: '' },
-      { w: '第 5 周', works: 22, submitted: 29, active: 389, calls: 9120, runs: 3060, event: '第1期校园黑客松', eventTag: '#第1期校园黑客松' },
-      { w: '第 6 周', works: 24, submitted: 31, active: 438, calls: 9820, runs: 3460, event: '第2期科研工具赛', eventTag: '#第2期科研工具赛' }
+    const CATEGORIES = [
+      { name: '学习助手', count: 33, pct: 34, color: '#624AFF' },
+      { name: '效率工具', count: 27, pct: 28, color: '#13C2C2' },
+      { name: '阅读辅助', count: 20, pct: 21, color: '#3B82F6' },
+      { name: '校园生活', count: 16, pct: 17, color: '#F59E0B' }
     ];
 
-    const TRACK_DATA = [
-      { cat: '课程助学', works: 31, workShare: 32.3, runs: 4180, runShare: 33.7, color: '#624AFF' },
-      { cat: '科研文献', works: 28, workShare: 29.2, runs: 3420, runShare: 27.6, color: '#13C2C2' },
-      { cat: '校园服务', works: 18, workShare: 18.7, runs: 2940, runShare: 23.7, color: '#3B82F6' },
-      { cat: '开发效率', works: 19, workShare: 19.8, runs: 1860, runShare: 15.0, color: '#F59E0B' }
+    const CREATORS = [
+      { name: '林知行', workId: 'fw-1', works: 3, rep: '华科选课排课助手', tries: 1420, likes: 148, grad: 'linear-gradient(135deg,#624AFF,#36CFD1)' },
+      { name: '周予安', workId: 'fw-2', works: 2, rep: '论文速读卡片生成器', tries: 1240, likes: 126, grad: 'linear-gradient(135deg,#13C2C2,#3B82F6)' },
+      { name: '陈一鸣', workId: 'fw-3', works: 2, rep: '小组待办与语音纪要助手', tries: 890, likes: 98, grad: 'linear-gradient(135deg,#3B82F6,#624AFF)' },
+      { name: '陆星野', workId: 'fw-5', works: 2, rep: '算法题解动画沙盒', tries: 780, likes: 92, grad: 'linear-gradient(135deg,#8B5CF6,#EC4899)' },
+      { name: '许嘉禾', workId: 'fw-4', works: 2, rep: '食堂窗口排队估算', tries: 760, likes: 84, grad: 'linear-gradient(135deg,#F59E0B,#EF4444)' }
     ];
 
-    const STUDENTS = [
-      { name: '林知行', workId: 'fw-1', days: 26, works: 3, featured: 2, runs: 1420, likes: 148, awards: 2 },
-      { name: '周予安', workId: 'fw-2', days: 24, works: 2, featured: 1, runs: 1240, likes: 126, awards: 1 },
-      { name: '陈一鸣', workId: 'fw-3', days: 22, works: 2, featured: 1, runs: 890, likes: 98, awards: 1 },
-      { name: '许嘉禾', workId: 'fw-4', days: 19, works: 2, featured: 1, runs: 760, likes: 84, awards: 1 },
-      { name: '陆星野', workId: 'fw-5', days: 25, works: 2, featured: 1, runs: 680, likes: 92, awards: 1 },
-      { name: '苏明澈', workId: 'fw-6', days: 17, works: 2, featured: 1, runs: 540, likes: 61, awards: 1 }
-    ];
-
-    // Cohort scatter points across all 4 quadrants (split at days=14, runs=400)
-    const COHORT_POINTS = [
-      { name: '唐书瑶', days: 18, runs: 610, works: 2, likes: 55 },
-      { name: '顾言深', days: 23, runs: 520, works: 1, likes: 48 },
-      { name: '赵子昂', days: 15, runs: 490, works: 1, likes: 46 },
-      { name: '沈佳期', days: 16, runs: 440, works: 1, likes: 39 },
-      { name: '叶清欢', days: 11, runs: 620, works: 1, likes: 58 },
-      { name: '江逾白', days: 9, runs: 470, works: 1, likes: 42 },
-      { name: '夏知微', days: 21, runs: 310, works: 1, likes: 31 },
-      { name: '程景行', days: 24, runs: 250, works: 1, likes: 24 },
-      { name: '梁景初', days: 17, runs: 195, works: 1, likes: 19 },
-      { name: '宋知夏', days: 12, runs: 260, works: 1, likes: 22 },
-      { name: '韩牧之', days: 8, runs: 190, works: 1, likes: 18 },
-      { name: '秦语桐', days: 10, runs: 155, works: 1, likes: 15 },
-      { name: '方思远', days: 6, runs: 125, works: 1, likes: 12 },
-      { name: '谢明轩', days: 5, runs: 85, works: 1, likes: 9 }
-    ];
-
-    const WALL_WORKS = [
+    const WORKS = [
       {
         id: 'fw-1',
-        spotlight: true,
-        awarded: true,
-        tint: 'linear-gradient(125deg, rgba(98,74,255,0.16) 0%, rgba(54,207,209,0.20) 100%)',
-        title: '华科选课排雷与课表冲突检测助手',
-        cat: '校园服务',
-        type: 'Web',
-        tag: '#第1期校园黑客松',
-        runs: 1420,
-        weekRuns: 486,
-        dailyRuns: [48, 62, 58, 71, 84, 92, 71],
+        title: '华科选课排课助手',
+        cat: '校园生活',
+        type: 'Web 网页',
         author: '林知行',
+        tries: 1420,
         likes: 148,
-        award: '黑客松实时 #1',
         cover: './media/demo_campus_events_1.jpg',
         url: 'https://apps.huanxi-lab.cn/hust-course-helper',
-        desc: '自动检测课程周次与节次冲突，结合历年选课数据生成多套无冲突课表并支持导出日历文件。'
+        desc: '输入想选的课程自动检测时间冲突，一键生成多套清爽课表并导出到手机日历。'
       },
       {
         id: 'fw-2',
-        spotlight: true,
-        awarded: true,
-        tint: 'linear-gradient(125deg, rgba(19,194,194,0.16) 0%, rgba(59,130,246,0.20) 100%)',
-        title: '论文精读结构化卡片生成器',
-        cat: '科研文献',
-        type: 'Web',
-        tag: '#第2期科研工具赛',
-        runs: 1240,
-        weekRuns: 412,
-        dailyRuns: [42, 51, 56, 64, 68, 72, 59],
+        title: '论文速读卡片生成器',
+        cat: '阅读辅助',
+        type: 'Web 网页',
         author: '周予安',
+        tries: 1240,
         likes: 126,
-        award: '科研赛候选 #1',
         cover: './media/demo_cms_web.jpg',
         url: 'https://apps.huanxi-lab.cn/paper-cards',
-        desc: '导入论文 PDF 自动拆解研究问题、方法架构、关键公式推导与实验复现核对清单，支持导出 Markdown。'
+        desc: '拖入英文文献 PDF，自动提炼核心思路、关键公式与复现步骤，方便做读书笔记。'
       },
       {
         id: 'fw-3',
-        spotlight: false,
-        awarded: false,
-        title: '实验室组会纪要与值班排班客户端',
-        cat: '开发效率',
-        type: 'PC',
-        tag: '#第2期科研工具赛',
-        runs: 890,
-        weekRuns: 245,
-        dailyRuns: [28, 34, 31, 39, 42, 38, 33],
+        title: '小组待办与语音纪要助手',
+        cat: '效率工具',
+        type: 'PC 桌面端',
         author: '陈一鸣',
+        tries: 890,
         likes: 98,
-        award: '院级精选',
         cover: './media/demo_cms_agent.jpg',
-        url: 'lab-assistant-v1.1.zip',
-        desc: '自动提取组会讨论待办任务、责任人与截止节点，同步生成课题组值班表与提醒日历。'
-      },
-      {
-        id: 'fw-4',
-        spotlight: false,
-        awarded: false,
-        title: '东区食堂档口排队时长估算应用',
-        cat: '校园服务',
-        type: 'APP',
-        tag: '#第1期校园黑客松',
-        runs: 760,
-        weekRuns: 290,
-        dailyRuns: [32, 38, 41, 44, 49, 46, 40],
-        author: '许嘉禾',
-        likes: 84,
-        award: '院级精选',
-        cover: './media/demo_homework_app_1.jpg',
-        url: 'canteen-eta-v0.8.apk',
-        desc: '融合教学楼下课时间分布与就餐打卡样本，实时估算各食堂窗口排队等待分钟数。'
+        url: 'team-voice-notes-v1.1.zip',
+        desc: '把平时讨论的口头想法自动整理成清晰待办清单，再也不用手动抄会议记录。'
       },
       {
         id: 'fw-5',
-        spotlight: false,
-        awarded: true,
-        title: '动态规划与图论题解步进可视化沙盒',
-        cat: '课程助学',
-        type: 'Web',
-        tag: '#第2期科研工具赛',
-        runs: 680,
-        weekRuns: 218,
-        dailyRuns: [24, 29, 33, 36, 35, 31, 30],
+        title: '算法题解动画沙盒',
+        cat: '学习助手',
+        type: 'Web 网页',
         author: '陆星野',
+        tries: 780,
         likes: 92,
-        award: '先导赛二等奖',
         cover: './media/demo_focus_timer_1.jpg',
         url: 'https://apps.huanxi-lab.cn/algo-sandbox',
-        desc: '输入算法代码实时渲染状态转移表与图搜索逐帧状态，辅助《算法设计与分析》课程实验调试。'
+        desc: '把枯燥的动态规划和图论代码变成一步步可回放的动画，帮自己和同学直观搞懂算法。'
+      },
+      {
+        id: 'fw-4',
+        title: '食堂窗口排队估算',
+        cat: '校园生活',
+        type: '手机 APP',
+        author: '许嘉禾',
+        tries: 760,
+        likes: 84,
+        cover: './media/demo_homework_app_1.jpg',
+        url: 'canteen-eta-v0.8.apk',
+        desc: '结合下课时间规律预估东区各食堂热门档口排队时长，下课吃饭不再跑空。'
       },
       {
         id: 'fw-6',
-        spotlight: false,
-        awarded: true,
-        title: '毕设开题与答辩结构化模拟问答台',
-        cat: '课程助学',
-        type: 'Web',
-        tag: '#先导期小应用赛',
-        runs: 540,
-        weekRuns: 164,
-        dailyRuns: [18, 22, 24, 25, 28, 24, 23],
+        title: '答辩自测模拟搭子',
+        cat: '学习助手',
+        type: 'Web 网页',
         author: '苏明澈',
+        tries: 540,
         likes: 61,
-        award: '先导赛一等奖',
         cover: './media/demo_club_poster_1.jpg',
-        url: 'https://apps.huanxi-lab.cn/defense-mock',
-        desc: '导入开题报告或论文提纲，围绕技术路线、工作量与边界条件生成多轮追问及修改清单。'
+        url: 'https://apps.huanxi-lab.cn/defense-partner',
+        desc: '上传汇报 PPT 提纲，AI 自动模拟提问帮你在上台前提前查漏补缺、缓解紧张。'
       }
-    ];
-
-    const SLOT_HEATMAP = [
-      { slot: '08–12', vals: [2, 3, 2, 3, 2, 3, 2] },
-      { slot: '12–14', vals: [2, 2, 2, 2, 2, 3, 3] },
-      { slot: '14–18', vals: [3, 4, 3, 4, 3, 4, 4] },
-      { slot: '18–21', vals: [4, 5, 4, 5, 4, 5, 5] },
-      { slot: '21–24', vals: [5, 5, 5, 5, 5, 5, 4] },
-      { slot: '00–08', vals: [1, 1, 2, 1, 2, 3, 2] }
-    ];
-
-    const WEEK_HEATMAP = [
-      [1,1,2,2,2,1,1], [1,2,2,2,3,2,1], [2,2,3,3,3,2,2], [2,3,3,3,2,2,1],
-      [2,3,4,4,3,3,2], [2,3,3,4,3,2,2], [3,3,4,4,4,3,2], [3,4,4,3,4,3,2],
-      [3,4,4,4,5,4,3], [3,4,5,4,5,4,3], [4,4,5,5,5,4,3], [4,5,5,5,5,4,4]
     ];
 
     function showToast(msg) {
@@ -950,11 +475,11 @@
       el.textContent = msg;
       el.classList.remove('opacity-0', '-translate-y-2');
       el.classList.add('opacity-100', 'translate-y-0');
-      clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(() => {
+      clearTimeout(window.__t);
+      window.__t = setTimeout(() => {
         el.classList.add('opacity-0', '-translate-y-2');
         el.classList.remove('opacity-100', 'translate-y-0');
-      }, 2400);
+      }, 2200);
     }
 
     function maskName(n) {
@@ -963,83 +488,67 @@
     }
 
     function onMaskToggle() {
-      renderScatter();
-      renderLeaderboard();
+      renderCreators();
       renderWall();
     }
 
-    function setPeriod(p) { period = p; renderAll(); }
-    function setTrendMode(m) { trendMode = m; renderTrend(); }
-    function setHeatMode(m) { heatMode = m; renderHeatmap(); }
-    function setQuadFilter(q) { quadFilter = quadFilter === q ? 'all' : q; renderScatter(); }
-    function setRankSort(s) { rankSort = s; renderLeaderboard(); }
+    function setPeriod(p) {
+      period = p;
+      renderAll();
+    }
 
     function toggleProjectionMode() {
       darkMode = !darkMode;
       document.body.classList.toggle('theme-dark', darkMode);
       syncThemeButton();
       renderAll();
-      showToast(darkMode ? '已切换至沉浸投屏大屏（按 ESC 退出）' : '已切换回极光浅色视图');
+      showToast(darkMode ? '已进入沉浸投屏模式（按 ESC 可退出）' : '已返回浅色视图');
     }
 
     function syncThemeButton() {
       const iconEl = document.getElementById('themeToggleIcon');
       const labelEl = document.getElementById('themeToggleLabel');
-      const btn = document.getElementById('themeToggleBtn');
       if (darkMode) {
         iconEl.innerHTML = `<svg class="w-3.5 h-3.5 text-[#49F2F4]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>`;
-        labelEl.textContent = '退出投屏（浅色）';
-        btn.style.background = 'rgba(44, 224, 226, 0.16)';
-        btn.style.borderColor = 'rgba(73, 242, 244, 0.45)';
+        labelEl.textContent = '浅色视图';
       } else {
         iconEl.innerHTML = `<svg class="w-3.5 h-3.5 text-cyan-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="3" width="20" height="14" rx="2"/><path stroke-linecap="round" d="M8 21h8m-4-4v4"/></svg>`;
-        labelEl.textContent = '沉浸投屏大屏';
-        btn.style.background = 'rgba(255, 255, 255, 0.12)';
-        btn.style.borderColor = 'rgba(103, 232, 249, 0.35)';
+        labelEl.textContent = '沉浸投屏';
       }
     }
 
-    function badgeStyle(tone) {
-      if (tone === 'cyan') return 'background:var(--cyan-soft); color:var(--cyan-ink);';
-      if (tone === 'amber') return 'background:var(--amber-soft); color:var(--amber-ink);';
-      if (tone === 'violet') return 'background:var(--primary-soft); color:var(--primary);';
-      return 'background:var(--bg-chip); color:var(--muted);';
+    function kpiIcon(kind, color) {
+      const paths = {
+        users: '<path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',
+        spark: '<path stroke-linecap="round" stroke-linejoin="round" d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"/>',
+        cube: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 2l8 4.5v11L12 22l-8-4.5v-11L12 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 22V11m8-4.5L12 11 4 6.5"/>',
+        heart: '<path stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>'
+      };
+      return `<span class="w-9 h-9 rounded-xl inline-flex items-center justify-center shrink-0" style="background:${color}18; color:${color};">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1">${paths[kind]}</svg>
+      </span>`;
     }
 
-    function kpiIconSvg(name) {
-      if (name === 'users') {
-        return `<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background:linear-gradient(135deg,rgba(19,194,194,0.18),rgba(98,74,255,0.14)); border:1px solid var(--border); color:var(--cyan);">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
-          </svg>
-        </div>`;
-      }
-      if (name === 'pulse') {
-        return `<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background:linear-gradient(135deg,rgba(98,74,255,0.20),rgba(129,107,255,0.10)); border:1px solid var(--border); color:var(--primary);">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M22 12h-4l-3 7L9 5l-3 7H2"/>
-          </svg>
-        </div>`;
-      }
-      if (name === 'cube') {
-        return `<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background:linear-gradient(135deg,rgba(245,158,11,0.18),rgba(98,74,255,0.14)); border:1px solid var(--border); color:var(--amber);">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.3 7l8.7 5 8.7-5M12 22V12"/>
-          </svg>
-        </div>`;
-      }
-      return `<div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background:linear-gradient(135deg,rgba(19,194,194,0.20),rgba(59,130,246,0.14)); border:1px solid var(--border); color:var(--cyan);">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polygon points="5 3 19 12 5 21 5 3" stroke-linejoin="round"/>
-        </svg>
-      </div>`;
+    function renderKpis() {
+      const items = PERIOD_DATA[period].kpis;
+      document.getElementById('kpiGrid').innerHTML = items.map(k => `
+        <div class="exec-card kpi-card p-6 flex flex-col justify-between gap-4">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-medium" style="color:var(--muted);">${k.label}</span>
+            ${kpiIcon(k.icon, k.color)}
+          </div>
+          <div>
+            <div class="text-3xl sm:text-[34px] font-bold mono tracking-tight leading-none">
+              ${k.val}<span class="text-xs font-normal ml-1.5" style="color:var(--muted);">${k.unit}</span>
+            </div>
+            <div class="text-xs mt-2.5" style="color:var(--ink-sub);">${k.sub}</div>
+          </div>
+        </div>
+      `).join('');
     }
 
     function smoothPath(pts) {
       if (!pts.length) return '';
-      if (pts.length === 1) return `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
       let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
       for (let i = 0; i < pts.length - 1; i++) {
         const p0 = pts[i], p1 = pts[i + 1];
@@ -1049,824 +558,258 @@
       return d;
     }
 
-    function kpiMicroGraphic(k) {
-      if (k.kind === 'ring') {
-        const r = 18, c = 2 * Math.PI * r;
-        const offset = (c * (1 - k.pct / 100)).toFixed(1);
-        return `<svg viewBox="0 0 46 46" class="w-12 h-12 shrink-0">
-          <circle cx="23" cy="23" r="${r}" fill="none" stroke="var(--grid-line)" stroke-width="4.5"/>
-          <circle cx="23" cy="23" r="${r}" fill="none" stroke="var(--cyan)" stroke-width="4.5" stroke-linecap="round"
-            stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${offset}" transform="rotate(-90 23 23)"/>
-          <text x="23" y="26" text-anchor="middle" font-size="9" font-weight="700" fill="var(--ink)" class="mono">${k.ringText}</text>
-        </svg>`;
-      }
-      if (k.kind === 'spark') {
-        const pts = k.spark;
-        const max = Math.max(...pts) * 1.08, min = Math.min(...pts) * 0.85;
-        const w = 82, h = 38;
-        const coords = pts.map((v, i) => ({
-          x: 4 + (i / (pts.length - 1)) * (w - 10),
-          y: h - 5 - ((v - min) / (max - min)) * (h - 11)
-        }));
-        const line = smoothPath(coords);
-        const area = `${line} L ${coords[coords.length - 1].x.toFixed(1)} ${h} L ${coords[0].x.toFixed(1)} ${h} Z`;
-        const last = coords[coords.length - 1];
-        return `<svg viewBox="0 0 ${w} ${h}" class="w-20 h-10 shrink-0 overflow-visible">
-          <defs>
-            <linearGradient id="kpiSparkGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="var(--cyan)" stop-opacity="0.34"/>
-              <stop offset="100%" stop-color="var(--cyan)" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <path d="${area}" fill="url(#kpiSparkGrad)"/>
-          <path d="${line}" fill="none" stroke="var(--cyan)" stroke-width="2.2" stroke-linecap="round"/>
-          <circle cx="${last.x.toFixed(1)}" cy="${last.y.toFixed(1)}" r="3" fill="var(--cyan)"/>
-        </svg>`;
-      }
-      if (k.kind === 'bars') {
-        return `<div class="flex items-end gap-1 h-9 shrink-0 pb-0.5">
-          ${k.bars.map((v, i) => `<span class="w-1.5 rounded-full" style="height:${Math.round(v * 0.34)}px; background:${i >= k.bars.length - 2 ? 'var(--primary)' : 'rgba(98,74,255,0.34)'};"></span>`).join('')}
-        </div>`;
-      }
-      return `<svg viewBox="0 0 68 38" class="w-16 h-9 shrink-0">
-        <polygon points="4,4 64,4 56,11 12,11" fill="rgba(148,163,184,0.45)"/>
-        <polygon points="12,13 56,13 48,20 20,20" fill="var(--blue)"/>
-        <polygon points="20,22 48,22 42,29 26,29" fill="var(--primary)"/>
-        <polygon points="26,31 42,31 39,37 29,37" fill="var(--cyan)"/>
-      </svg>`;
+    function renderUserCurve() {
+      const d = PERIOD_DATA[period];
+      document.getElementById('activeCurveStat').textContent = d.curveBadge;
+      const rows = d.usersSeries;
+      const maxV = Math.max(...rows.map(r => r.v)) * 1.16;
+      const w = 480, h = 200, padL = 38, padR = 18, padT = 20, padB = 30;
+      const pw = w - padL - padR, ph = h - padT - padB;
+      const step = pw / (rows.length - 1);
+
+      const pts = rows.map((r, i) => ({
+        x: padL + i * step,
+        y: padT + ph * (1 - r.v / maxV),
+        r
+      }));
+      const curve = smoothPath(pts);
+      const area = `${curve} L ${pts[pts.length - 1].x.toFixed(1)} ${padT + ph} L ${pts[0].x.toFixed(1)} ${padT + ph} Z`;
+
+      let svg = `<svg viewBox="0 0 ${w} ${h}" class="w-full h-52 overflow-visible select-none">
+        <defs>
+          <linearGradient id="userCurveFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--primary)" stop-opacity="${darkMode ? '0.42' : '0.24'}"/>
+            <stop offset="100%" stop-color="var(--primary)" stop-opacity="0.01"/>
+          </linearGradient>
+          <linearGradient id="userCurveStroke" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#624AFF"/>
+            <stop offset="100%" stop-color="#13C2C2"/>
+          </linearGradient>
+        </defs>`;
+
+      [0, 0.5, 1].forEach(f => {
+        const y = (padT + ph * (1 - f)).toFixed(1);
+        svg += `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="var(--grid-line)" stroke-dasharray="3 3"/>`;
+        svg += `<text x="${padL - 8}" y="${+y + 3.5}" text-anchor="end" fill="var(--muted)" font-size="10.5" class="mono">${Math.round(maxV * f)}</text>`;
+      });
+
+      svg += `<path d="${area}" fill="url(#userCurveFill)"/>`;
+      svg += `<path d="${curve}" fill="none" stroke="url(#userCurveStroke)" stroke-width="3" stroke-linecap="round"/>`;
+
+      pts.forEach((p) => {
+        const pctX = ((p.x / w) * 100).toFixed(1);
+        svg += `<g class="cursor-pointer group" onmouseenter="showTip('userCurveTip', '${p.r.x}：${p.r.v} 位同学活跃使用 AI', ${pctX})">
+          <rect x="${(p.x - step / 2).toFixed(1)}" y="${padT}" width="${step.toFixed(1)}" height="${ph}" fill="transparent"/>
+          <line x1="${p.x.toFixed(1)}" y1="${padT}" x2="${p.x.toFixed(1)}" y2="${padT + ph}" stroke="var(--primary)" stroke-opacity="0" class="group-hover:stroke-opacity-30 transition"/>
+          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" fill="var(--bg-surface)" stroke="var(--primary)" stroke-width="2.8"/>
+          <text x="${p.x.toFixed(1)}" y="${(p.y - 10).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-size="10.5" font-weight="700" class="mono">${p.r.v}</text>
+          <text x="${p.x.toFixed(1)}" y="${h - 8}" text-anchor="middle" fill="var(--muted)" font-size="11">${p.r.x}</text>
+        </g>`;
+      });
+
+      svg += `</svg>`;
+      document.getElementById('userCurveSvg').innerHTML = svg;
     }
 
-    function renderKpis() {
-      const meta = PERIOD_META[period];
-      document.getElementById('periodScopeHint').textContent = meta.label;
-      document.getElementById('kpiGrid').innerHTML = meta.kpis.map(k => `
-        <div class="exec-card kpi-card p-5 flex flex-col justify-between gap-3.5">
-          <div class="flex items-center justify-between gap-2">
-            ${kpiIconSvg(k.icon)}
-            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold mono" style="${badgeStyle(k.badgeTone)}">${k.badge}</span>
+    function renderWorksBars() {
+      const d = PERIOD_DATA[period];
+      document.getElementById('worksBarStat').textContent = d.worksBadge;
+      const rows = d.worksSeries;
+      const maxV = Math.max(...rows.map(r => r.total)) * 1.18;
+      const w = 480, h = 200, padL = 36, padR = 16, padT = 22, padB = 30;
+      const pw = w - padL - padR, ph = h - padT - padB;
+      const slot = pw / rows.length;
+      const barW = 34;
+
+      let svg = `<svg viewBox="0 0 ${w} ${h}" class="w-full h-52 overflow-visible select-none">
+        <defs>
+          <linearGradient id="worksColGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#36CFD1"/>
+            <stop offset="100%" stop-color="#624AFF"/>
+          </linearGradient>
+        </defs>`;
+
+      [0, 0.5, 1].forEach(f => {
+        const y = (padT + ph * (1 - f)).toFixed(1);
+        svg += `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="var(--grid-line)" stroke-dasharray="3 3"/>`;
+        svg += `<text x="${padL - 8}" y="${+y + 3.5}" text-anchor="end" fill="var(--muted)" font-size="10.5" class="mono">${Math.round(maxV * f)}</text>`;
+      });
+
+      rows.forEach((r, i) => {
+        const cx = padL + i * slot + slot / 2;
+        const bh = Math.max(8, (r.total / maxV) * ph);
+        const by = padT + ph - bh;
+        const pctX = ((cx / w) * 100).toFixed(1);
+
+        svg += `<g class="cursor-pointer group" onmouseenter="showTip('worksBarTip', '${r.x}：累计 ${r.total} 件作品（新诞生 +${r.add} 件）', ${pctX})">
+          <rect x="${(cx - slot / 2).toFixed(1)}" y="${padT}" width="${slot.toFixed(1)}" height="${ph}" fill="transparent"/>
+          <rect x="${(cx - barW / 2).toFixed(1)}" y="${by.toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" rx="9"
+            fill="url(#worksColGrad)" fill-opacity="${i === rows.length - 1 ? '1' : '0.78'}" class="group-hover:fill-opacity-100 transition"/>
+          <text x="${cx.toFixed(1)}" y="${(by - 7).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-size="10.5" font-weight="700" class="mono">${r.total}</text>
+          <text x="${cx.toFixed(1)}" y="${h - 8}" text-anchor="middle" fill="var(--muted)" font-size="11">${r.x}</text>
+        </g>`;
+      });
+
+      svg += `</svg>`;
+      document.getElementById('worksBarSvg').innerHTML = svg;
+    }
+
+    function showTip(id, text, pctX) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text;
+      el.style.left = Math.min(78, Math.max(22, pctX)) + '%';
+      el.style.top = '0px';
+      el.style.transform = 'translateX(-50%)';
+      el.classList.remove('hidden');
+    }
+
+    function hideTip(id) {
+      document.getElementById(id)?.classList.add('hidden');
+    }
+
+    function renderCategoryDonut() {
+      const r = 54, c = 2 * Math.PI * r, gap = 5;
+      let acc = 0;
+
+      const arcs = CATEGORIES.map((cat, idx) => {
+        const seg = (cat.pct / 100) * c - gap;
+        const off = -acc;
+        acc += (cat.pct / 100) * c;
+        const active = hoverCatIdx === idx || activeCat === cat.name;
+        return `<circle cx="72" cy="72" r="${r}" fill="none" stroke="${cat.color}"
+          stroke-width="${active ? 18 : 14}"
+          stroke-dasharray="${seg.toFixed(1)} ${(c - seg).toFixed(1)}"
+          stroke-dashoffset="${off.toFixed(1)}"
+          transform="rotate(-90 72 72)"
+          class="cursor-pointer transition-all duration-200"
+          style="opacity:${(hoverCatIdx === -1 && activeCat === 'all') || active ? 1 : 0.35};"
+          onmouseenter="hoverCat(${idx})" onmouseleave="hoverCat(-1)"
+          onclick="toggleCatFilter('${cat.name}')"/>`;
+      }).join('');
+
+      document.getElementById('catDonutSvg').innerHTML = `
+        <svg viewBox="0 0 144 144" class="w-full h-full overflow-visible">
+          <circle cx="72" cy="72" r="${r}" fill="none" stroke="var(--grid-line)" stroke-width="14"/>
+          ${arcs}
+        </svg>
+      `;
+
+      const bigEl = document.getElementById('donutBigVal');
+      const subEl = document.getElementById('donutSubLbl');
+      if (hoverCatIdx >= 0) {
+        bigEl.textContent = CATEGORIES[hoverCatIdx].pct + '%';
+        subEl.textContent = CATEGORIES[hoverCatIdx].name;
+      } else {
+        bigEl.textContent = '96';
+        subEl.textContent = '原创作品';
+      }
+
+      document.getElementById('catLegendList').innerHTML = CATEGORIES.map((cat, idx) => {
+        const selected = activeCat === cat.name;
+        return `
+          <div onmouseenter="hoverCat(${idx})" onmouseleave="hoverCat(-1)" onclick="toggleCatFilter('${cat.name}')"
+            class="p-2 px-2.5 rounded-xl cursor-pointer transition flex items-center justify-between gap-2 border"
+            style="background:${selected ? 'var(--primary-soft)' : 'var(--bg-subtle)'}; border-color:${selected ? 'var(--primary)' : 'transparent'};">
+            <span class="inline-flex items-center gap-2 font-medium">
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${cat.color};"></span>
+              <span>${cat.name}</span>
+            </span>
+            <span class="mono font-bold">${cat.count} 件 <span class="font-normal text-[11px]" style="color:var(--muted);">(${cat.pct}%)</span></span>
           </div>
-          <div class="flex items-end justify-between gap-2">
-            <div>
-              <div class="text-xs font-medium" style="color:var(--muted);">${k.label}</div>
-              <div class="text-2xl sm:text-[28px] font-bold mono leading-tight mt-1">
-                ${k.val}<span class="text-xs font-normal ml-1" style="color:var(--muted);">${k.unit}</span>
+        `;
+      }).join('');
+    }
+
+    function hoverCat(idx) {
+      hoverCatIdx = idx;
+      renderCategoryDonut();
+    }
+
+    function toggleCatFilter(catName) {
+      activeCat = activeCat === catName ? 'all' : catName;
+      renderCategoryDonut();
+      renderWall();
+      document.getElementById('worksWallSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function renderCreators() {
+      document.getElementById('creatorsList').innerHTML = CREATORS.map(s => `
+        <div onclick="openWorkDrawer('${s.workId}')"
+          class="p-3 px-3.5 rounded-2xl border cursor-pointer transition flex flex-wrap items-center justify-between gap-3 hover:border-[#624AFF]/50"
+          style="background:var(--bg-subtle); border-color:var(--border);">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="w-9 h-9 rounded-full inline-flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-sm" style="background:${s.grad};">
+              ${s.name[0]}
+            </span>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-sm">${maskName(s.name)}</span>
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-medium" style="background:var(--primary-soft); color:var(--primary);">创作 ${s.works} 件作品</span>
               </div>
+              <div class="text-xs truncate mt-0.5" style="color:var(--muted);">代表作：《${s.rep}》</div>
             </div>
-            ${kpiMicroGraphic(k)}
           </div>
-          <div class="pt-2.5 text-[11px] mono truncate" style="border-top:1px solid var(--border); color:var(--muted);">
-            ${k.sub}
+          <div class="text-right mono text-xs shrink-0">
+            <div class="font-bold" style="color:var(--ink);">${s.tries.toLocaleString()} 次试玩</div>
+            <div class="text-[11px] mt-0.5" style="color:var(--muted);">♡ ${s.likes} 赞</div>
           </div>
         </div>
       `).join('');
     }
 
-    function renderTrend() {
-      const rows = TREND_SERIES;
-      const isWorks = trendMode === 'works';
-
-      const bWorks = document.getElementById('trendBtnWorks');
-      const bRuns = document.getElementById('trendBtnRuns');
-      bWorks.style.background = isWorks ? 'var(--primary)' : 'transparent';
-      bWorks.style.color = isWorks ? '#FFFFFF' : 'var(--muted)';
-      bRuns.style.background = !isWorks ? 'var(--primary)' : 'transparent';
-      bRuns.style.color = !isWorks ? '#FFFFFF' : 'var(--muted)';
-
-      document.getElementById('trendLegendBar').innerHTML = isWorks
-        ? `<span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-[3px]" style="background:var(--primary);"></span>当周新增上架作品 (件)</span>
-           <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full" style="background:var(--cyan);"></span>编码活跃人数 (人)</span>
-           <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full" style="background:var(--amber);"></span>主题赛训节点</span>`
-        : `<span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-[3px]" style="background:var(--primary);"></span>当周作品运行增量 (次)</span>
-           <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full" style="background:var(--cyan);"></span>工程调用次数 (次)</span>
-           <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full" style="background:var(--amber);"></span>主题赛训节点</span>`;
-
-      const maxBar = isWorks ? 30 : 4000;
-      const maxLine = isWorks ? 520 : 11500;
-      const w = 640, h = 232, padL = 44, padR = 46, padT = 36, padB = 32;
-      const pw = w - padL - padR, ph = h - padT - padB;
-      const slot = pw / rows.length;
-      const barW = 30;
-
-      const linePts = rows.map((r, i) => ({
-        x: padL + i * slot + slot / 2,
-        y: padT + ph * (1 - (isWorks ? r.active : r.calls) / maxLine),
-        r
-      }));
-      const lineCurve = smoothPath(linePts);
-      const lineArea = `${lineCurve} L ${linePts[linePts.length - 1].x.toFixed(1)} ${padT + ph} L ${linePts[0].x.toFixed(1)} ${padT + ph} Z`;
-
-      let svg = `<svg viewBox="0 0 ${w} ${h}" class="w-full h-56 sm:h-60 overflow-visible select-none">
-        <defs>
-          <linearGradient id="actAreaFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="var(--cyan)" stop-opacity="${darkMode ? '0.28' : '0.16'}"/>
-            <stop offset="100%" stop-color="var(--cyan)" stop-opacity="0.01"/>
-          </linearGradient>
-          <linearGradient id="workBarGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#8B75FF"/>
-            <stop offset="100%" stop-color="#624AFF"/>
-          </linearGradient>
-          <filter id="lineGlow" x="-15%" y="-15%" width="130%" height="130%">
-            <feGaussianBlur stdDeviation="${darkMode ? '3.0' : '1.2'}" result="blur"/>
-            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>`;
-
-      [0, 0.33, 0.66, 1].forEach(f => {
-        const y = (padT + ph * (1 - f)).toFixed(1);
-        const leftLbl = isWorks ? Math.round(maxBar * f) + '件' : (maxBar * f / 1000).toFixed(1) + 'k';
-        const rightLbl = isWorks ? Math.round(maxLine * f) + '人' : (maxLine * f / 1000).toFixed(1) + 'k';
-        svg += `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="var(--grid-line)" stroke-dasharray="3 3"/>`;
-        svg += `<text x="${padL - 8}" y="${+y + 3.5}" text-anchor="end" fill="var(--muted)" font-size="10" class="mono">${leftLbl}</text>`;
-        svg += `<text x="${w - padR + 8}" y="${+y + 3.5}" text-anchor="start" fill="var(--muted)" font-size="10" class="mono">${rightLbl}</text>`;
-      });
-
-      svg += `<path d="${lineArea}" fill="url(#actAreaFill)"/>`;
-
-      rows.forEach((r, i) => {
-        const cx = padL + i * slot + slot / 2;
-        const barVal = isWorks ? r.works : r.runs;
-        const bh = (barVal / maxBar) * ph;
-        const by = padT + ph - bh;
-        const pctX = ((cx / w) * 100).toFixed(1);
-
-        if (r.event) {
-          svg += `<line x1="${cx.toFixed(1)}" y1="${padT - 8}" x2="${cx.toFixed(1)}" y2="${padT + ph}" stroke="var(--amber)" stroke-opacity="0.45" stroke-dasharray="2.5 2.5"/>`;
-          const bw = r.event.length * 9.2 + 14;
-          svg += `<rect x="${(cx - bw / 2).toFixed(1)}" y="${padT - 26}" width="${bw}" height="17" rx="8.5" fill="var(--amber-soft)" stroke="var(--amber)" stroke-opacity="0.45"/>`;
-          svg += `<text x="${cx.toFixed(1)}" y="${padT - 14.5}" text-anchor="middle" fill="var(--amber-ink)" font-size="9.5" font-weight="600">${r.event}</text>`;
-        }
-
-        svg += `<g class="cursor-pointer group"
-          onmouseenter="showTrendTooltip(${i}, ${pctX})"
-          onclick="onTrendBarClick(${i})">`;
-        svg += `<rect x="${(cx - slot / 2 + 2).toFixed(1)}" y="${padT}" width="${(slot - 4).toFixed(1)}" height="${ph}" rx="8" fill="var(--primary)" fill-opacity="0" class="group-hover:fill-opacity-[0.06] transition"/>`;
-        svg += `<line x1="${cx.toFixed(1)}" y1="${padT}" x2="${cx.toFixed(1)}" y2="${padT + ph}" stroke="var(--primary)" stroke-opacity="0" class="group-hover:stroke-opacity-40 transition"/>`;
-        svg += `<rect x="${(cx - barW / 2).toFixed(1)}" y="${by.toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" rx="6" fill="url(#workBarGrad)" fill-opacity="${r.event ? '0.96' : '0.72'}" class="group-hover:fill-opacity-100 transition"/>`;
-        svg += `<text x="${cx.toFixed(1)}" y="${(by - 5).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-size="10" font-weight="700" class="mono">${barVal}</text>`;
-        svg += `<text x="${cx.toFixed(1)}" y="${h - 8}" text-anchor="middle" fill="var(--muted)" font-size="10.5" class="mono">${r.w}</text>`;
-        svg += `</g>`;
-      });
-
-      svg += `<path d="${lineCurve}" fill="none" stroke="var(--cyan)" stroke-width="2.6" stroke-linecap="round" filter="url(#lineGlow)" pointer-events="none"/>`;
-      linePts.forEach(ap => {
-        svg += `<circle cx="${ap.x.toFixed(1)}" cy="${ap.y.toFixed(1)}" r="4.2" fill="var(--bg-surface)" stroke="var(--cyan)" stroke-width="2.4" pointer-events="none"/>`;
-      });
-
-      svg += `</svg>`;
-      document.getElementById('collegeTrendChart').innerHTML = svg;
-
-      // 3 Sub Visual Gauge Cards (Arc gauge + Bar compare + Stacked pill)
-      document.getElementById('trendSubGauges').innerHTML = `
-        <div class="p-3 rounded-xl border flex items-center justify-between gap-2" style="background:var(--bg-subtle); border-color:var(--border);">
-          <div>
-            <div class="text-[11px]" style="color:var(--muted);">提交过审上架率</div>
-            <div class="text-sm font-bold mono mt-0.5" style="color:var(--primary);">75.0% <span class="text-[10px] font-normal" style="color:var(--muted);">96/128</span></div>
-          </div>
-          <svg viewBox="0 0 44 26" class="w-11 h-7 shrink-0">
-            <path d="M 4 22 A 18 18 0 0 1 40 22" fill="none" stroke="var(--grid-line)" stroke-width="4.5" stroke-linecap="round"/>
-            <path d="M 4 22 A 18 18 0 0 1 34.7 9.3" fill="none" stroke="var(--primary)" stroke-width="4.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-
-        <div class="p-3 rounded-xl border flex items-center justify-between gap-2" style="background:var(--bg-subtle); border-color:var(--border);">
-          <div>
-            <div class="text-[11px]" style="color:var(--muted);">赛训周 vs 日常周</div>
-            <div class="text-sm font-bold mono mt-0.5" style="color:var(--amber-ink);">2.5× <span class="text-[10px] font-normal" style="color:var(--muted);">21.3/8.5</span></div>
-          </div>
-          <div class="flex items-end gap-1.5 h-7 shrink-0">
-            <span class="w-2.5 rounded-t" style="height:11px; background:rgba(148,163,184,0.45);" title="日常周 8.5件"></span>
-            <span class="w-2.5 rounded-t" style="height:26px; background:var(--amber);" title="赛事周 21.3件"></span>
-          </div>
-        </div>
-
-        <div class="p-3 rounded-xl border flex items-center justify-between gap-2" style="background:var(--bg-subtle); border-color:var(--border);">
-          <div>
-            <div class="text-[11px]" style="color:var(--muted);">多作品持续创客</div>
-            <div class="text-sm font-bold mono mt-0.5" style="color:var(--cyan-ink);">25.7% <span class="text-[10px] font-normal" style="color:var(--muted);">19/74人</span></div>
-          </div>
-          <div class="w-12 h-2.5 rounded-full overflow-hidden flex p-0.5" style="background:var(--bg-chip);">
-            <span class="h-full rounded-l-full" style="width:26%; background:var(--cyan);"></span>
-            <span class="h-full rounded-r-full" style="width:74%; background:rgba(148,163,184,0.3);"></span>
-          </div>
-        </div>
-      `;
-
-      document.getElementById('collegeTrendTable').innerHTML = `
-        <table class="w-full text-xs text-left border-collapse">
-          <thead>
-            <tr class="text-[11px]" style="border-bottom:1px solid var(--border); color:var(--muted);">
-              <th class="py-2 font-medium">周次</th>
-              <th class="py-2 font-medium">提交→上架</th>
-              <th class="py-2 font-medium">活跃编码人数</th>
-              <th class="py-2 font-medium">工程调用次数</th>
-              <th class="py-2 font-medium">当周运行增量</th>
-              <th class="py-2 font-medium">赛训节点</th>
-            </tr>
-          </thead>
-          <tbody class="mono">
-            ${rows.map(r => `
-              <tr style="border-bottom:1px solid var(--border);">
-                <td class="py-2">${r.w}</td>
-                <td class="py-2 font-semibold" style="color:var(--primary);">${r.submitted} → ${r.works} 件</td>
-                <td class="py-2">${r.active} 人</td>
-                <td class="py-2">${r.calls.toLocaleString()} 次</td>
-                <td class="py-2" style="color:var(--cyan-ink);">+${r.runs.toLocaleString()} 次</td>
-                <td class="py-2 font-sans" style="color:var(--muted);">${r.event || '日常实训'}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
-    }
-
-    function showTrendTooltip(idx, pctX) {
-      const r = TREND_SERIES[idx];
-      const tip = document.getElementById('trendFloatTip');
-      if (!tip) return;
-      tip.innerHTML = `
-        <div class="font-bold flex items-center justify-between gap-3 mb-1">
-          <span>${r.w}</span>
-          ${r.event ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-amber-400/20 text-amber-300">${r.event}</span>` : ''}
-        </div>
-        <div class="mono space-y-0.5 text-[10.5px] text-slate-200">
-          <div>新增上架：<strong class="text-white">${r.works} 件</strong>（提交 ${r.submitted}）</div>
-          <div>编码活跃：<strong class="text-cyan-300">${r.active} 人</strong> · 调用 ${r.calls.toLocaleString()} 次</div>
-          <div>作品运行：<strong class="text-emerald-300">+${r.runs.toLocaleString()} 次</strong></div>
-        </div>
-      `;
-      const clamped = Math.min(78, Math.max(22, pctX));
-      tip.style.left = clamped + '%';
-      tip.style.top = '8px';
-      tip.style.transform = 'translateX(-50%)';
-      tip.classList.remove('hidden');
-    }
-
-    function hideTrendTooltip() {
-      document.getElementById('trendFloatTip')?.classList.add('hidden');
-    }
-
-    function onTrendBarClick(idx) {
-      const r = TREND_SERIES[idx];
-      if (!r.eventTag) {
-        showToast(`${r.w} 为日常实训周，共新增上架 ${r.works} 件作品`);
-        return;
-      }
-      activeWallTag = activeWallTag === r.eventTag ? 'all' : r.eventTag;
-      renderWall();
-      document.getElementById('worksWallSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      showToast(`已联动筛选「${r.event}」代表作品`);
-    }
-
-    function toggleTrendTable() {
-      trendTableOpen = !trendTableOpen;
-      document.getElementById('collegeTrendTable').classList.toggle('hidden', !trendTableOpen);
-      document.getElementById('trendTableArrow').textContent = trendTableOpen ? '▴' : '▾';
-    }
-
-    // True Interactive SVG Centered Tapered Funnel Chart
-    function renderFunnel() {
-      const meta = PERIOD_META[period];
-      document.getElementById('funnelTopBadge').textContent = meta.deliverBadge;
-      const stages = meta.funnel;
-      const w = 420, h = 190;
-      const leftLabelW = 92, rightLabelW = 96;
-      const centerX = leftLabelW + (w - leftLabelW - rightLabelW) / 2;
-      const maxBarW = w - leftLabelW - rightLabelW - 8;
-      const rowH = h / stages.length;
-
-      let defs = '<defs>';
-      stages.forEach((s, i) => {
-        defs += `<linearGradient id="fnGrad${i}" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="${s.c1}"/>
-          <stop offset="100%" stop-color="${s.c2}"/>
-        </linearGradient>`;
-      });
-      defs += '</defs>';
-
-      let body = '';
-      stages.forEach((s, i) => {
-        const topRatio = s.ratio;
-        const botRatio = i < stages.length - 1 ? stages[i + 1].ratio : s.ratio * 0.84;
-        const topW = Math.max(36, maxBarW * topRatio);
-        const botW = Math.max(30, maxBarW * botRatio);
-        const y0 = i * rowH + 2;
-        const y1 = (i + 1) * rowH - 2.5;
-        const x0L = centerX - topW / 2, x0R = centerX + topW / 2;
-        const x1L = centerX - botW / 2, x1R = centerX + botW / 2;
-        const cy = (y0 + y1) / 2 + 4;
-        const numTxt = s.extra ? `${s.num}人/${s.extra}` : `${s.num}${s.unit}`;
-
-        body += `<g class="cursor-pointer group"
-          onmouseenter="setFunnelTip('${i + 1}. ${s.stage}：${numTxt}（${s.conv} · ${s.drop}）')"
-          onmouseleave="setFunnelTip('悬停漏斗阶梯查看层间留存与折损率')">
-          <line x1="${leftLabelW - 4}" y1="${cy - 3.5}" x2="${w - rightLabelW + 4}" y2="${cy - 3.5}" stroke="var(--grid-line)" stroke-dasharray="2 2"/>
-          <path d="M ${x0L.toFixed(1)} ${y0.toFixed(1)} L ${x0R.toFixed(1)} ${y0.toFixed(1)} L ${x1R.toFixed(1)} ${y1.toFixed(1)} L ${x1L.toFixed(1)} ${y1.toFixed(1)} Z"
-            fill="url(#fnGrad${i})" fill-opacity="0.90" class="group-hover:fill-opacity-100 transition" stroke="var(--bg-surface)" stroke-width="1"/>
-          <text x="${leftLabelW - 8}" y="${cy}" text-anchor="end" font-size="11" font-weight="600" fill="var(--ink-sub)">${s.stage}</text>
-          <text x="${centerX}" y="${cy}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#FFFFFF" class="mono">${numTxt}</text>
-          <text x="${w - rightLabelW + 8}" y="${cy}" text-anchor="start" font-size="10.5" font-weight="600" fill="var(--cyan-ink)" class="mono">${s.conv}</text>
-        </g>`;
-      });
-
-      document.getElementById('svgFunnelBox').innerHTML = `<svg viewBox="0 0 ${w} ${h}" class="w-full h-48 select-none">${defs}${body}</svg>`;
-    }
-
-    function setFunnelTip(txt) {
-      const el = document.getElementById('funnelHoverBar');
-      if (el) el.innerHTML = `<span class="truncate">${txt}</span>`;
-    }
-
-    function renderHeatmap() {
-      const paletteLight = ['rgba(98,74,255,0.10)', 'rgba(98,74,255,0.28)', 'rgba(98,74,255,0.54)', '#624AFF', '#13C2C2'];
-      const paletteDark = ['rgba(129,107,255,0.14)', 'rgba(129,107,255,0.34)', 'rgba(129,107,255,0.62)', '#7C66FF', '#2CE0E2'];
-      const pal = darkMode ? paletteDark : paletteLight;
-      const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-
-      const btnSlot = document.getElementById('heatBtnSlot');
-      const btnWeek = document.getElementById('heatBtnWeek');
-      btnSlot.style.background = heatMode === 'slot' ? 'var(--primary)' : 'transparent';
-      btnSlot.style.color = heatMode === 'slot' ? '#FFFFFF' : 'var(--muted)';
-      btnWeek.style.background = heatMode === 'week' ? 'var(--primary)' : 'transparent';
-      btnWeek.style.color = heatMode === 'week' ? '#FFFFFF' : 'var(--muted)';
-
-      if (heatMode === 'slot') {
-        document.getElementById('heatmapHoverInfo').textContent = '18–24点占全天 58.4%';
-        document.getElementById('heatmapBody').innerHTML = `
-          <div class="space-y-1">
-            <div class="grid grid-cols-[42px_repeat(7,minmax(0,1fr))] gap-1 text-[10px] mono text-center" style="color:var(--muted);">
-              <span></span>${days.map(d => `<span>${d.slice(1)}</span>`).join('')}
-            </div>
-            ${SLOT_HEATMAP.map(row => `
-              <div class="grid grid-cols-[42px_repeat(7,minmax(0,1fr))] gap-1 items-center">
-                <span class="text-[10px] mono" style="color:var(--muted);">${row.slot}</span>
-                ${row.vals.map((lv, dIdx) => {
-                  const cnt = 28 + lv * 46 + (dIdx * 7);
-                  return `<div
-                    onmouseenter="document.getElementById('heatmapHoverInfo').textContent='${days[dIdx]} ${row.slot} · 均活跃 ${cnt} 人'"
-                    onmouseleave="document.getElementById('heatmapHoverInfo').textContent='18–24点占全天 58.4%'"
-                    class="h-4 rounded-[4px] cursor-pointer transition hover:ring-2 hover:ring-[#624AFF]"
-                    style="background:${pal[lv - 1]};"></div>`;
-                }).join('')}
-              </div>
-            `).join('')}
-          </div>
-        `;
-      } else {
-        document.getElementById('heatmapHoverInfo').textContent = '单日峰值 462 人';
-        document.getElementById('heatmapBody').innerHTML = `
-          <div class="flex items-center gap-2">
-            <div class="grid grid-rows-7 gap-1 text-[10px] mono pr-1 select-none" style="color:var(--muted);">
-              <span class="h-3.5 leading-[14px]">一</span><span class="h-3.5"></span>
-              <span class="h-3.5 leading-[14px]">三</span><span class="h-3.5"></span>
-              <span class="h-3.5 leading-[14px]">五</span><span class="h-3.5"></span>
-              <span class="h-3.5 leading-[14px]">日</span>
-            </div>
-            <div class="flex-1 grid grid-cols-12 gap-1">
-              ${WEEK_HEATMAP.map((col, wIdx) => `
-                <div class="grid grid-rows-7 gap-1">
-                  ${col.map((lv, dIdx) => {
-                    const act = 76 + lv * 72 + ((wIdx * 5 + dIdx * 7) % 26);
-                    return `<div
-                      onmouseenter="document.getElementById('heatmapHoverInfo').textContent='第${wIdx + 1}周 ${days[dIdx]} · 活跃 ${act} 人'"
-                      onmouseleave="document.getElementById('heatmapHoverInfo').textContent='单日峰值 462 人'"
-                      class="h-3.5 rounded-[3.5px] cursor-pointer transition hover:scale-125 hover:ring-2 hover:ring-[#624AFF]"
-                      style="background:${pal[lv - 1]};"></div>`;
-                  }).join('')}
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      }
-    }
-
-    // Concentric Dual-Ring (Inner = Works Share, Outer = Campus Runs Share) + SVG Stepped Pyramid
-    function renderTracks() {
-      const scale = PERIOD_META[period].trackScale;
-      const rows = TRACK_DATA.map(t => ({
-        ...t,
-        scaledRuns: Math.round(t.runs * scale),
-        avgRuns: Math.round((t.runs * scale) / t.works)
-      }));
-      const totalRuns = rows.reduce((s, r) => s + r.scaledRuns, 0);
-      const maxRuns = Math.max(...rows.map(r => r.scaledRuns));
-
-      const rOuter = 54, cOuter = 2 * Math.PI * rOuter;
-      const rInner = 39, cInner = 2 * Math.PI * rInner;
-      const gap = 3.5;
-      let accOut = 0, accIn = 0;
-
-      const outerArcs = rows.map((t, idx) => {
-        const seg = Math.max(4, (t.runShare / 100) * cOuter - gap);
-        const off = -accOut;
-        accOut += (t.runShare / 100) * cOuter;
-        const active = activeTrackIdx === idx || activeWallCat === t.cat;
-        return `<circle cx="64" cy="64" r="${rOuter}" fill="none" stroke="${t.color}"
-          stroke-width="${active ? 11.5 : 9.5}"
-          stroke-dasharray="${seg.toFixed(1)} ${(cOuter - seg).toFixed(1)}"
-          stroke-dashoffset="${off.toFixed(1)}"
-          transform="rotate(-90 64 64)"
-          class="cursor-pointer transition-all duration-200"
-          style="opacity:${(activeTrackIdx === -1 && activeWallCat === 'all') || active ? 1 : 0.32};"
-          onmouseenter="hoverTrack(${idx})" onmouseleave="hoverTrack(-1)" onclick="filterWallByCat('${t.cat}')"/>`;
-      }).join('');
-
-      const innerArcs = rows.map((t, idx) => {
-        const seg = Math.max(3, (t.workShare / 100) * cInner - gap);
-        const off = -accIn;
-        accIn += (t.workShare / 100) * cInner;
-        const active = activeTrackIdx === idx || activeWallCat === t.cat;
-        return `<circle cx="64" cy="64" r="${rInner}" fill="none" stroke="${t.color}"
-          stroke-width="${active ? 8.5 : 7}"
-          stroke-dasharray="${seg.toFixed(1)} ${(cInner - seg).toFixed(1)}"
-          stroke-dashoffset="${off.toFixed(1)}"
-          transform="rotate(-90 64 64)"
-          class="cursor-pointer transition-all duration-200"
-          style="opacity:${(activeTrackIdx === -1 && activeWallCat === 'all') || active ? 0.78 : 0.22};"
-          onmouseenter="hoverTrack(${idx})" onmouseleave="hoverTrack(-1)" onclick="filterWallByCat('${t.cat}')"/>`;
-      }).join('');
-
-      document.getElementById('trackDonutSvg').innerHTML = `
-        <svg viewBox="0 0 128 128" class="w-full h-full overflow-visible">
-          <circle cx="64" cy="64" r="${rOuter}" fill="none" stroke="var(--grid-line)" stroke-width="9.5"/>
-          <circle cx="64" cy="64" r="${rInner}" fill="none" stroke="var(--grid-line)" stroke-width="7"/>
-          ${outerArcs}
-          ${innerArcs}
-        </svg>
-      `;
-
-      const topEl = document.getElementById('trackCenterTop');
-      const valEl = document.getElementById('trackCenterVal');
-      const subEl = document.getElementById('trackCenterSub');
-      if (activeTrackIdx >= 0) {
-        const cur = rows[activeTrackIdx];
-        topEl.textContent = cur.cat;
-        valEl.textContent = cur.avgRuns + '次/件';
-        subEl.textContent = cur.works + '件 · ' + cur.scaledRuns.toLocaleString() + '次';
-      } else {
-        topEl.textContent = '篇均运行';
-        valEl.textContent = Math.round(totalRuns / 96) + '次';
-        subEl.textContent = (totalRuns / 1000).toFixed(1) + 'K 总运行';
-      }
-
-      document.getElementById('trackBarsList').innerHTML = rows.map((t, idx) => {
-        const selected = activeWallCat === t.cat;
-        return `
-          <div onmouseenter="hoverTrack(${idx})" onmouseleave="hoverTrack(-1)" onclick="filterWallByCat('${t.cat}')"
-            class="p-1.5 px-2 rounded-xl cursor-pointer transition space-y-1 border"
-            style="background:${selected ? 'var(--primary-soft)' : 'transparent'}; border-color:${selected ? 'var(--primary)' : 'transparent'};">
-            <div class="flex items-center justify-between gap-1 text-[11px]">
-              <span class="inline-flex items-center gap-1.5 font-semibold">
-                <span class="w-2 h-2 rounded-full" style="background:${t.color};"></span>${t.cat}
-              </span>
-              <span class="mono"><strong>${t.works}</strong>件 · <span style="color:var(--cyan-ink);">${t.scaledRuns.toLocaleString()}</span>次</span>
-            </div>
-            <div class="space-y-0.5">
-              <div class="h-1 rounded-full overflow-hidden" style="background:var(--bg-chip);">
-                <div class="h-full rounded-full" style="width:${Math.round((t.works / 31) * 100)}%; background:${t.color}; opacity:0.65;"></div>
-              </div>
-              <div class="h-1.5 rounded-full overflow-hidden" style="background:var(--bg-chip);">
-                <div class="h-full rounded-full" style="width:${Math.round((t.scaledRuns / maxRuns) * 100)}%; background:${t.color};"></div>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      renderSelectionPyramid();
-    }
-
-    // Interactive SVG Horizontal Stepped Selection Funnel (128 -> 96 -> 26 -> 18)
-    function renderSelectionPyramid() {
-      const tiers = [
-        { key: 'all', label: '提交原型', val: 128, pct: '100%', h: 52, color: '#94A3B8' },
-        { key: 'all', label: '过审上架', val: 96, pct: '75.0%', h: 41, color: '#3B82F6' },
-        { key: 'awarded', label: '赛事获奖', val: 26, pct: '20.3%', h: 26, color: '#624AFF' },
-        { key: 'featured', label: '精选种子', val: 18, pct: '14.1%', h: 19, color: '#13C2C2' }
-      ];
-      const w = 320, h = 76;
-      const segW = w / tiers.length;
-      const midY = 33;
-
-      let svg = `<svg viewBox="0 0 ${w} ${h}" class="w-full h-20 select-none overflow-visible">`;
-      tiers.forEach((t, i) => {
-        const nextH = i < tiers.length - 1 ? tiers[i + 1].h : t.h * 0.85;
-        const x0 = i * segW + 2, x1 = (i + 1) * segW - 2;
-        const y0T = midY - t.h / 2, y0B = midY + t.h / 2;
-        const y1T = midY - nextH / 2, y1B = midY + nextH / 2;
-        const active = activePyramidTier === t.key && t.key !== 'all';
-        svg += `<g class="cursor-pointer group"
-          onclick="filterByPyramidTier('${t.key}', '${t.label}')"
-          onmouseenter="document.getElementById('pyramidHoverHint').textContent='${t.label} ${t.val} 件（占提交总量 ${t.pct}）'"
-          onmouseleave="document.getElementById('pyramidHoverHint').textContent='点击层级联动筛选'">
-          <polygon points="${x0},${y0T} ${x1},${y1T} ${x1},${y1B} ${x0},${y0B}"
-            fill="${t.color}" fill-opacity="${active ? '1' : '0.84'}" class="group-hover:fill-opacity-100 transition"
-            stroke="${active ? 'var(--ink)' : 'none'}" stroke-width="1.5"/>
-          <text x="${(x0 + x1) / 2}" y="${midY + 3.5}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#FFFFFF" class="mono">${t.val}</text>
-          <text x="${(x0 + x1) / 2}" y="${h - 4}" text-anchor="middle" font-size="9.5" fill="var(--muted)">${t.label}</text>
-        </g>`;
-      });
-      svg += `</svg>`;
-      document.getElementById('selectionPyramidSvg').innerHTML = svg;
-    }
-
-    function filterByPyramidTier(key, label) {
-      activePyramidTier = activePyramidTier === key ? 'all' : key;
-      renderSelectionPyramid();
-      renderWall();
-      document.getElementById('worksWallSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      showToast(activePyramidTier === 'all' ? '已恢复显示全部精选种子作品' : `已筛选「${label}」作品`);
-    }
-
-    function hoverTrack(idx) { activeTrackIdx = idx; renderTracks(); }
-
-    function filterWallByCat(cat) {
-      activeWallCat = activeWallCat === cat ? 'all' : cat;
-      renderTracks();
-      renderWall();
-      document.getElementById('worksWallSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    function pointQuad(days, runs) {
-      if (days >= 14 && runs >= 400) return 'q1';
-      if (days < 14 && runs >= 400) return 'q2';
-      if (days >= 14 && runs < 400) return 'q4';
-      return 'q3';
-    }
-
-    function renderScatter() {
-      const quads = [
-        { k: 'all', l: '全部创客 (74人)' },
-        { k: 'q1', l: '高产苗子象限 (28人)' },
-        { k: 'q4', l: '高频实训型 (24人)' },
-        { k: 'q2', l: '轻巧爆款型 (9人)' }
-      ];
-      document.getElementById('quadFilterBar').innerHTML = quads.map(q => {
-        const a = quadFilter === q.k;
-        return `<button onclick="setQuadFilter('${q.k}')" class="px-2 py-0.5 rounded-md border font-medium transition"
-          style="${a ? 'background:var(--primary); color:#FFFFFF; border-color:var(--primary);' : 'background:var(--bg-subtle); color:var(--muted); border-color:var(--border);'}">${q.l}</button>`;
-      }).join('');
-
-      const w = 310, h = 198, padL = 36, padR = 14, padT = 14, padB = 26;
-      const pw = w - padL - padR, ph = h - padT - padB;
-      const maxDays = 30, maxRuns = 1600;
-      const midX = padL + (14 / maxDays) * pw;
-      const midY = padT + ph * (1 - 400 / maxRuns);
-
-      let svg = `<svg viewBox="0 0 ${w} ${h}" class="w-full h-48 overflow-visible select-none">
-        <rect x="${midX.toFixed(1)}" y="${padT}" width="${(padL + pw - midX).toFixed(1)}" height="${(midY - padT).toFixed(1)}" rx="8"
-          fill="var(--cyan)" fill-opacity="${quadFilter === 'q1' ? '0.20' : darkMode ? '0.11' : '0.07'}" stroke="var(--cyan)" stroke-opacity="0.30" stroke-dasharray="3 3"/>
-        <text x="${(padL + pw - 6).toFixed(1)}" y="${padT + 12}" text-anchor="end" font-size="9" font-weight="600" fill="var(--cyan-ink)" class="mono">高投入·高产出 (28人)</text>
-
-        <line x1="${padL}" y1="${padT + ph}" x2="${padL + pw}" y2="${padT + ph}" stroke="var(--border-strong)"/>
-        <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + ph}" stroke="var(--border-strong)"/>
-        <line x1="${midX.toFixed(1)}" y1="${padT}" x2="${midX.toFixed(1)}" y2="${padT + ph}" stroke="var(--grid-line)" stroke-dasharray="3 3"/>
-        <line x1="${padL}" y1="${midY.toFixed(1)}" x2="${padL + pw}" y2="${midY.toFixed(1)}" stroke="var(--grid-line)" stroke-dasharray="3 3"/>
-
-        <text x="${padL - 5}" y="${padT + 8}" text-anchor="end" font-size="9" fill="var(--muted)" class="mono">1.6k</text>
-        <text x="${padL - 5}" y="${midY.toFixed(1)}" text-anchor="end" font-size="9" fill="var(--muted)" class="mono">400</text>
-        <text x="${padL - 5}" y="${padT + ph}" text-anchor="end" font-size="9" fill="var(--muted)" class="mono">0</text>
-
-        <text x="${padL}" y="${h - 6}" font-size="9" fill="var(--muted)" class="mono">0天</text>
-        <text x="${midX.toFixed(1)}" y="${h - 6}" text-anchor="middle" font-size="9" fill="var(--muted)" class="mono">14天</text>
-        <text x="${padL + pw}" y="${h - 6}" text-anchor="end" font-size="9" fill="var(--muted)" class="mono">30天 (月编码活跃)</text>
-      `;
-
-      COHORT_POINTS.forEach(p => {
-        const q = pointQuad(p.days, p.runs);
-        const match = quadFilter === 'all' || quadFilter === q;
-        const cx = padL + (p.days / maxDays) * pw;
-        const cy = padT + ph * (1 - p.runs / maxRuns);
-        const r = 3.5 + p.works * 1.3;
-        const col = q === 'q1' ? 'var(--cyan)' : q === 'q2' ? 'var(--blue)' : 'var(--muted)';
-        const pxPct = ((cx / w) * 100).toFixed(1);
-        const pyPct = ((cy / h) * 100).toFixed(1);
-        svg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="${col}"
-          fill-opacity="${match ? (q === 'q1' ? '0.72' : '0.45') : '0.10'}"
-          class="cursor-pointer transition"
-          onmouseenter="showScatterTooltip('${maskName(p.name)}', ${p.days}, ${p.works}, ${p.runs}, ${p.likes}, ${pxPct}, ${pyPct})"/>`;
-      });
-
-      STUDENTS.forEach((s, idx) => {
-        const q = pointQuad(s.days, s.runs);
-        const match = quadFilter === 'all' || quadFilter === q;
-        const cx = padL + (s.days / maxDays) * pw;
-        const cy = padT + ph * (1 - s.runs / maxRuns);
-        const isHi = highlightStudentName === s.name;
-        const r = (isHi ? 7.8 : 5.5) + s.works * 1.1;
-        const pxPct = ((cx / w) * 100).toFixed(1);
-        const pyPct = ((cy / h) * 100).toFixed(1);
-        svg += `<g class="cursor-pointer" style="opacity:${match ? 1 : 0.16};"
-          onmouseenter="onBubbleHover('${s.name}', ${s.days}, ${s.works}, ${s.runs}, ${s.likes}, ${pxPct}, ${pyPct})"
-          onclick="openWorkDrawer('${s.workId}')">`;
-        if (idx < 3 || isHi) {
-          svg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r + 4.5).toFixed(1)}" fill="var(--primary)" fill-opacity="${isHi ? '0.32' : '0.16'}"/>`;
-        }
-        svg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="${idx === 0 ? 'var(--amber)' : 'var(--primary)'}" stroke="var(--bg-surface)" stroke-width="1.8"/>`;
-        if (idx < 3) {
-          svg += `<text x="${(cx - r - 3).toFixed(1)}" y="${(cy + 3).toFixed(1)}" text-anchor="end" font-size="9.5" font-weight="600" fill="var(--ink)" class="mono">${maskName(s.name)}</text>`;
-        }
-        svg += `</g>`;
-      });
-
-      svg += `</svg>`;
-      document.getElementById('quadrantScatterSvg').innerHTML = svg;
-
-      const summaryMap = {
-        all: '全院 74 名交付创客 · 篇均运行 129 次 · 均值活跃 16.4 天',
-        q1: '高产苗子 28 人（编码 ≥14天 且 运行 ≥400次）· 贡献 76% 运行量',
-        q4: '高频实训 24 人（编码 ≥14天）· 工程练习扎实，可引导优化作品',
-        q2: '轻巧爆款 9 人（编码 <14天 但 运行 ≥400次）· 选题精准直击痛点'
-      };
-      document.getElementById('scatterSummaryBar').textContent = summaryMap[quadFilter];
-    }
-
-    function showScatterTooltip(name, days, works, runs, likes, pxPct, pyPct) {
-      const tip = document.getElementById('scatterFloatTip');
-      if (!tip) return;
-      tip.innerHTML = `
-        <div class="font-bold text-white mb-0.5">${name}</div>
-        <div class="mono text-[10px] text-slate-200">编码 ${days} 天 · ${works} 件作品 · 运行 ${runs.toLocaleString()} 次 · ▲${likes}</div>
-      `;
-      tip.style.left = Math.min(76, Math.max(24, pxPct)) + '%';
-      tip.style.top = Math.max(4, pyPct - 24) + '%';
-      tip.style.transform = 'translateX(-50%)';
-      tip.classList.remove('hidden');
-    }
-
-    function onBubbleHover(rawName, days, works, runs, likes, pxPct, pyPct) {
-      highlightStudentName = rawName;
-      renderLeaderboard();
-      showScatterTooltip(maskName(rawName), days, works, runs, likes, pxPct, pyPct);
-    }
-
-    function hideScatterTooltip() {
-      highlightStudentName = '';
-      document.getElementById('scatterFloatTip')?.classList.add('hidden');
-      renderLeaderboard();
-      renderScatter();
-    }
-
-    function hoverLeaderRow(rawName) {
-      highlightStudentName = rawName;
-      renderScatter();
-      renderLeaderboard();
-    }
-
-    // Sortable Data-Bar Leaderboard
-    function renderLeaderboard() {
-      ['Runs', 'Likes', 'Days'].forEach(k => {
-        const key = k.toLowerCase();
-        const btn = document.getElementById('sortBtn' + k);
-        btn.style.background = rankSort === key ? 'var(--primary)' : 'transparent';
-        btn.style.color = rankSort === key ? '#FFFFFF' : 'var(--muted)';
-      });
-
-      const list = [...STUDENTS].sort((a, b) => b[rankSort] - a[rankSort]);
-      const maxVal = Math.max(...list.map(s => s[rankSort]));
-
-      document.getElementById('leaderboardBarsContainer').innerHTML = list.map((s, idx) => {
-        const pct = Math.round((s[rankSort] / maxVal) * 100);
-        const isHi = highlightStudentName === s.name;
-        const mainMetric = rankSort === 'runs'
-          ? `${s.runs.toLocaleString()} 次运行`
-          : rankSort === 'likes'
-            ? `▲ ${s.likes} 赞`
-            : `${s.days} 天编码`;
-        return `
-          <div onmouseenter="hoverLeaderRow('${s.name}')" onmouseleave="hoverLeaderRow('')"
-            onclick="openWorkDrawer('${s.workId}')"
-            class="relative p-2 px-2.5 rounded-xl border cursor-pointer overflow-hidden transition"
-            style="border-color:${isHi ? 'var(--primary)' : 'var(--border)'}; background:var(--bg-subtle);">
-            <div class="absolute inset-y-0 left-0 pointer-events-none transition-all duration-300"
-              style="width:${pct}%; background:linear-gradient(90deg, rgba(98,74,255,0.13), rgba(19,194,194,0.10));"></div>
-            <div class="relative z-10 flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2 min-w-0">
-                <span class="w-5 h-5 rounded-md inline-flex items-center justify-center mono text-[10.5px] font-bold shrink-0"
-                  style="${idx === 0 ? 'background:var(--amber-soft); color:var(--amber-ink);' : idx < 3 ? 'background:var(--primary-soft); color:var(--primary);' : 'background:var(--bg-surface); color:var(--muted);'}">${idx + 1}</span>
-                <span class="font-bold truncate">${maskName(s.name)}</span>
-                <span class="mono text-[10.5px] px-1.5 py-0.5 rounded" style="background:var(--bg-surface); color:var(--ink-sub);">${s.works}作/${s.featured}★</span>
-              </div>
-              <div class="flex items-center gap-2 shrink-0 mono text-[11px]">
-                <span class="font-bold" style="color:var(--cyan-ink);">${mainMetric}</span>
-                <span class="text-[10px] px-1.5 py-0.5 rounded" style="background:var(--primary-soft); color:var(--primary);">${s.awards}奖</span>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function catColor(cat) {
-      const hit = TRACK_DATA.find(t => t.cat === cat);
+    function catColor(name) {
+      const hit = CATEGORIES.find(c => c.name === name);
       return hit ? hit.color : '#624AFF';
     }
 
     function renderWall() {
-      const cats = ['all', '课程助学', '科研文献', '校园服务', '开发效率'];
-      document.getElementById('collegeCatFilters').innerHTML = cats.map(c => {
-        const a = activeWallCat === c;
-        return `<button onclick="activeWallCat='${c}'; renderTracks(); renderWall()" class="px-3 py-1.5 rounded-full text-xs font-medium border transition"
-          style="${a ? 'background:var(--primary); color:#FFFFFF; border-color:var(--primary);' : 'background:var(--bg-surface); color:var(--ink-sub); border-color:var(--border);'}">${c === 'all' ? '全部赛道' : c}</button>`;
+      const pills = ['all', ...CATEGORIES.map(c => c.name)];
+      document.getElementById('wallCatPills').innerHTML = pills.map(p => {
+        const a = activeCat === p;
+        return `<button onclick="activeCat='${p}'; renderCategoryDonut(); renderWall()"
+          class="px-4 py-1.5 rounded-full text-xs font-semibold border transition"
+          style="${a ? 'background:var(--primary); color:#FFFFFF; border-color:var(--primary);' : 'background:var(--bg-surface); color:var(--ink-sub); border-color:var(--border);'}">
+          ${p === 'all' ? '全部作品' : p}
+        </button>`;
       }).join('');
 
-      const tags = [
-        { k: 'all', l: '全部赛事' },
-        { k: '#第1期校园黑客松', l: '#黑客松' },
-        { k: '#第2期科研工具赛', l: '#科研工具赛' },
-        { k: '#先导期小应用赛', l: '#先导赛' }
-      ];
-      document.getElementById('collegeTagFilters').innerHTML = tags.map(t => {
-        const a = activeWallTag === t.k;
-        return `<button onclick="activeWallTag='${t.k}'; renderWall()" class="px-2.5 py-1.5 rounded-full text-xs font-medium border transition"
-          style="${a ? 'background:var(--ink); color:var(--bg-page); border-color:var(--ink);' : 'background:var(--bg-surface); color:var(--muted); border-color:var(--border);'}">${t.l}</button>`;
-      }).join('');
-
-      const sortBy = document.getElementById('wallSortSelect')?.value || 'runs';
-      const filtered = WALL_WORKS
-        .filter(w =>
-          (activeWallCat === 'all' || w.cat === activeWallCat) &&
-          (activeWallTag === 'all' || w.tag === activeWallTag) &&
-          (activePyramidTier !== 'awarded' || w.awarded)
-        )
-        .sort((a, b) => sortBy === 'likes' ? b.likes - a.likes : sortBy === 'week' ? b.weekRuns - a.weekRuns : b.runs - a.runs);
-
-      const spotEl = document.getElementById('spotlightRow');
-      if (activeWallCat === 'all' && activeWallTag === 'all' && activePyramidTier === 'all') {
-        spotEl.classList.remove('hidden');
-        spotEl.innerHTML = WALL_WORKS.filter(w => w.spotlight).map(w => `
-          <div onclick="openWorkDrawer('${w.id}')" class="spotlight-card" style="background:${w.tint};">
-            <img src="${w.cover}" alt="${w.title}" class="spotlight-cover" loading="lazy" />
-            <div class="spotlight-inner space-y-2.5">
-              <div class="flex items-center gap-1.5 flex-wrap text-[11px] mono">
-                <span class="px-2 py-0.5 rounded font-sans font-semibold text-white" style="background:${catColor(w.cat)};">${w.cat}</span>
-                <span class="px-2 py-0.5 rounded font-semibold" style="background:var(--cyan-soft); color:var(--cyan-ink);">运行 ${w.runs.toLocaleString()} 次</span>
-                <span class="px-2 py-0.5 rounded" style="background:var(--bg-chip); color:var(--ink-sub);">▲ ${w.likes}</span>
-              </div>
-              <div class="text-base font-bold leading-snug">${w.title}</div>
-              <p class="text-xs leading-relaxed line-clamp-2" style="color:var(--muted);">${w.desc}</p>
-              <div class="pt-1 flex items-center justify-between text-xs mono">
-                <span class="font-sans" style="color:var(--ink-sub);">@${maskName(w.author)} · <span class="mono text-[11px]" style="color:var(--muted);">${w.type} · ${w.award}</span></span>
-                <span class="font-semibold" style="color:var(--primary);">运行数据与演示 ↗</span>
-              </div>
-            </div>
-          </div>
-        `).join('');
-      } else {
-        spotEl.classList.add('hidden');
-      }
-
-      if (!filtered.length) {
-        document.getElementById('featuredWorksGrid').innerHTML = `
-          <div class="col-span-full exec-card p-10 text-center text-xs" style="color:var(--muted);">
-            当前筛选条件下无匹配作品，<button onclick="activeWallCat='all'; activeWallTag='all'; activePyramidTier='all'; renderAll();" class="underline font-semibold" style="color:var(--primary);">重置筛选</button>
-          </div>`;
-        return;
-      }
-
-      document.getElementById('featuredWorksGrid').innerHTML = filtered.map(w => `
+      const list = WORKS.filter(w => activeCat === 'all' || w.cat === activeCat);
+      document.getElementById('worksGrid').innerHTML = list.map(w => `
         <div onclick="openWorkDrawer('${w.id}')" class="work-card group cursor-pointer flex flex-col justify-between">
           <div>
             <div class="thumb-wrap aspect-video overflow-hidden relative bg-slate-900">
               <img src="${w.cover}" alt="${w.title}" class="w-full h-full object-cover group-hover:scale-[1.04] transition duration-300" loading="lazy" />
-              <div class="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between text-[11px] mono">
-                <span class="px-2.5 py-0.5 rounded-full bg-slate-900/85 text-white backdrop-blur font-sans font-medium">${w.cat} · ${w.type}</span>
-                <span class="px-2.5 py-0.5 rounded-full font-bold bg-white/95 text-[#1E1D3A] shadow-sm">运行 ${w.runs.toLocaleString()} 次</span>
+              <div class="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between text-[11px]">
+                <span class="px-2.5 py-0.5 rounded-full text-white font-medium shadow-sm" style="background:${catColor(w.cat)};">${w.cat}</span>
+                <span class="px-2.5 py-0.5 rounded-full bg-white/95 text-[#1E1D3A] font-medium shadow-sm">${w.type}</span>
               </div>
             </div>
-            <div class="p-4 pt-3.5 space-y-2">
-              <div class="flex items-center justify-between gap-2 text-[11px] mono">
-                <span class="px-2 py-0.5 rounded-md" style="background:var(--bg-surface); border:1px solid var(--border); color:var(--ink-sub);">${w.tag}</span>
-                <span style="color:var(--primary);">${w.award}</span>
-              </div>
-              <div class="text-sm font-bold leading-snug">${w.title}</div>
+            <div class="p-5 pt-4 space-y-1.5">
+              <div class="text-base font-bold leading-snug">${w.title}</div>
               <p class="text-xs leading-relaxed line-clamp-2" style="color:var(--muted);">${w.desc}</p>
             </div>
           </div>
-          <div class="px-4 py-3 flex items-center justify-between text-xs mono" style="border-top:1px solid var(--border);">
-            <span class="font-sans" style="color:var(--muted);">@${maskName(w.author)} · 近7日 <strong class="mono" style="color:var(--ink-sub);">+${w.weekRuns}</strong> 次</span>
-            <span class="font-semibold" style="color:var(--primary);">▲ ${w.likes} · 演示 →</span>
+          <div class="px-5 py-3.5 flex items-center justify-between text-xs" style="border-top:1px solid var(--border);">
+            <span style="color:var(--ink-sub);">@${maskName(w.author)}</span>
+            <span class="mono font-semibold" style="color:var(--primary);">${w.tries.toLocaleString()} 次试玩 · ♡ ${w.likes}</span>
           </div>
         </div>
       `).join('');
     }
 
     function openWorkDrawer(id) {
-      const w = WALL_WORKS.find(x => x.id === id);
+      const w = WORKS.find(x => x.id === id);
       if (!w) return;
-      const maxD = Math.max(...w.dailyRuns);
-      const dayLabels = ['D-6', 'D-5', 'D-4', 'D-3', 'D-2', '昨日', '今日'];
-
       document.getElementById('workDrawerBody').innerHTML = `
         <div class="flex items-start justify-between gap-3">
           <div class="space-y-1.5">
-            <div class="flex items-center gap-2 flex-wrap text-[11px] mono">
-              <span class="px-2.5 py-0.5 rounded-full font-sans font-semibold text-white" style="background:${catColor(w.cat)};">${w.cat}</span>
-              <span class="px-2.5 py-0.5 rounded-full font-semibold" style="background:var(--primary-soft); color:var(--primary);">${w.award}</span>
-              <span class="px-2.5 py-0.5 rounded-full" style="background:var(--bg-subtle); color:var(--ink-sub);">${w.tag}</span>
+            <div class="flex items-center gap-2 text-xs">
+              <span class="px-2.5 py-0.5 rounded-full text-white font-medium" style="background:${catColor(w.cat)};">${w.cat}</span>
+              <span class="px-2.5 py-0.5 rounded-full" style="background:var(--bg-subtle); color:var(--ink-sub);">${w.type}</span>
             </div>
-            <h2 class="text-lg font-bold pt-1">${w.title}</h2>
-            <div class="text-xs" style="color:var(--muted);">独立开发者：@${maskName(w.author)}</div>
+            <h2 class="text-xl font-bold pt-1">${w.title}</h2>
+            <div class="text-xs" style="color:var(--muted);">创作者：@${maskName(w.author)}</div>
           </div>
           <button onclick="closeWorkDrawer()" class="text-2xl leading-none opacity-60 hover:opacity-100">×</button>
         </div>
@@ -1879,67 +822,35 @@
               <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
             </div>
             <span class="mono text-[11px] truncate px-3 py-0.5 rounded-md flex-1 text-center" style="background:var(--bg-surface); color:var(--primary);">${w.url}</span>
-            <span class="mono text-[10px] font-semibold px-2 py-0.5 rounded" style="background:var(--cyan-soft); color:var(--cyan-ink);">${w.type}</span>
           </div>
           <img src="${w.cover}" alt="${w.title}" class="w-full aspect-video object-cover" />
         </div>
 
-        <!-- Per-Work 7-Day Campus Runs Mini Bar Chart -->
-        <div class="p-4 rounded-2xl border space-y-2.5" style="background:var(--bg-subtle); border-color:var(--border);">
-          <div class="flex items-center justify-between text-xs">
-            <span class="font-bold">近 7 日校内真实运行趋势</span>
-            <span class="mono text-[11px]" style="color:var(--cyan-ink);">累计 ${w.runs.toLocaleString()} 次 · 近7日 +${w.weekRuns} 次 · ▲${w.likes} 赞</span>
+        <div class="grid grid-cols-2 gap-3 text-center">
+          <div class="p-3.5 rounded-2xl border" style="background:var(--bg-subtle); border-color:var(--border);">
+            <div class="text-lg font-bold mono" style="color:var(--primary);">${w.tries.toLocaleString()} 次</div>
+            <div class="text-xs mt-0.5" style="color:var(--muted);">被同学试玩体验</div>
           </div>
-          <div class="grid grid-cols-7 gap-2 items-end h-20 pt-2">
-            ${w.dailyRuns.map((v, i) => `
-              <div class="flex flex-col items-center gap-1">
-                <span class="mono text-[10px]" style="color:var(--ink-sub);">${v}</span>
-                <div class="w-full rounded-t-md transition-all" style="height:${Math.round((v / maxD) * 44)}px; background:${i >= 5 ? 'var(--cyan)' : 'var(--primary)'}; opacity:${i >= 5 ? 0.95 : 0.72};"></div>
-                <span class="mono text-[9.5px]" style="color:var(--muted);">${dayLabels[i]}</span>
-              </div>
-            `).join('')}
+          <div class="p-3.5 rounded-2xl border" style="background:var(--bg-subtle); border-color:var(--border);">
+            <div class="text-lg font-bold mono" style="color:var(--cyan-ink);">♡ ${w.likes}</div>
+            <div class="text-xs mt-0.5" style="color:var(--muted);">同学实名点赞</div>
           </div>
         </div>
 
         <div class="space-y-1.5 text-xs">
-          <div class="font-bold">解决场景与功能结构</div>
-          <p class="leading-relaxed" style="color:var(--ink-sub);">${w.desc}</p>
+          <div class="font-bold text-sm">作品介绍</div>
+          <p class="leading-relaxed text-xs" style="color:var(--ink-sub);">${w.desc}</p>
         </div>
       `;
       document.getElementById('workDrawerFooter').innerHTML = `
         <span class="text-xs mono truncate" style="color:var(--muted);">${w.url}</span>
-        <button onclick="showToast('正在打开作品演示地址：${w.url}')" class="px-5 py-2 rounded-full text-xs font-semibold text-white shrink-0 shadow-md hover:opacity-95 transition" style="background:linear-gradient(90deg,#27254C,#624AFF);">打开在线演示 ↗</button>
+        <button onclick="showToast('正在打开作品体验：${w.url}')" class="px-5 py-2.5 rounded-full text-xs font-semibold text-white shrink-0 shadow-md hover:opacity-95 transition" style="background:linear-gradient(90deg,#27254C,#624AFF);">打开体验作品 ↗</button>
       `;
       document.getElementById('workDrawer').classList.remove('hidden');
     }
 
     function closeWorkDrawer() {
       document.getElementById('workDrawer').classList.add('hidden');
-    }
-
-    function openBriefModal() {
-      document.getElementById('briefContentBox').innerHTML = `
-        <div><strong>1. 实训覆盖与转化：</strong>在籍名单 818 人 → 开通算力 642 人 (78.5%) → 月持续编码 512 人 (79.8%，其中月活≥8天 246 人) → 参与赛训实操 289 人 (56.4%) → 独立交付可运行软件 74 人 / 96 件 (25.6%)。</div>
-        <div><strong>2. 赛训拉动与时段：</strong>累计开展 3 期主题赛训，赛事周均新增作品 21.3 件（非赛周 8.5 件，拉动倍率 2.5×）；18:00–24:00 课后编码占全天活跃量 58.4%。</div>
-        <div><strong>3. 教研赋能与种子储备：</strong>课程助学 (31件 / 4,180次运行) 与科研文献 (28件 / 3,420次运行) 合计占全部作品 61.5%，全院作品累计运行/下载 12,400 次；通过四级遴选（提交 128 → 上架 96 → 获奖 26 → 精选 18）沉淀 18 个双创竞赛种子项目与 28 名高投入高产出创客苗子。</div>
-      `;
-      document.getElementById('briefModal').classList.remove('hidden');
-    }
-
-    function closeBriefModal() {
-      document.getElementById('briefModal').classList.add('hidden');
-    }
-
-    function copyBrief() {
-      const txt = [
-        '华中科技大学软件学院 · AI 实训与创新成果数据简报（2026秋）：',
-        '1. 实训转化漏斗：在籍 818 人 → 激活 642 人 (78.5%) → 月持续编码 512 人 (79.8%) → 赛训实操 289 人 (56.4%) → 独立交付作品 74 人 / 96 件。',
-        '2. 赛训拉动效应：3 期主题赛训周均新增上架作品 21.3 件（非赛周 8.5 件，2.5×）；18:00-24:00 课后实训占全天 58.4%。',
-        '3. 教研赛道与种子储备：课程助学(31件/4,180次运行) + 科研文献(28件/3,420次运行)占作品总量 61.5%，校内累计运行 12,400 次；累计遴选赛事获奖 26 件、院级双创精选种子 18 件、高产创客苗子 28 人。'
-      ].join('\n');
-      if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {});
-      closeBriefModal();
-      showToast('数据简报已复制到剪贴板');
     }
 
     function renderAll() {
@@ -1949,21 +860,19 @@
         b.style.color = a ? '#1E1D3A' : 'rgba(224, 231, 255, 0.88)';
       });
       renderKpis();
-      renderTrend();
-      renderFunnel();
-      renderHeatmap();
-      renderTracks();
-      renderScatter();
-      renderLeaderboard();
+      renderUserCurve();
+      renderWorksBars();
+      renderCategoryDonut();
+      renderCreators();
       renderWall();
     }
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        const drawerOpen = !document.getElementById('workDrawer').classList.contains('hidden');
-        const briefOpen = !document.getElementById('briefModal').classList.contains('hidden');
-        if (drawerOpen) { closeWorkDrawer(); return; }
-        if (briefOpen) { closeBriefModal(); return; }
+        if (!document.getElementById('workDrawer').classList.contains('hidden')) {
+          closeWorkDrawer();
+          return;
+        }
         if (darkMode) toggleProjectionMode();
       }
     });
