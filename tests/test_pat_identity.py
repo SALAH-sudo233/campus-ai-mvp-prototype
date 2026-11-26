@@ -1,4 +1,6 @@
+import hashlib
 import os
+import secrets
 import sqlite3
 import tempfile
 import unittest
@@ -121,33 +123,80 @@ class PatIdentityHttpTests(unittest.TestCase):
 
 
 class PatIdentityMigrationTests(unittest.TestCase):
-    def test_v11_tokens_backfill_deterministically_without_losing_orphan_rows(self):
+    def seed_v11_tokens(self, path):
+        original = migrations.MIGRATIONS
+        try:
+            migrations.MIGRATIONS = original[:-1]
+            migrations.migrate(path)
+        finally:
+            migrations.MIGRATIONS = original
+        with sqlite3.connect(path) as conn:
+            user_ids = [conn.execute("SELECT user_id FROM org_memberships WHERE student_id = ?",
+                                     (student_id,)).fetchone()[0]
+                        for student_id in ("2024001001", "2024001002", "2024001003", "2024001004")]
+            other_org = migrations.ensure_org(conn, "legacy-pat-org", "历史令牌学院")
+            conn.execute("INSERT INTO org_memberships (org_id, user_id, role, admission_status, external_ref, name, joined_at) "
+                         "VALUES (?, ?, 'org_member', 'active', 'legacy-member', '历史成员', 1)",
+                         (other_org, user_ids[0]))
+            accounts = (("legacy-first", user_ids[0], PILOT, 1, 123),
+                        ("legacy-second", user_ids[0], other_org, 2, 456),
+                        ("ambiguous-first", user_ids[2], PILOT, 1, 789),
+                        ("ambiguous-second", user_ids[2], PILOT, 2, 789),
+                        ("legacy-null-org", user_ids[3], None, 1, 123))
+            for owner_ref, user_id, org_id, created_at, balance in accounts:
+                conn.execute("INSERT INTO students (owner_ref, mode, identity, pw_salt, pw_hash, balance, spent, created_at, user_id, org_id) "
+                             "VALUES (?, 'email', ?, '00', '00', ?, 0, ?, ?, ?)",
+                             (owner_ref, owner_ref + "@example.edu.cn", balance, created_at, user_id, org_id))
+            tokens = {}
+            for token_id, user_id, org_id in (("legacy-valid", user_ids[0], other_org),
+                                               ("legacy-first-org", user_ids[0], PILOT),
+                                               ("legacy-orphan", user_ids[1], PILOT),
+                                               ("legacy-ambiguous", user_ids[2], PILOT),
+                                               ("legacy-unmatched", user_ids[3], PILOT),
+                                               ("legacy-null", user_ids[3], None)):
+                tokens[token_id] = "cpat_" + secrets.token_urlsafe(32)
+                conn.execute("INSERT INTO pat_tokens (id, user_id, token_hash, token_hint, label, role_snapshot, org_snapshot, "
+                             "created_at, created_by, expires_at, request_id) "
+                             "VALUES (?, ?, ?, 'legacy', 'legacy', 'org_member', ?, 1, ?, 9999999999, ?)",
+                             (token_id, user_id, hashlib.sha256(tokens[token_id].encode()).hexdigest(),
+                              org_id, user_id, token_id))
+        return tokens, other_org
+
+    def test_v11_tokens_backfill_only_unique_accounts_in_snapshot_org_without_losing_rows(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = os.path.join(temporary, "v11.sqlite")
-            original = migrations.MIGRATIONS
-            try:
-                migrations.MIGRATIONS = original[:-1]
-                migrations.migrate(path)
-            finally:
-                migrations.MIGRATIONS = original
-            with sqlite3.connect(path) as conn:
-                user_id = conn.execute("SELECT user_id FROM org_memberships WHERE student_id = '2024001001'").fetchone()[0]
-                missing_user = conn.execute("SELECT user_id FROM org_memberships WHERE student_id = '2024001002'").fetchone()[0]
-                for ref, created_at in (("legacy-first", 1), ("legacy-second", 2)):
-                    conn.execute("INSERT INTO students (owner_ref, mode, identity, pw_salt, pw_hash, balance, spent, created_at, user_id, org_id) "
-                                 "VALUES (?, 'email', ?, '00', '00', 123, 0, ?, ?, ?)",
-                                 (ref, ref + "@example.edu.cn", created_at, user_id, PILOT))
-                for token_id, owner in (("legacy-valid", user_id), ("legacy-orphan", missing_user)):
-                    conn.execute("INSERT INTO pat_tokens (id, user_id, token_hash, token_hint, label, role_snapshot, org_snapshot, "
-                                 "created_at, created_by, expires_at, request_id) "
-                                 "VALUES (?, ?, ?, 'legacy', 'legacy', 'org_member', ?, 1, ?, 9999999999, ?)",
-                                 (token_id, owner, token_id, PILOT, owner, token_id))
+            self.seed_v11_tokens(path)
             self.assertEqual(migrations.migrate(path), [12])
             self.assertEqual(migrations.migrate(path), [])
             with sqlite3.connect(path) as conn:
                 rows = dict(conn.execute("SELECT id, owner_ref FROM pat_tokens"))
-                self.assertEqual(rows, {"legacy-valid": "legacy-first", "legacy-orphan": None})
-                self.assertEqual(conn.execute("SELECT balance FROM students WHERE owner_ref = 'legacy-second'").fetchone()[0], 123)
+                self.assertEqual(rows, {"legacy-valid": "legacy-second", "legacy-first-org": "legacy-first",
+                                        "legacy-orphan": None, "legacy-ambiguous": None,
+                                        "legacy-unmatched": None, "legacy-null": "legacy-null-org"})
+                self.assertEqual(dict(conn.execute("SELECT owner_ref, balance FROM students WHERE mode = 'email'")),
+                                 {"legacy-first": 123, "legacy-second": 456, "ambiguous-first": 789,
+                                  "ambiguous-second": 789, "legacy-null-org": 123})
+
+    def test_migrated_pat_uses_snapshot_org_account_and_rejects_ambiguous_owners_over_http(self):
+        server = DemoServer()
+        tokens, org_id = self.seed_v11_tokens(server.db_path)
+        with server:
+            code, profile = server.get("/api/me", tokens["legacy-valid"])
+            self.assertEqual(code, 200, profile)
+            self.assertEqual(profile["org"]["id"], org_id)
+            self.assertEqual(profile["identity"], "legacy-second@example.edu.cn")
+            code, rotated = server.post("/api/key/rotate", {"requestId": "migrated-bound-key"}, tokens["legacy-valid"])
+            self.assertEqual(code, 200, rotated)
+            with sqlite3.connect(server.relay_path) as conn:
+                owner = conn.execute("SELECT owner_ref FROM relay_keys WHERE key_hint = ? AND revoked_at IS NULL",
+                                     (rotated["hint"],)).fetchone()[0]
+                self.assertEqual(owner, "legacy-second")
+            for token_id in ("legacy-ambiguous", "legacy-unmatched", "legacy-orphan"):
+                with self.subTest(token_id=token_id):
+                    self.assertEqual(server.get("/api/me", tokens[token_id])[0], 401)
+                    self.assertEqual(server.post("/api/key/rotate", {"requestId": token_id}, tokens[token_id])[0], 401)
+            with sqlite3.connect(server.db_path) as conn:
+                self.assertEqual(conn.execute("SELECT balance FROM students WHERE owner_ref = 'legacy-first'").fetchone()[0], 123)
 
 
 if __name__ == "__main__":
