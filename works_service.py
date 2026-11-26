@@ -222,6 +222,15 @@ def ensure_showcase_artifacts(conn, data_dir):
                 urls.append("media/" + fname)
         work_media_urls[wid] = urls
 
+    if os.path.isdir(demo_src_dir):
+        for fname in sorted(os.listdir(demo_src_dir)):
+            if not fname.startswith("demo_"):
+                continue
+            src = os.path.join(demo_src_dir, fname)
+            dst = os.path.join(media_root, fname)
+            if os.path.isfile(src) and not os.path.exists(dst):
+                shutil.copy2(src, dst)
+
     # 1 & 2: Two hosted Web apps
     web_demos = [
         ("demo-campus-events", "校园活动清单", "在线筛选、收藏本周校园活动，支持直接托管成可访问网站。", "v1.2.0", DEMO_CAMPUS_EVENTS_HTML),

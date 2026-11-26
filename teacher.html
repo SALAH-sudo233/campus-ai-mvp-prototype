@@ -411,12 +411,12 @@
     ];
 
     const WALL_WORKS = [
-      { id: 'fw-1', title: '华科选课排雷助手', type: 'Web', tag: '#第1期校园黑客松', author: '林知行', deg: '本科 · 大三', likes: 148, accent: '#0F4C81', url: 'https://apps.huanxi-lab.cn/hust-course-helper', desc: '结合历年课程口碑与时间冲突检测，AI 一键排出最优课表并支持导出日历，上线 3 天服务本院 400+ 同学。' },
-      { id: 'fw-2', title: '论文精读卡片生成器', type: 'Web', tag: '#第1期校园黑客松', author: '周予安', deg: '研究生 · 研一', likes: 126, accent: '#0D9488', url: 'https://apps.huanxi-lab.cn/paper-cards', desc: '拖入 PDF 自动拆解论文创新点、公式推导与复现清单，助力研究生科研文献阅读提效。' },
-      { id: 'fw-3', title: '实验室值班语音助手', type: 'PC', tag: '#第2周Workshop实战', author: '陈一鸣', deg: '本科 · 大四', likes: 98, accent: '#0A2540', url: 'lab-voice-v1.1.zip', desc: '本地轻量化桌面助手，自动整理组会口头待办并生成排班与打卡提醒。' },
-      { id: 'fw-4', title: '食堂档口排队实时估算', type: 'APP', tag: '#第1期校园黑客松', author: '许嘉禾', deg: '研究生 · 研二', likes: 84, accent: '#0F4C81', url: 'canteen-eta-v0.8.apk', desc: '结合课表下课潮汐规律预测东区各食堂窗口排队时长，解决校园真实高频痛点。' },
-      { id: 'fw-5', title: '算法题解可视化沙盒', type: 'Web', tag: '#第2周Workshop实战', author: '陆星野', deg: '本科 · 大二', likes: 73, accent: '#0D9488', url: 'https://apps.huanxi-lab.cn/algo-sandbox', desc: '输入动态规划或图论代码，自动生成状态转移步进动画，帮助低年级同学直观理解算法。' },
-      { id: 'fw-6', title: '毕设开题答辩模拟评委', type: 'Web', tag: '#第1期校园黑客松', author: '苏明澈', deg: '研究生 · 研一', likes: 61, accent: '#334155', url: 'https://apps.huanxi-lab.cn/defense-mock', desc: '导入开题 PPT 大纲，自动扮演三位评审老师进行结构化追问与改进建议打分。' }
+      { id: 'fw-1', title: '华科选课排雷助手', type: 'Web', tag: '#第1期校园黑客松', author: '林知行', deg: '本科 · 大三', likes: 148, accent: '#0F4C81', cover: './media/demo_campus_events_1.jpg', url: 'https://apps.huanxi-lab.cn/hust-course-helper', desc: '结合历年课程口碑与时间冲突检测，AI 一键排出最优课表并支持导出日历，上线 3 天服务本院 400+ 同学。' },
+      { id: 'fw-2', title: '论文精读卡片生成器', type: 'Web', tag: '#第1期校园黑客松', author: '周予安', deg: '研究生 · 研一', likes: 126, accent: '#0D9488', cover: './media/demo_cms_web.jpg', url: 'https://apps.huanxi-lab.cn/paper-cards', desc: '拖入 PDF 自动拆解论文创新点、公式推导与复现清单，助力研究生科研文献阅读提效。' },
+      { id: 'fw-3', title: '实验室值班语音助手', type: 'PC', tag: '#第2周Workshop实战', author: '陈一鸣', deg: '本科 · 大四', likes: 98, accent: '#0A2540', cover: './media/demo_cms_agent.jpg', url: 'lab-voice-v1.1.zip', desc: '本地轻量化桌面助手，自动整理组会口头待办并生成排班与打卡提醒。' },
+      { id: 'fw-4', title: '食堂档口排队实时估算', type: 'APP', tag: '#第1期校园黑客松', author: '许嘉禾', deg: '研究生 · 研二', likes: 84, accent: '#0F4C81', cover: './media/demo_homework_app_1.jpg', url: 'canteen-eta-v0.8.apk', desc: '结合课表下课潮汐规律预测东区各食堂窗口排队时长，解决校园真实高频痛点。' },
+      { id: 'fw-5', title: '算法题解可视化沙盒', type: 'Web', tag: '#第2周Workshop实战', author: '陆星野', deg: '本科 · 大二', likes: 73, accent: '#0D9488', cover: './media/demo_focus_timer_1.jpg', url: 'https://apps.huanxi-lab.cn/algo-sandbox', desc: '输入动态规划或图论代码，自动生成状态转移步进动画，帮助低年级同学直观理解算法。' },
+      { id: 'fw-6', title: '毕设开题答辩模拟评委', type: 'Web', tag: '#第1期校园黑客松', author: '苏明澈', deg: '研究生 · 研一', likes: 61, accent: '#334155', cover: './media/demo_club_poster_1.jpg', url: 'https://apps.huanxi-lab.cn/defense-mock', desc: '导入开题 PPT 大纲，自动扮演三位评审老师进行结构化追问与改进建议打分。' }
     ];
 
     function showToast(msg) {
@@ -582,16 +582,16 @@
 
       const list = WALL_WORKS.filter(w => activeWallTag === 'all' || w.tag === activeWallTag);
       document.getElementById('featuredWorksGrid').innerHTML = list.map(w => `
-        <div onclick="openWorkDrawer('${w.id}')" class="cpa-card work-card overflow-hidden cursor-pointer flex flex-col justify-between">
+        <div onclick="openWorkDrawer('${w.id}')" class="cpa-card work-card group overflow-hidden cursor-pointer flex flex-col justify-between">
           <div>
-            <div class="h-24 px-4 py-3 flex flex-col justify-between" style="background:linear-gradient(135deg, ${w.accent}14 0%, ${w.accent}05 100%); border-bottom:1px solid var(--border);">
-              <div class="flex items-center justify-between text-[11px]">
-                <span class="px-2.5 py-0.5 rounded-full bg-white border border-slate-200 font-medium">${w.type}</span>
-                <span class="px-2.5 py-0.5 rounded-full font-medium" style="background:#EFF6FF; color:var(--primary);">★ 学院精选</span>
+            <div class="aspect-video w-full overflow-hidden relative bg-slate-100 border-b border-slate-100">
+              <img src="${w.cover}" alt="${w.title}" class="w-full h-full object-cover group-hover:scale-[1.03] transition duration-300" loading="lazy" />
+              <div class="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between text-[11px]">
+                <span class="px-2.5 py-0.5 rounded-full bg-white/95 shadow-sm font-medium">${w.type}</span>
+                <span class="px-2.5 py-0.5 rounded-full font-medium bg-white/95 shadow-sm" style="color:var(--primary);">★ 学院精选</span>
               </div>
-              <div class="mono text-[11px] truncate" style="color:var(--muted);">${w.url}</div>
             </div>
-            <div class="p-4 space-y-2">
+            <div class="p-4 space-y-1.5">
               <div class="text-sm font-bold">${w.title}</div>
               <p class="text-xs leading-relaxed line-clamp-2" style="color:var(--muted);">${w.desc}</p>
             </div>
@@ -616,10 +616,12 @@
           </div>
           <button onclick="closeWorkDrawer()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
         </div>
-        <div class="rounded-2xl border border-slate-200 p-6 text-center space-y-2" style="background:var(--bg-page);">
-          <div class="text-xs font-semibold">${w.title}</div>
-          <div class="mono text-xs" style="color:var(--primary);">${w.url}</div>
-          <div class="text-[11px]" style="color:var(--muted);">汇报现场点击下方按钮即可直接打开学生作品实时演示</div>
+        <div class="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
+          <img src="${w.cover}" alt="${w.title}" class="w-full aspect-video object-cover" />
+          <div class="px-4 py-3 flex items-center justify-between gap-2 text-[11px]" style="background:var(--bg-page);">
+            <span class="mono truncate" style="color:var(--primary);">${w.url}</span>
+            <span class="shrink-0" style="color:var(--muted);">汇报现场可直开演示</span>
+          </div>
         </div>
         <div class="space-y-1.5 text-xs">
           <div class="font-bold">成果简介</div>
