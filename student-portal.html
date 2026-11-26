@@ -926,13 +926,12 @@
         </div>
       </section>
 
-      <!-- ==================== TAB 3: 作品广场 (MODELSCOPE SPOTLIGHT DUAL-MODE FEED + MY WORKS) ==================== -->
+      <!-- ==================== TAB 3: 作品广场（3 列卡片网格原版布局 + 新标签页独立详情跳转） ==================== -->
       <section id="tab-square" class="hidden">
         <div id="squareHomeView" class="space-y-5">
           <!-- Sub-Mode A: 广场作品 -->
           <div id="squareAllPane" class="space-y-5">
-            <!-- Ongoing Challenge Hero Banner -->
-            <div id="squareHeroBanner" class="rounded-3xl p-5 px-6 text-white flex flex-wrap items-center justify-between gap-4" style="background:radial-gradient(ellipse 50% 90% at 92% 20%, rgba(54,207,209,0.28), transparent 70%), linear-gradient(135deg, #27254C 0%, #36298C 55%, #624AFF 100%); box-shadow:0 12px 28px rgba(98,74,255,0.18);">
+            <div class="rounded-3xl p-5 px-6 text-white flex flex-wrap items-center justify-between gap-4" style="background:radial-gradient(ellipse 50% 90% at 92% 20%, rgba(54,207,209,0.28), transparent 70%), linear-gradient(135deg, #27254C 0%, #36298C 55%, #624AFF 100%); box-shadow:0 12px 28px rgba(98,74,255,0.18);">
               <div class="space-y-1.5">
                 <div class="flex flex-wrap items-center gap-2 text-xs">
                   <span class="px-2.5 py-0.5 rounded-full font-semibold text-white" style="background:var(--accent);">🔥 火热进行中的主题挑战赛</span>
@@ -948,58 +947,28 @@
                 </div>
               </div>
               <div class="flex flex-wrap items-center gap-2.5 shrink-0">
-                <a id="squareHeroChallengeLink" href="?challenge=ch-hackathon" target="_blank" rel="noopener" class="px-4 py-2 rounded-full text-xs font-semibold border border-white/30 bg-white/10 hover:bg-white/20 text-white transition no-underline">查看挑战详情 ↗</a>
+                <a id="squareHeroChallengeLink" href="?challenge=ch-hackathon" target="_blank" rel="noopener" class="px-4 py-2 rounded-full text-xs font-semibold border border-white/30 bg-white/10 hover:bg-white/20 text-white transition no-underline">查看挑战详情</a>
                 <button onclick="openPublishModal('#第1期校园黑客松')" class="px-4 py-2 rounded-full text-xs font-semibold bg-white text-[#27254C] hover:bg-slate-100 transition">带标签参赛 →</button>
               </div>
             </div>
 
-            <!-- Filtered / View-All Subheader (Shown when tag/search/all is active) -->
-            <div id="squareFilterBanner" class="hidden cpa-card p-4 px-5 flex flex-wrap items-center justify-between gap-3 bg-white">
-              <div class="flex items-center gap-3">
-                <span class="w-9 h-9 rounded-2xl inline-flex items-center justify-center text-sm font-bold text-white shrink-0" style="background:linear-gradient(135deg,#27254C,#624AFF);">✦</span>
-                <div>
-                  <div class="flex items-center gap-2">
-                    <h2 id="squareFilterTitle" class="text-base font-bold leading-tight">作品广场 · 全部校园作品</h2>
-                    <span id="squareFilterCount" class="px-2 py-0.5 rounded-full text-[11px] mono font-medium" style="background:#F1F1FD; color:var(--primary);">6 件</span>
-                  </div>
-                  <div class="text-xs mt-0.5" style="color:var(--muted);">再次点击已选标签可取消筛选 · 点击作品卡片将在新标签页打开独立体验页</div>
-                </div>
-              </div>
-              <button onclick="resetSquareFilter()" class="cpa-ghost-pill px-3.5 py-1.5 text-xs font-medium bg-white shrink-0">← 返回聚合广场</button>
-            </div>
-
-            <!-- Sticky ModelScope Spotlight Filter & Sort Bar -->
-            <div class="ms-filter-bar sticky top-3 z-20 p-3.5 px-4 flex flex-wrap items-center justify-between gap-3">
-              <div class="flex items-center gap-1.5 flex-wrap text-xs">
-                <span class="font-semibold mr-1" style="color:var(--muted);">筛选：</span>
-                <div id="tagFilters" class="flex items-center gap-1.5 flex-wrap"></div>
-              </div>
-              <div class="flex flex-wrap items-center gap-2 text-xs">
-                <input id="squareSearch" oninput="onSquareSearchInput()" type="text" placeholder="搜索作品 / 作者..." class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-[#F7F9FD] focus:bg-white text-xs focus:outline-none focus:border-[#624AFF] w-36 sm:w-44 transition" />
-                <select id="typeFilter" onchange="onSquareSelectChange()" class="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs focus:outline-none">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div id="tagFilters" class="flex items-center gap-2 flex-wrap"></div>
+              <div class="flex items-center gap-2 text-xs">
+                <select id="typeFilter" onchange="onSquareSelectChange()" class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs focus:outline-none">
                   <option value="all">全部形态</option>
                   <option value="Web">Web（在线体验）</option>
                   <option value="APP">APP（安装包）</option>
                   <option value="PC">PC（客户端）</option>
                 </select>
-                <select id="sortFilter" onchange="onSquareSelectChange()" class="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs focus:outline-none">
-                  <option value="hot">综合热度</option>
-                  <option value="new">最新发布</option>
+                <select id="sortFilter" onchange="onSquareSelectChange()" class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs focus:outline-none">
+                  <option value="hot">按点赞最热</option>
+                  <option value="new">按最新发布</option>
                 </select>
-                <button id="squareViewAllBtn" onclick="toggleSquareViewAll()" class="px-3 py-1.5 rounded-full text-xs font-semibold transition shrink-0" style="background:#F1F1FD; color:#624AFF;">查看全部</button>
               </div>
             </div>
 
-            <!-- STATE A: Default Grouped Discovery + Right Challenge/Tutorial Rail -->
-            <div id="squareGroupedView" class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-              <div id="squareGroupedSections" class="xl:col-span-8 space-y-8"></div>
-              <div id="squareRightRail" class="xl:col-span-4 xl:sticky xl:top-20 space-y-4"></div>
-            </div>
-
-            <!-- STATE B: Filtered / View-All Full-Width 3-Column Flat Grid -->
-            <div id="squareFilteredView" class="hidden">
-              <div id="squareGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
-            </div>
+            <div id="squareGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
           </div>
 
           <!-- Sub-Mode B: 我的作品（含审核状态与驳回修改闭环） -->
@@ -1146,12 +1115,9 @@
     let cmsQuery = '';
     let studioShowAll = false;
     let studioRailTab = 'challenges'; // challenges | works
-    let activeSquareTag = '';
+    let activeSquareTag = 'all';
     let squareTypeFilter = 'all';
     let squareSortFilter = 'hot';
-    let squareQuery = '';
-    let squareShowAll = false;
-    let squareRailTab = 'challenges'; // challenges | lessons
     let publishMode = 'prompt';
     let currentKeyPlain = 'sk-hx-live-98f2c71a0e4b3d9f4a';
     let suppressUrlSync = false;
@@ -1670,11 +1636,9 @@ Model   ：claude-sonnet-4
             if (squareMode === 'mine') {
               usp.set('sub', 'mine');
             } else {
-              if (activeSquareTag) usp.set('tag', activeSquareTag);
+              if (activeSquareTag && activeSquareTag !== 'all') usp.set('tag', activeSquareTag);
               if (squareTypeFilter !== 'all') usp.set('type', squareTypeFilter);
               if (squareSortFilter !== 'hot') usp.set('sort', squareSortFilter);
-              if (squareQuery.trim()) usp.set('q', squareQuery.trim());
-              if (squareShowAll && !activeSquareTag && squareTypeFilter === 'all' && squareSortFilter === 'hot' && !squareQuery.trim()) usp.set('all', '1');
             }
           }
         }
@@ -2486,13 +2450,11 @@ Model   ：claude-sonnet-4
         if (inp) inp.value = '';
       } else if (tab === 'square') {
         squareMode = extra.sub === 'mine' ? 'mine' : 'all';
-        activeSquareTag = extra.tag || '';
+        activeSquareTag = extra.tag || 'all';
         squareTypeFilter = 'all';
         squareSortFilter = 'hot';
-        squareQuery = '';
-        squareShowAll = Boolean(extra.all);
-        const inp = document.getElementById('squareSearch');
-        if (inp) inp.value = '';
+        const tSel = document.getElementById('typeFilter'); if (tSel) tSel.value = 'all';
+        const sSel = document.getElementById('sortFilter'); if (sSel) sSel.value = 'hot';
       }
       switchTab(tab, false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3031,7 +2993,7 @@ Model   ：claude-sonnet-4
               <div class="cpa-card p-5 space-y-3.5 bg-white">
                 <div class="flex items-center justify-between">
                   <span class="text-xs font-bold">其他热门作品</span>
-                  <a href="${buildHref({ tab: 'square', all: '1' })}" onclick="return navPortalFromDetail(event, 'square', { all: true })" class="text-[11px] font-medium hover:underline no-underline" style="color:var(--primary);">全部作品 &gt;</a>
+                  <a href="${buildHref({ tab: 'square' })}" onclick="return navPortalFromDetail(event, 'square')" class="text-[11px] font-medium hover:underline no-underline" style="color:var(--primary);">全部作品 &gt;</a>
                 </div>
                 <div class="space-y-3">
                   ${others.map(o => `
@@ -3116,11 +3078,7 @@ Model   ：claude-sonnet-4
       showToast('作品已撤回');
     }
 
-    // ===== MODELSCOPE SPOTLIGHT DUAL-MODE SQUARE FEED (GROUPED + RIGHT RAIL <-> 3-COL FILTERED GRID) =====
-    function isSquareFiltered() {
-      return Boolean(activeSquareTag || squareTypeFilter !== 'all' || squareSortFilter !== 'hot' || squareQuery.trim() || squareShowAll);
-    }
-
+    // ===== SQUARE (CLEAN 3-COLUMN GRID LAYOUT + NEW-TAB STANDALONE DETAIL & URL SYNC) =====
     function setSquareMode(mode, skipSync = false) {
       squareMode = mode === 'mine' ? 'mine' : 'all';
       document.getElementById('squareAllPane').classList.toggle('hidden', squareMode !== 'all');
@@ -3132,55 +3090,10 @@ Model   ：claude-sonnet-4
       if (!skipSync) syncUrlFromState(false);
     }
 
-    function toggleSquareTag(tag) {
-      activeSquareTag = activeSquareTag === tag ? '' : tag;
-      if (activeSquareTag) squareShowAll = false;
+    function selectSquareTag(tag) {
+      activeSquareTag = (tag !== 'all' && activeSquareTag === tag) ? 'all' : tag;
       renderSquare();
       syncUrlFromState(false);
-    }
-
-    function toggleSquareViewAll() {
-      if (isSquareFiltered()) {
-        resetSquareFilter();
-      } else {
-        squareShowAll = true;
-        renderSquare();
-        syncUrlFromState(false);
-      }
-    }
-
-    function setSquareFilter(opts = {}) {
-      activeSquareTag = opts.tag || '';
-      squareTypeFilter = opts.type || 'all';
-      squareSortFilter = opts.sort || 'hot';
-      squareQuery = opts.q || '';
-      squareShowAll = Boolean(opts.all);
-      const tSel = document.getElementById('typeFilter'); if (tSel) tSel.value = squareTypeFilter;
-      const sSel = document.getElementById('sortFilter'); if (sSel) sSel.value = squareSortFilter;
-      const qInp = document.getElementById('squareSearch'); if (qInp) qInp.value = squareQuery;
-      renderSquare();
-      syncUrlFromState(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function resetSquareFilter() {
-      activeSquareTag = '';
-      squareTypeFilter = 'all';
-      squareSortFilter = 'hot';
-      squareQuery = '';
-      squareShowAll = false;
-      const tSel = document.getElementById('typeFilter'); if (tSel) tSel.value = 'all';
-      const sSel = document.getElementById('sortFilter'); if (sSel) sSel.value = 'hot';
-      const qInp = document.getElementById('squareSearch'); if (qInp) qInp.value = '';
-      renderSquare();
-      syncUrlFromState(false);
-    }
-
-    function onSquareSearchInput() {
-      const qInp = document.getElementById('squareSearch');
-      squareQuery = qInp ? qInp.value : '';
-      renderSquare();
-      syncUrlFromState(true);
     }
 
     function onSquareSelectChange() {
@@ -3222,7 +3135,7 @@ Model   ：claude-sonnet-4
             </div>
           </a>
           <div class="px-4 py-3 border-t border-slate-100 flex items-center justify-between text-xs">
-            <a href="${href}" target="_blank" rel="noopener" class="truncate hover:text-[#624AFF] transition no-underline" style="color:var(--muted);"><strong style="color:var(--ink);">${w.author}</strong> · 💬 ${cmtCount} · 体验 ↗</a>
+            <a href="${href}" target="_blank" rel="noopener" class="truncate hover:text-[#624AFF] transition no-underline" style="color:var(--muted);"><strong style="color:var(--ink);">${w.author}</strong> · 💬 ${cmtCount}</a>
             <button onclick="toggleVote('${w.id}')" class="px-3 py-1 rounded-full mono text-xs font-medium border transition shrink-0" style="${w.voted ? 'background:#F1F1FD; color:#624AFF; border-color:#D2C4FF;' : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);'}">▲ ${w.likes}</button>
           </div>
         </div>
@@ -3234,6 +3147,7 @@ Model   ：claude-sonnet-4
       if (heroLink) heroLink.href = buildHref({ challenge: 'ch-hackathon' });
 
       const tags = [
+        { k: 'all', label: '全部作品' },
         { k: 'featured', label: '★ 精选应用' },
         { k: 'awarded', label: '🏆 挑战获奖' },
         { k: '#第1期校园黑客松', label: '#第1期校园黑客松' },
@@ -3242,116 +3156,21 @@ Model   ：claude-sonnet-4
       ];
       document.getElementById('tagFilters').innerHTML = tags.map(t => {
         const active = activeSquareTag === t.k;
-        return `<button onclick="toggleSquareTag('${t.k}')" class="ms-chip ${active ? 'active' : ''}">${t.label}${active ? ' ×' : ''}</button>`;
+        return `<button onclick="selectSquareTag('${t.k}')" class="px-3.5 py-1.5 rounded-full text-xs font-medium border transition" style="${active ? 'background:#27254C; color:#FFFFFF; box-shadow:0 8px 24px rgba(39,37,76,0.20); border-color:#0A2540;' : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);'}">${t.label}</button>`;
       }).join('');
 
-      const filteredMode = isSquareFiltered();
-      document.getElementById('squareHeroBanner').classList.toggle('hidden', filteredMode);
-      document.getElementById('squareFilterBanner').classList.toggle('hidden', !filteredMode);
-      document.getElementById('squareGroupedView').classList.toggle('hidden', filteredMode);
-      document.getElementById('squareFilteredView').classList.toggle('hidden', !filteredMode);
-
-      const viewAllBtn = document.getElementById('squareViewAllBtn');
-      if (viewAllBtn) {
-        viewAllBtn.textContent = filteredMode ? '返回聚合' : '查看全部';
-        viewAllBtn.style.background = filteredMode ? '#27254C' : '#F1F1FD';
-        viewAllBtn.style.color = filteredMode ? '#FFFFFF' : '#624AFF';
-      }
+      let list = [...squareWorks];
+      if (activeSquareTag === 'featured') list = list.filter(w => w.featured);
+      else if (activeSquareTag === 'awarded') list = list.filter(w => Boolean(w.awardBadge));
+      else if (activeSquareTag !== 'all') list = list.filter(w => workMatchesChallengeTag(w, activeSquareTag));
+      if (squareTypeFilter !== 'all') list = list.filter(w => w.type === squareTypeFilter);
+      if (squareSortFilter === 'hot') list.sort((a, b) => b.likes - a.likes);
+      else list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
       const rankOrder = [...squareWorks].sort((a, b) => b.likes - a.likes);
       const rankOf = id => rankOrder.findIndex(x => x.id === id) + 1;
 
-      if (!filteredMode) {
-        renderSquareGroupedFeed(rankOf);
-        renderSquareRightRail();
-        return;
-      }
-
-      const q = squareQuery.trim().toLowerCase();
-      let list = [...squareWorks];
-      if (activeSquareTag === 'featured') list = list.filter(w => w.featured);
-      else if (activeSquareTag === 'awarded') list = list.filter(w => Boolean(w.awardBadge));
-      else if (activeSquareTag) list = list.filter(w => workMatchesChallengeTag(w, activeSquareTag));
-      if (squareTypeFilter !== 'all') list = list.filter(w => w.type === squareTypeFilter);
-      if (q) list = list.filter(w => w.title.toLowerCase().includes(q) || w.author.toLowerCase().includes(q) || w.desc.toLowerCase().includes(q));
-      if (squareSortFilter === 'hot') list.sort((a, b) => b.likes - a.likes);
-      else list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-
-      const labelMap = { featured: '★ 精选应用', awarded: '🏆 挑战获奖' };
-      const parts = [];
-      if (activeSquareTag) parts.push(labelMap[activeSquareTag] || activeSquareTag);
-      if (squareTypeFilter !== 'all') parts.push(squareTypeFilter);
-      if (q) parts.push(`“${squareQuery.trim()}”`);
-      document.getElementById('squareFilterTitle').textContent = parts.length ? `作品筛选 · ${parts.join(' + ')}` : '作品广场 · 全部校园作品';
-      document.getElementById('squareFilterCount').textContent = `${list.length} 件`;
-
-      document.getElementById('squareGrid').innerHTML = list.length
-        ? list.map(w => renderWorkCardHtml(w, rankOf)).join('')
-        : `<div class="col-span-full cpa-card p-10 text-center space-y-3 bg-white"><div class="text-sm font-semibold">没有找到符合条件的作品</div><div class="text-xs" style="color:var(--muted);">可点击已选标签取消筛选，或清空搜索词查看全部</div><button onclick="resetSquareFilter()" class="cpa-ghost-pill px-4 py-1.5 text-xs font-medium">恢复聚合广场</button></div>`;
-    }
-
-    function renderSquareGroupedFeed(rankOf) {
-      const groups = [
-        { title: '社区精选应用', sub: '高完成度校园真实痛点应用，支持新标签页在线体验', filter: `{tag:'featured'}`, items: squareWorks.filter(w => w.featured).slice(0, 2) },
-        { title: '第 1 期校园黑客松 · 热门参赛', sub: '正在角逐 2.2M Token 奖池的实时高赞作品', filter: `{tag:'#第1期校园黑客松'}`, items: getChallengeWorks('#第1期校园黑客松').slice(0, 2) },
-        { title: '科研与校园学习工具', sub: '文献推导、算法动画与开题模拟小助手', filter: `{all:true}`, items: squareWorks.filter(w => !w.featured).slice(0, 2) }
-      ];
-      document.getElementById('squareGroupedSections').innerHTML = groups.map(g => `
-        <div class="space-y-3.5">
-          <div class="flex items-end justify-between gap-3">
-            <div class="section-eyebrow">
-              <div class="section-bar"></div>
-              <div>
-                <h3 class="text-sm sm:text-base font-bold leading-tight">${g.title}</h3>
-                <div class="text-xs mt-0.5" style="color:var(--muted);">${g.sub}</div>
-              </div>
-            </div>
-            <button onclick="setSquareFilter(${g.filter})" class="text-xs font-semibold hover:underline shrink-0" style="color:var(--primary);">查看全部 &gt;</button>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            ${g.items.map(w => renderWorkCardHtml(w, rankOf)).join('')}
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function renderSquareRightRail() {
-      const listHtml = squareRailTab === 'challenges'
-        ? CHALLENGES.map(ch => `
-            <a href="${buildHref({ challenge: ch.id })}" target="_blank" rel="noopener" class="p-3.5 rounded-2xl border border-slate-200/85 hover:border-[#624AFF]/55 hover:bg-[#F7F9FD] transition block space-y-1.5 no-underline text-inherit group">
-              <div class="flex items-center justify-between gap-2 text-[11px]">
-                <span class="px-2 py-0.5 rounded-full font-semibold" style="${ch.statusStyle}">${ch.status === 'ongoing' ? '火热征集' : ch.status === 'judging' ? '结算中' : '获奖公示'}</span>
-                <span class="mono" style="color:var(--muted);">${ch.deadline}</span>
-              </div>
-              <div class="text-xs sm:text-[13px] font-bold leading-snug group-hover:text-[#624AFF] transition">${ch.title}</div>
-              <div class="flex items-center justify-between text-[11px] pt-0.5">
-                <span class="mono font-semibold" style="color:var(--primary);">${ch.shortPoolText}</span>
-                <span style="color:var(--muted);">看榜单 ↗</span>
-              </div>
-            </a>
-          `).join('')
-        : CMS_LESSONS.slice(0, 4).map(l => `
-            <a href="${buildHref({ lesson: l.id })}" target="_blank" rel="noopener" class="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-[#F7F9FD] transition no-underline text-inherit group">
-              <img src="${l.cover}" alt="${l.title}" class="w-18 h-11 rounded-lg object-cover border border-slate-200 bg-slate-100 shrink-0" onerror="handleCoverError(this)" />
-              <div class="min-w-0 flex-1">
-                <div class="text-xs font-semibold truncate group-hover:text-[#624AFF] transition">${l.title}</div>
-                <div class="text-[11px] mono mt-0.5" style="color:var(--muted);">${l.author} · ${l.duration}</div>
-              </div>
-            </a>
-          `).join('');
-
-      document.getElementById('squareRightRail').innerHTML = `
-        <div class="cpa-card p-4 sm:p-5 space-y-4 bg-white">
-          <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
-            <div class="inline-flex p-0.5 rounded-full bg-[#F4F6FB] text-xs">
-              <button onclick="squareRailTab='challenges'; renderSquareRightRail()" class="px-3 py-1 rounded-full font-semibold transition" style="${squareRailTab === 'challenges' ? 'background:#FFFFFF; color:#624AFF; box-shadow:0 2px 6px rgba(39,37,76,0.06);' : 'color:#64748B;'}">挑战赛况</button>
-              <button onclick="squareRailTab='lessons'; renderSquareRightRail()" class="px-3 py-1 rounded-full font-semibold transition" style="${squareRailTab === 'lessons' ? 'background:#FFFFFF; color:#624AFF; box-shadow:0 2px 6px rgba(39,37,76,0.06);' : 'color:#64748B;'}">创作教程</button>
-            </div>
-            <button onclick="switchTab('studio')" class="text-[11px] font-semibold hover:underline" style="color:var(--primary);">更多 &gt;</button>
-          </div>
-          <div class="space-y-2.5">${listHtml}</div>
-        </div>
-      `;
+      document.getElementById('squareGrid').innerHTML = list.map(w => renderWorkCardHtml(w, rankOf)).join('');
     }
 
     function refreshVisibleViews() {
@@ -3482,14 +3301,11 @@ Model   ：claude-sonnet-4
       cmsQuery = activeTab === 'studio' ? (qs.get('q') || '') : '';
       studioShowAll = activeTab === 'studio' && qs.get('all') === '1';
 
-      activeSquareTag = qs.get('tag') || '';
+      activeSquareTag = qs.get('tag') || 'all';
       squareTypeFilter = ['all', 'Web', 'APP', 'PC'].includes(qs.get('type')) ? qs.get('type') : 'all';
       squareSortFilter = ['hot', 'new'].includes(qs.get('sort')) ? qs.get('sort') : 'hot';
-      squareQuery = activeTab === 'square' ? (qs.get('q') || '') : '';
-      squareShowAll = activeTab === 'square' && qs.get('all') === '1';
 
       const cmsInp = document.getElementById('cmsSearch'); if (cmsInp) cmsInp.value = cmsQuery;
-      const sqInp = document.getElementById('squareSearch'); if (sqInp) sqInp.value = squareQuery;
       const tSel = document.getElementById('typeFilter'); if (tSel) tSel.value = squareTypeFilter;
       const sSel = document.getElementById('sortFilter'); if (sSel) sSel.value = squareSortFilter;
 
