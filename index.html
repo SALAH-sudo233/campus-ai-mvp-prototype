@@ -7,74 +7,100 @@
   <script src="./tailwindcss.min.js"></script>
   <style>
     :root {
-      --bg-page: #F7F9FC;
+      /* ModelScope Studios Design Tokens */
+      --bg-page: #FFFFFF;
       --bg-surface: #FFFFFF;
-      --bg-subtle: #F1F5F9;
-      --border: #E5E9F0;
-      --ink: #0A2540;
-      --muted: #64748B;
-      --primary: #0F4C81;
-      --primary-hover: #0B3A63;
-      --accent: #0D9488;
-      --accent-soft: #ECFDF5;
-      --accent-ink: #0F766E;
-      --coral: #C85A4A;
-      --coral-soft: #FEF2F2;
-      --warn: #D97706;
-      --warn-soft: #FFFBEB;
+      --bg-subtle: #F7F9FD;
+      --ms-surface-hover: #F3F5FA;
+      --ms-surface-subtle: #EFF2F9;
+      --ms-primary-selected: #F1F1FD;
+      --border: #ECEDF1;
+      --ink: #27254C;
+      --muted: #8284A4;
+      --primary: #624AFF;
+      --primary-hover: #8A73FF;
+      --accent: #13C2C2;
+      --accent-soft: #E6FFFB;
+      --accent-ink: #006D75;
+      --coral: #FF4D4F;
+      --coral-soft: #FFF2F0;
+      --warn: #D48806;
+      --warn-soft: #FFFBE6;
     }
+    html { scroll-behavior: smooth; }
     body {
       background: var(--bg-page);
       color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, sans-serif;
+      font-family: "PingFang SC", "Microsoft Yahei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-variant-numeric: tabular-nums;
       margin: 0;
     }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-variant-numeric: tabular-nums; }
     .cpa-card {
       background: var(--bg-surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: 0 1px 2px rgba(10, 37, 64, 0.03);
+      border-radius: 20px;
+      box-shadow: 0 2px 16px rgba(39, 37, 76, 0.04);
+      transition: background-color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
     }
     .cpa-pill-btn {
-      background: #0A2540;
+      background: linear-gradient(90deg, #27254C 0%, #624AFF 100%);
       color: #FFFFFF;
       border-radius: 9999px;
-      transition: all 150ms ease;
+      box-shadow: 0 6px 16px rgba(98, 74, 255, 0.20);
+      transition: opacity 140ms cubic-bezier(0.22, 0.78, 0.2, 1), transform 140ms cubic-bezier(0.22, 0.78, 0.2, 1), box-shadow 200ms ease;
     }
-    .cpa-pill-btn:hover { background: #0F4C81; }
+    .cpa-pill-btn:hover { opacity: 0.90; box-shadow: 0 8px 22px rgba(98, 74, 255, 0.28); }
+    .cpa-pill-btn:active { transform: scale(0.97); }
     .cpa-ghost-pill {
       background: #FFFFFF;
       color: var(--ink);
       border: 1px solid var(--border);
       border-radius: 9999px;
-      transition: all 150ms ease;
+      transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 100ms ease, box-shadow 180ms ease;
     }
-    .cpa-ghost-pill:hover { background: var(--bg-subtle); border-color: #CBD5E1; }
+    .cpa-ghost-pill:hover { background: var(--ms-surface-hover); border-color: #D2C4FF; color: var(--primary); }
+    .cpa-ghost-pill:active { transform: scale(0.97); background: var(--ms-surface-subtle); }
+    .cpa-ghost-pill:focus-visible { outline: none; box-shadow: 0 0 0 3px #B2A6FF; }
+
+    /* ModelScope Six-Layer Pastel Aurora Mesh Hero */
     .hero-grid-glow {
-      background-image:
-        radial-gradient(ellipse 65% 75% at 45% 35%, rgba(13, 148, 136, 0.08), transparent 72%),
-        linear-gradient(to right, rgba(15, 76, 129, 0.03) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(15, 76, 129, 0.03) 1px, transparent 1px);
-      background-size: 100% 100%, 44px 44px, 44px 44px;
+      background:
+        linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 22%),
+        linear-gradient(180deg, rgba(242, 240, 255, 0) 34%, #F2F0FF 90%),
+        radial-gradient(ellipse 55% 55% at 0% -5%, rgba(203, 228, 255, 0.85), transparent 98%),
+        radial-gradient(ellipse 70% 60% at 100% 12%, rgba(211, 245, 254, 0.74), transparent 76%),
+        radial-gradient(ellipse 68% 48% at 0% 100%, rgba(242, 240, 255, 0.84), transparent 72%),
+        radial-gradient(ellipse 42% 36% at 8% 0%, rgba(251, 229, 255, 0.72), transparent 65%),
+        #FFFFFF;
+      box-shadow: 0 12px 32px rgba(144, 156, 234, 0.14);
+    }
+
+    /* Frosted Top Nav with ModelScope Elastic Pop */
+    header.sticky {
+      background: rgba(255, 255, 255, 0.90) !important;
+      backdrop-filter: blur(20px) !important;
+      border-bottom-color: #ECEDF1 !important;
     }
     .nav-tab {
       position: relative;
-      color: var(--muted);
-      transition: color 140ms ease;
+      color: #464D5B;
+      font-size: 13.5px;
+      transition: color 160ms ease;
     }
     .nav-tab:hover { color: var(--ink); }
     .nav-tab.active {
       color: var(--ink);
       font-weight: 600;
+      animation: msNavPop 325ms cubic-bezier(0.2727, 0.0986, 0.8333, 1);
     }
     .nav-tab.active::after {
       content: "";
       position: absolute;
-      left: 0; right: 0; bottom: -18px;
-      height: 2px;
+      left: 10%; right: 10%; bottom: -18px;
+      height: 2.5px;
       background: var(--primary);
-      border-radius: 2px;
+      border-radius: 999px;
     }
     .section-eyebrow {
       display: flex;
@@ -82,29 +108,83 @@
       gap: 10px;
     }
     .section-bar {
-      width: 3px;
-      height: 28px;
+      width: 3.5px;
+      height: 26px;
       border-radius: 999px;
-      background: var(--accent);
+      background: linear-gradient(180deg, #624AFF 0%, #36CFD1 100%);
       flex-shrink: 0;
     }
     .drawer-backdrop {
-      background: rgba(10, 37, 64, 0.34);
-      backdrop-filter: blur(2px);
+      background: rgba(39, 37, 76, 0.28);
+      backdrop-filter: blur(3px);
     }
     #toast { transition: opacity 200ms ease, transform 200ms ease; }
-    .lesson-card { transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease; }
-    .lesson-card:hover { transform: translateY(-2px); border-color: #CBD5E1; box-shadow: 0 8px 20px rgba(10, 37, 64, 0.06); }
+
+    /* ModelScope Studios Cloud Soft-Shell Card + Tactile Floating Thumbnail Tilt */
+    .lesson-card {
+      background: #F7F9FD;
+      border-color: #F7F9FD;
+      border-radius: 24px;
+      box-shadow: none;
+      overflow: visible !important;
+      transition: background-color 200ms ease, border-color 200ms ease, transform 220ms cubic-bezier(0.22, 0.78, 0.2, 1);
+    }
+    .lesson-card:hover {
+      background: #F3F5FA;
+      border-color: #EFF2F9;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 26px rgba(144, 156, 234, 0.16);
+    }
+    .lesson-card .aspect-video {
+      margin: 10px 10px 0 10px;
+      width: calc(100% - 20px) !important;
+      border-radius: 18px;
+      border: 1.5px solid #FFFFFF;
+      box-shadow: 0 12px 21.6px rgba(144, 156, 234, 0.25);
+      transform-origin: 50% 50%;
+      transition: transform 240ms cubic-bezier(0.22, 0.78, 0.2, 1), border-color 200ms ease, box-shadow 240ms ease;
+    }
+    .lesson-card:hover .aspect-video {
+      transform: translateY(-4px) rotate(-2.5deg);
+      border-color: transparent;
+      box-shadow: 0 16px 28px rgba(144, 156, 234, 0.34);
+    }
+
+    /* Auth Left Split Aurora Wash */
+    #authView > div:first-child {
+      background:
+        radial-gradient(ellipse 60% 60% at 0% 0%, rgba(203, 228, 255, 0.80), transparent 80%),
+        radial-gradient(ellipse 65% 55% at 100% 15%, rgba(211, 245, 254, 0.72), transparent 75%),
+        linear-gradient(180deg, #FFFFFF 0%, #F2F0FF 100%) !important;
+    }
+
+    /* === ModelScope Studios Visual & Micro-Interaction Layer (Element-Preserving) === */
+    @keyframes msNavPop {
+      0% { transform: scale(0.86); }
+      100% { transform: scale(1); }
+    }
+    @keyframes msPulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(98, 74, 255, 0.28); }
+      50% { box-shadow: 0 0 0 5px rgba(98, 74, 255, 0); }
+    }
+    h1, h2, h3 {
+      font-family: 'SFMono-Regular', ui-monospace, Menlo, Monaco, Consolas, "PingFang SC", "Microsoft Yahei", sans-serif;
+      letter-spacing: -0.01em;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #624AFF !important;
+      box-shadow: 0 0 0 3px rgba(98, 74, 255, 0.10);
+    }
   </style>
 </head>
 <body class="antialiased min-h-screen">
 
   <!-- Unified 4-Portal Prototype Switcher Bar -->
-  <div style="background:#0A2540; color:#E2E8F0;" class="px-4 py-2 text-xs border-b border-white/10">
+  <div style="background:#27254C; color:#E8EAF6;" class="px-4 py-2 text-xs border-b border-white/10">
     <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-1.5 flex-wrap">
         <a href="./overview.html" class="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium">✦ 浣溪AI Lab · 总览</a>
-        <a href="./index.html" class="px-2.5 py-1 rounded-full bg-teal-600 text-white font-semibold">① 学生端</a>
+        <a href="./index.html" class="px-2.5 py-1 rounded-full text-white font-semibold" style="background:#624AFF;">① 学生端</a>
         <a href="./college-dashboard.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">② 学院端</a>
         <a href="./school-ops.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">③ 运营端(校)</a>
         <a href="./platform-admin.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">④ 平台端(浣溪)</a>
@@ -120,7 +200,7 @@
   </div>
 
   <!-- Toast -->
-  <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-medium shadow-lg pointer-events-none opacity-0 -translate-y-2" style="background:#0A2540; color:#FFFFFF;"></div>
+  <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-medium shadow-lg pointer-events-none opacity-0 -translate-y-2" style="background:#27254C; color:#FFFFFF; box-shadow:0 8px 24px rgba(39,37,76,0.20);"></div>
 
   <!-- ==================== VIEW 0: CPAMC-INSPIRED SPLIT AUTH VIEW ==================== -->
   <div id="authView" class="hidden min-h-[calc(100vh-36px)] bg-white grid-cols-1 lg:grid-cols-12">
@@ -164,7 +244,7 @@
               <label class="font-medium">所属试点高校 / 学院</label>
               <span style="color:var(--muted);">匹配允许的教育邮箱域名</span>
             </div>
-            <select id="authCollege" onchange="onCollegeChange()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-xs focus:outline-none focus:border-[#0F4C81]">
+            <select id="authCollege" onchange="onCollegeChange()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-xs focus:outline-none focus:border-[#624AFF]">
               <option value="hust.edu.cn">华中科技大学 · 软件学院（@hust.edu.cn）</option>
               <option value="whu.edu.cn">武汉大学 · 计算机学院（试点预留 · @whu.edu.cn）</option>
             </select>
@@ -175,24 +255,24 @@
               <label class="font-medium">学校专属教育邮箱</label>
               <span class="text-[11px]" style="color:var(--muted);">白名单演示：<code class="mono">linzhixing@hust.edu.cn</code></span>
             </div>
-            <input id="authEmail" type="email" value="linzhixing@hust.edu.cn" placeholder="name@hust.edu.cn" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 mono text-xs focus:outline-none focus:border-[#0F4C81]" />
+            <input id="authEmail" type="email" value="linzhixing@hust.edu.cn" placeholder="name@hust.edu.cn" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 mono text-xs focus:outline-none focus:border-[#624AFF]" />
             <div class="mt-1 text-[11px]" style="color:var(--muted);">输入其他同校邮箱（如 <code class="mono">new@hust.edu.cn</code>）可演示待校内审核态</div>
           </div>
 
           <div>
             <label class="block font-medium mb-1.5">邮箱验证码</label>
             <div class="flex gap-2">
-              <input id="authCode" type="text" value="668822" placeholder="输入 6 位验证码" class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 mono text-xs focus:outline-none focus:border-[#0F4C81]" />
+              <input id="authCode" type="text" value="668822" placeholder="输入 6 位验证码" class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 mono text-xs focus:outline-none focus:border-[#624AFF]" />
               <button id="sendCodeBtn" onclick="sendDemoCode()" class="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-medium shrink-0">获取验证码</button>
             </div>
           </div>
 
           <label class="flex items-center gap-2 text-xs select-none cursor-pointer" style="color:var(--muted);">
-            <input type="checkbox" checked class="rounded border-slate-300 accent-[#0F4C81]" />
+            <input type="checkbox" checked class="rounded border-slate-300 accent-[#624AFF]" />
             <span>30 天内保持本机登录状态</span>
           </label>
 
-          <button onclick="submitAuth()" class="w-full py-3 rounded-xl text-xs font-semibold text-white transition hover:opacity-95" style="background:#0A2540;">登录 / 首次认证进入工作台</button>
+          <button onclick="submitAuth()" class="w-full py-3 rounded-xl text-xs font-semibold text-white transition hover:opacity-95" style="background:linear-gradient(90deg,#27254C 0%,#624AFF 100%); box-shadow:0 6px 18px rgba(98,74,255,0.22);">登录 / 首次认证进入工作台</button>
         </div>
       </div>
 
@@ -224,7 +304,7 @@
           <!-- Clickable Avatar Menu (Direct Access to My Works + Logout) -->
           <div class="relative">
             <button id="userMenuBtn" onclick="toggleUserMenu(event)" class="flex items-center gap-2 text-xs px-2 py-1 rounded-full hover:bg-slate-100 transition text-left" title="查看我的作品与账号操作">
-              <span class="relative w-7 h-7 rounded-full inline-flex items-center justify-center text-[11px] font-semibold text-white shrink-0" style="background:#0A2540;">
+              <span class="relative w-7 h-7 rounded-full inline-flex items-center justify-center text-[11px] font-semibold text-white shrink-0" style="background:linear-gradient(135deg,#27254C,#624AFF);">
                 林
                 <span id="avatarAlertDot" class="hidden absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ring-2 ring-white" style="background:var(--coral);"></span>
               </span>
@@ -340,14 +420,14 @@
                 <svg viewBox="0 0 900 84" class="w-full h-20" preserveAspectRatio="none">
                   <defs>
                     <linearGradient id="cpaWaveGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#0D9488" stop-opacity="0.20"/>
-                      <stop offset="100%" stop-color="#0D9488" stop-opacity="0"/>
+                      <stop offset="0%" stop-color="#624AFF" stop-opacity="0.20"/>
+                      <stop offset="100%" stop-color="#624AFF" stop-opacity="0"/>
                     </linearGradient>
                   </defs>
                   <path d="M0 64 C55 64, 70 18, 120 18 C170 18, 190 74, 240 74 C290 74, 315 36, 365 36 C415 36, 445 78, 505 78 C555 78, 585 24, 635 24 C685 24, 715 72, 775 72 C825 72, 855 44, 900 44 L900 84 L0 84 Z" fill="url(#cpaWaveGrad)"/>
-                  <path d="M0 64 C55 64, 70 18, 120 18 C170 18, 190 74, 240 74 C290 74, 315 36, 365 36 C415 36, 445 78, 505 78 C555 78, 585 24, 635 24 C685 24, 715 72, 775 72 C825 72, 855 44, 900 44" fill="none" stroke="#0D9488" stroke-width="2" stroke-linecap="round"/>
-                  <circle cx="848" cy="54" r="4" fill="#0D9488"/>
-                  <circle cx="848" cy="54" r="9" fill="#0D9488" fill-opacity="0.18"/>
+                  <path d="M0 64 C55 64, 70 18, 120 18 C170 18, 190 74, 240 74 C290 74, 315 36, 365 36 C415 36, 445 78, 505 78 C555 78, 585 24, 635 24 C685 24, 715 72, 775 72 C825 72, 855 44, 900 44" fill="none" stroke="#624AFF" stroke-width="2" stroke-linecap="round"/>
+                  <circle cx="848" cy="54" r="4" fill="#624AFF"/>
+                  <circle cx="848" cy="54" r="9" fill="#624AFF" fill-opacity="0.18"/>
                 </svg>
               </div>
             </div>
@@ -371,7 +451,7 @@
                 <span title="初始 1.0M + 奖励 1.0M - 已消耗 517.5K" class="cursor-help opacity-70">ⓘ</span>
               </div>
               <div class="text-2xl font-bold mono">74.1%</div>
-              <div class="h-[3px] rounded-full overflow-hidden" style="background:#E0ECFA;">
+              <div class="h-[3px] rounded-full overflow-hidden" style="background:#F1F1FD;">
                 <div class="h-full rounded-full" style="width:74.1%; background:var(--primary);"></div>
               </div>
             </div>
@@ -461,7 +541,7 @@
                 </div>
 
                 <!-- CPAMC-Style Key Row -->
-                <div class="p-3.5 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-3" style="background:var(--bg-page);">
+                <div class="p-3.5 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-3" style="background:#F7F9FD;">
                   <div class="flex items-center gap-3 min-w-0">
                     <span class="mono text-xs px-2 py-0.5 rounded bg-white border border-slate-200" style="color:var(--muted);">#1</span>
                     <div class="min-w-0">
@@ -508,7 +588,7 @@
                     <span class="mono" style="color:var(--muted);">146 次 · 284.1K · <strong style="color:var(--ink);">54.9%</strong></span>
                   </div>
                   <div class="h-2 rounded-full overflow-hidden" style="background:var(--bg-subtle);">
-                    <div class="h-full rounded-full" style="width:54.9%; background:#0F4C81;"></div>
+                    <div class="h-full rounded-full" style="width:54.9%; background:#624AFF;"></div>
                   </div>
                 </div>
                 <div class="space-y-1.5 text-xs">
@@ -517,7 +597,7 @@
                     <span class="mono" style="color:var(--muted);">112 次 · 178.0K · <strong style="color:var(--ink);">34.4%</strong></span>
                   </div>
                   <div class="h-2 rounded-full overflow-hidden" style="background:var(--bg-subtle);">
-                    <div class="h-full rounded-full" style="width:34.4%; background:#0D9488;"></div>
+                    <div class="h-full rounded-full" style="width:34.4%; background:#36CFD1;"></div>
                   </div>
                 </div>
                 <div class="space-y-1.5 text-xs">
@@ -545,7 +625,7 @@
           <div id="studioConnectSection" class="space-y-4">
             <div class="flex flex-wrap items-end justify-between gap-3">
               <div class="flex items-center gap-3">
-                <span class="w-8 h-8 rounded-xl mono text-xs font-bold inline-flex items-center justify-center text-white shrink-0" style="background:#0A2540;">01</span>
+                <span class="w-8 h-8 rounded-xl mono text-xs font-bold inline-flex items-center justify-center text-white shrink-0" style="background:linear-gradient(135deg,#27254C,#624AFF);">01</span>
                 <div>
                   <h2 class="text-base font-bold leading-tight">Token 接入 · 官方教程</h2>
                   <div class="text-xs mt-0.5" style="color:var(--muted);">一个视频讲清全工具接入流程，右侧按所用工具一键复制提示词</div>
@@ -556,7 +636,7 @@
 
             <!-- Single Official Video + Per-Tool Prompt Panel -->
             <div class="cpa-card overflow-hidden grid grid-cols-1 lg:grid-cols-12">
-              <div class="lg:col-span-7 bg-[#0A2540] relative aspect-video lg:aspect-auto lg:min-h-[340px]">
+              <div class="lg:col-span-7 bg-[#27254C] relative aspect-video lg:aspect-auto lg:min-h-[340px]">
                 <iframe
                   id="officialBiliFrame"
                   class="w-full h-full min-h-[240px] lg:min-h-[340px] border-0 block"
@@ -584,7 +664,7 @@
                       <button onclick="copyActiveOfficialPrompt()" class="font-medium hover:underline" style="color:var(--primary);">一键复制</button>
                     </div>
                     <div id="officialToolTabs" class="flex items-center gap-1.5 flex-wrap text-[11px]"></div>
-                    <pre id="ogPromptBox" class="p-3.5 rounded-xl mono text-[11px] leading-relaxed whitespace-pre-wrap overflow-y-auto max-h-40 m-0" style="background:#0A2540; color:#E2E8F0;"></pre>
+                    <pre id="ogPromptBox" class="p-3.5 rounded-xl mono text-[11px] leading-relaxed whitespace-pre-wrap overflow-y-auto max-h-40 m-0" style="background:#27254C; color:#E8EAF6;"></pre>
                   </div>
                 </div>
                 <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
@@ -605,7 +685,7 @@
                   <div class="text-xs mt-0.5" style="color:var(--muted);">点击任意教程进入独立详情页，观看视频并参与互动评论</div>
                 </div>
               </div>
-              <input id="cmsSearch" oninput="renderCmsGrid()" type="text" placeholder="搜索实战教程..." class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0F4C81] w-44 sm:w-52" />
+              <input id="cmsSearch" oninput="renderCmsGrid()" type="text" placeholder="搜索实战教程..." class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#624AFF] w-44 sm:w-52" />
             </div>
 
             <!-- Category Filter Row -->
@@ -664,7 +744,7 @@
 
           <!-- Sub-Mode A: 广场作品 -->
           <div id="squareAllPane" class="space-y-5">
-            <div class="rounded-2xl p-5 px-6 text-white flex flex-wrap items-center justify-between gap-4" style="background:#0A2540;">
+            <div class="rounded-3xl p-5 px-6 text-white flex flex-wrap items-center justify-between gap-4" style="background:radial-gradient(ellipse 50% 90% at 92% 20%, rgba(54,207,209,0.28), transparent 70%), linear-gradient(135deg, #27254C 0%, #36298C 55%, #624AFF 100%); box-shadow:0 12px 28px rgba(98,74,255,0.18);">
               <div class="space-y-1">
                 <div class="flex items-center gap-2 text-xs">
                   <span class="px-2.5 py-0.5 rounded-full font-medium" style="background:var(--accent);">双周冲刺激励</span>
@@ -672,7 +752,7 @@
                 </div>
                 <div class="text-base font-semibold">每两周点赞量前 10 名的作品，作者可获 500,000 Token 奖励（每件作品不重复领奖）</div>
               </div>
-              <button onclick="openPublishModal()" class="px-4 py-2 rounded-full text-xs font-semibold bg-white text-[#0A2540] hover:bg-slate-100 shrink-0">发布作品冲榜 →</button>
+              <button onclick="openPublishModal()" class="px-4 py-2 rounded-full text-xs font-semibold bg-white text-[#27254C] hover:bg-slate-100 shrink-0">发布作品冲榜 →</button>
             </div>
 
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -735,7 +815,7 @@
           <div class="p-3 rounded-xl text-[11px] leading-relaxed" style="background:var(--accent-soft); color:var(--accent-ink);">
             复制下方发布指令到 Codex / Claude Code 中执行，AI 自动打包 Web 静态文件（或整理安装包信息）并一键提交至「作品广场 · 我的作品」。
           </div>
-          <div class="relative rounded-xl p-3.5 mono text-[11px] leading-relaxed" style="background:#0A2540; color:#E2E8F0;">
+          <div class="relative rounded-xl p-3.5 mono text-[11px] leading-relaxed" style="background:#27254C; color:#E8EAF6;">
             <button onclick="copyPublishPrompt()" class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-[11px] font-sans bg-white/15 hover:bg-white/25 text-white">复制指令</button>
             <div id="publishPromptText" class="pr-16"></div>
           </div>
@@ -753,7 +833,7 @@
         <div id="pubManualPane" class="hidden space-y-3">
           <div>
             <label class="block font-medium mb-1">作品名称 <span class="text-rose-500">*</span></label>
-            <input id="pubTitle" type="text" placeholder="例如：寝室电费提醒小助手" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-[#0F4C81]" />
+            <input id="pubTitle" type="text" placeholder="例如：寝室电费提醒小助手" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-[#624AFF]" />
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
@@ -775,11 +855,11 @@
           </div>
           <div>
             <label class="block font-medium mb-1">一句话卖点 <span class="text-rose-500">*</span></label>
-            <input id="pubDesc" type="text" placeholder="说明解决了什么痛点、核心亮点" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-[#0F4C81]" />
+            <input id="pubDesc" type="text" placeholder="说明解决了什么痛点、核心亮点" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-[#624AFF]" />
           </div>
           <div>
             <label id="pubAssetLabel" class="block font-medium mb-1">体验链接或静态包</label>
-            <input id="pubLink" type="text" placeholder="https://..." class="w-full px-3.5 py-2 rounded-xl border border-slate-300 mono text-xs focus:outline-none focus:border-[#0F4C81]" />
+            <input id="pubLink" type="text" placeholder="https://..." class="w-full px-3.5 py-2 rounded-xl border border-slate-300 mono text-xs focus:outline-none focus:border-[#624AFF]" />
             <div id="pubTypeHint" class="text-[11px] mt-1" style="color:var(--muted);">Web 作品自动打包静态托管，生成外网访问链接。</div>
           </div>
           <div class="pt-2 flex justify-end gap-2">
@@ -812,7 +892,7 @@
         <h3 class="text-sm font-bold">提交风控解冻申诉</h3>
         <p class="text-xs mt-1" style="color:var(--muted);">请说明近期调用情况（例如在机房和寝室切换网络调试项目），申诉将推送至浣溪平台风控中心复核。</p>
       </div>
-      <textarea id="appealReason" rows="3" placeholder="例如：昨晚在实验室和寝室切换了校园网与手机热点调试毕设项目，确系本人使用..." class="w-full p-3.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-[#0F4C81]"></textarea>
+      <textarea id="appealReason" rows="3" placeholder="例如：昨晚在实验室和寝室切换了校园网与手机热点调试毕设项目，确系本人使用..." class="w-full p-3.5 rounded-xl border border-slate-300 text-xs focus:outline-none focus:border-[#624AFF]"></textarea>
       <div class="flex justify-end gap-2">
         <button onclick="closeAppealModal()" class="cpa-ghost-pill px-4 py-1.5 text-xs font-medium">取消</button>
         <button onclick="submitAppeal()" class="cpa-pill-btn px-5 py-1.5 text-xs font-semibold">提交申诉</button>
@@ -1205,7 +1285,7 @@ Model   ：claude-sonnet-4
           const wave = Math.sin(r * 0.28 + c * 0.19) + Math.cos(r * 0.14 - c * 0.31);
           if (wave > 0.35) {
             const op = Math.min(0.45, Math.max(0.06, (wave - 0.35) * 0.32));
-            const color = (r + c) % 7 === 0 ? '#0D9488' : '#0A2540';
+            const color = (r + c) % 5 === 0 ? '#624AFF' : '#36CFD1';
             rects += `<rect x="${c * 17 + 6}" y="${r * 17 + 6}" width="7" height="7" rx="1.5" fill="${color}" fill-opacity="${op.toFixed(2)}"/>`;
           }
         }
@@ -1234,7 +1314,7 @@ Model   ：claude-sonnet-4
       appState = state;
       document.querySelectorAll('.state-pill').forEach(btn => {
         const active = btn.dataset.stateBtn === state;
-        btn.style.background = active ? '#0D9488' : 'rgba(255,255,255,0.12)';
+        btn.style.background = active ? '#624AFF' : 'rgba(255,255,255,0.12)';
         btn.style.color = active ? '#FFFFFF' : '#CBD5E1';
       });
 
@@ -1399,13 +1479,13 @@ Model   ：claude-sonnet-4
     function renderStackedBar() {
       document.querySelectorAll('.metric-btn').forEach(b => {
         const a = b.dataset.metric === chartMetric;
-        b.style.background = a ? '#0A2540' : 'transparent';
-        b.style.color = a ? '#FFFFFF' : '#64748B';
+        b.style.background = a ? '#F1F1FD' : 'transparent';
+        b.style.color = a ? '#624AFF' : '#464D5B';
       });
       document.querySelectorAll('.range-btn').forEach(b => {
         const a = b.dataset.range === chartRange;
-        b.style.background = a ? '#0A2540' : 'transparent';
-        b.style.color = a ? '#FFFFFF' : '#64748B';
+        b.style.background = a ? '#F1F1FD' : 'transparent';
+        b.style.color = a ? '#624AFF' : '#464D5B';
       });
 
       const rows = BAR_DATA[chartRange];
@@ -1422,7 +1502,7 @@ Model   ：claude-sonnet-4
         const y = padT + plotH * (1 - f);
         const tick = Math.round(maxTotal * f);
         const tickStr = chartMetric === 'tokens' && tick >= 1000 ? `${Math.round(tick/1000)}K` : `${tick}`;
-        svg += `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="#E5E9F0" stroke-dasharray="3 3" stroke-width="1"/>`;
+        svg += `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="#ECEDF1" stroke-dasharray="3 3" stroke-width="1"/>`;
         svg += `<text x="${padL - 8}" y="${y + 4}" text-anchor="end" fill="#94A3B8" font-size="10" class="mono">${tickStr}</text>`;
       });
 
@@ -1438,9 +1518,9 @@ Model   ：claude-sonnet-4
         const tipStr = `${r.t} · 请求 ${r.okReq + r.failReq} 次（成功 ${r.okReq} / 失败 ${r.failReq}）· 消耗 ${((r.okTok + r.failTok)/1000).toFixed(1)}K Token`;
 
         svg += `<g class="cursor-pointer" onmouseenter="document.getElementById('barHoverHint').textContent='${tipStr}'" onmouseleave="document.getElementById('barHoverHint').textContent='悬停柱条查看精准数值'">`;
-        svg += `<rect x="${cx - barW/2}" y="${okY}" width="${barW}" height="${Math.max(2, okH)}" rx="4" fill="#0D9488"/>`;
+        svg += `<rect x="${cx - barW/2}" y="${okY}" width="${barW}" height="${Math.max(2, okH)}" rx="4" fill="#624AFF"/>`;
         if (v.fail > 0) {
-          svg += `<rect x="${cx - barW/2}" y="${failY - 2}" width="${barW}" height="${Math.max(4, failH)}" rx="3" fill="#C85A4A"/>`;
+          svg += `<rect x="${cx - barW/2}" y="${failY - 2}" width="${barW}" height="${Math.max(4, failH)}" rx="3" fill="#FF4D4F"/>`;
         }
         svg += `<text x="${cx}" y="${Math.min(okY, failY) - 6}" text-anchor="middle" fill="#64748B" font-size="10" class="mono">${labelVal}</text>`;
         svg += `<text x="${cx}" y="${h - 6}" text-anchor="middle" fill="#64748B" font-size="11" class="mono">${r.t}</text>`;
@@ -1483,7 +1563,7 @@ Model   ：claude-sonnet-4
     function renderHealthStrip() {
       const hist = [1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
       document.getElementById('healthStrip').innerHTML = hist.map((ok, idx) => `
-        <div title="最近第 ${20 - idx} 次请求：${ok ? '成功 (200)' : '限流重试 (429)'}" class="h-5 rounded-[4px] transition hover:opacity-80" style="background:${ok ? '#0D9488' : '#C85A4A'}; opacity:${ok ? (0.45 + idx * 0.028).toFixed(2) : '0.95'};"></div>
+        <div title="最近第 ${20 - idx} 次请求：${ok ? '成功 (200)' : '限流重试 (429)'}" class="h-5 rounded-[4px] transition hover:opacity-80" style="background:${ok ? '#624AFF' : '#FF4D4F'}; opacity:${ok ? (0.45 + idx * 0.028).toFixed(2) : '0.95'};"></div>
       `).join('');
     }
 
@@ -1498,7 +1578,7 @@ Model   ：claude-sonnet-4
       currentKeyPlain = `sk-hx-live-${rand}e8c2`;
       document.getElementById('apiKeyText').textContent = currentKeyPlain;
       document.getElementById('keyOnceHint').textContent = '（新密钥仅本次明文展示，请立即保存）';
-      document.getElementById('keyOnceHint').style.color = '#0F766E';
+      document.getElementById('keyOnceHint').style.color = '#624AFF';
       closeResetKeyModal();
       showToast('API Key 已重置，旧密钥已立即失效');
     }
@@ -1594,7 +1674,7 @@ Model   ：claude-sonnet-4
       const g = OFFICIAL_GUIDES.find(x => x.id === activeOfficialTool) || OFFICIAL_GUIDES[0];
       document.getElementById('officialToolTabs').innerHTML = OFFICIAL_GUIDES.map(item => {
         const a = item.id === g.id;
-        return `<button onclick="selectOfficialTool('${item.id}')" class="px-2.5 py-1 rounded-full font-medium border transition" style="${a ? 'background:#0A2540; color:#FFFFFF; border-color:#0A2540;' : 'background:#FFFFFF; color:#64748B; border-color:var(--border);'}">${item.name}</button>`;
+        return `<button onclick="selectOfficialTool('${item.id}')" class="px-2.5 py-1 rounded-full font-medium border transition" style="${a ? 'background:#27254C; color:#FFFFFF; box-shadow:0 8px 24px rgba(39,37,76,0.20); border-color:#0A2540;' : 'background:#FFFFFF; color:#64748B; border-color:var(--border);'}">${item.name}</button>`;
       }).join('');
 
       document.getElementById('ogSummary').textContent = g.summary;
@@ -1607,7 +1687,7 @@ Model   ：claude-sonnet-4
       const cats = ['全部', 'Web 实战', 'AI 小应用', '效率技巧', '培训回放'];
       document.getElementById('cmsCatBar').innerHTML = cats.map(c => {
         const a = activeCmsCat === c;
-        return `<button onclick="activeCmsCat='${c}'; renderCmsGrid()" class="px-3.5 py-1.5 rounded-full text-xs font-medium border transition" style="${a ? 'background:#0A2540; color:#FFFFFF; border-color:#0A2540;' : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);'}">${c}</button>`;
+        return `<button onclick="activeCmsCat='${c}'; renderCmsGrid()" class="px-3.5 py-1.5 rounded-full text-xs font-medium border transition" style="${a ? 'background:#27254C; color:#FFFFFF; box-shadow:0 8px 24px rgba(39,37,76,0.20); border-color:#0A2540;' : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);'}">${c}</button>`;
       }).join('');
 
       const q = (document.getElementById('cmsSearch').value || '').trim().toLowerCase();
@@ -1624,7 +1704,7 @@ Model   ：claude-sonnet-4
             <div class="aspect-video w-full overflow-hidden relative bg-slate-100">
               <img src="${l.cover}" alt="${l.title}" class="w-full h-full object-cover group-hover:scale-[1.03] transition duration-300" loading="lazy" />
               <div class="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent"></div>
-              <span class="absolute bottom-3 left-3 w-8 h-8 rounded-full bg-white/95 text-[#0A2540] inline-flex items-center justify-center text-xs font-bold shadow-sm group-hover:scale-105 transition">▶</span>
+              <span class="absolute bottom-3 left-3 w-8 h-8 rounded-full bg-white/95 text-[#27254C] inline-flex items-center justify-center text-xs font-bold shadow-sm group-hover:scale-105 transition">▶</span>
               <span class="absolute bottom-3 right-3 px-2 py-0.5 rounded-md bg-black/65 text-white mono text-[11px] backdrop-blur-sm">${l.duration}</span>
             </div>
             <div class="p-4 space-y-1.5">
@@ -1651,7 +1731,7 @@ Model   ：claude-sonnet-4
                 <span class="absolute bottom-3 right-3 px-2.5 py-0.5 rounded-full text-[11px] mono bg-black/65 text-white backdrop-blur-sm">${ch.deadline}</span>
               </div>
               <div class="p-5 space-y-2">
-                <h3 class="text-base font-bold group-hover:text-[#0F4C81] transition">${ch.title}</h3>
+                <h3 class="text-base font-bold group-hover:text-[#624AFF] transition">${ch.title}</h3>
                 <p class="text-xs leading-relaxed" style="color:var(--muted);">${ch.subtitle}</p>
                 <div class="flex items-center justify-between pt-1 text-[11px]">
                   <span class="mono font-medium" style="color:${ch.tagColor};">${ch.tag}</span>
@@ -1680,7 +1760,7 @@ Model   ：claude-sonnet-4
 
           <!-- Comment Composer -->
           <div class="space-y-2.5">
-            <textarea id="${inputId}" rows="3" placeholder="${placeholder}" class="w-full p-3.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0F4C81] bg-slate-50/60 focus:bg-white transition"></textarea>
+            <textarea id="${inputId}" rows="3" placeholder="${placeholder}" class="w-full p-3.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#624AFF] bg-slate-50/60 focus:bg-white transition"></textarea>
             <div class="flex items-center justify-between gap-2 text-xs">
               <span class="text-[11px]" style="color:var(--muted);">当前身份：<strong style="color:var(--ink);">林知行</strong> · 华科软件学院</span>
               <button onclick="submitDiscussionComment('${threadKey}')" class="cpa-pill-btn px-4 py-1.5 text-xs font-medium">发表评论</button>
@@ -1691,7 +1771,7 @@ Model   ：claude-sonnet-4
           <div class="divide-y divide-slate-100">
             ${list.length ? list.map((c, idx) => `
               <div class="py-4 first:pt-2 last:pb-0 flex items-start gap-3">
-                <span class="w-8 h-8 rounded-full inline-flex items-center justify-center text-xs font-semibold shrink-0 text-white" style="background:${c.isStaff ? 'var(--accent)' : '#0A2540'};">${escapeHtml(c.author.slice(0, 1))}</span>
+                <span class="w-8 h-8 rounded-full inline-flex items-center justify-center text-xs font-semibold shrink-0 text-white" style="background:${c.isStaff ? '#624AFF' : '#27254C'};">${escapeHtml(c.author.slice(0, 1))}</span>
                 <div class="flex-1 min-w-0 space-y-1.5">
                   <div class="flex flex-wrap items-center gap-2 text-xs">
                     <span class="font-semibold">${escapeHtml(c.author)}</span>
@@ -1700,8 +1780,8 @@ Model   ：claude-sonnet-4
                   </div>
                   <p class="text-xs leading-relaxed" style="color:var(--ink);">${escapeHtml(c.body)}</p>
                   <div class="flex items-center gap-4 pt-0.5 text-[11px]" style="color:var(--muted);">
-                    <button onclick="toggleCommentLike('${threadKey}', ${idx})" class="hover:text-[#0A2540] transition mono" style="${c.liked ? 'color:var(--accent-ink); font-weight:600;' : ''}">👍 ${c.likes}</button>
-                    <button onclick="replyToComment('${threadKey}', '${escapeHtml(c.author)}')" class="hover:text-[#0A2540] transition">回复</button>
+                    <button onclick="toggleCommentLike('${threadKey}', ${idx})" class="hover:text-[#624AFF] transition mono" style="${c.liked ? 'color:var(--accent-ink); font-weight:600;' : ''}">👍 ${c.likes}</button>
+                    <button onclick="replyToComment('${threadKey}', '${escapeHtml(c.author)}')" class="hover:text-[#624AFF] transition">回复</button>
                   </div>
                 </div>
               </div>
@@ -1788,7 +1868,7 @@ Model   ：claude-sonnet-4
           <!-- Left (8): 播放 + 标题与简介 + 互动评论 -->
           <div class="lg:col-span-8 space-y-6">
             <div class="cpa-card overflow-hidden bg-white">
-              <div class="aspect-video w-full bg-[#0A2540]">
+              <div class="aspect-video w-full bg-[#27254C]">
                 <iframe
                   src="${embedUrl}"
                   class="w-full h-full border-0 block"
@@ -1799,7 +1879,7 @@ Model   ：claude-sonnet-4
               </div>
               <div class="p-5 sm:p-6 space-y-2.5">
                 <div class="flex flex-wrap items-center gap-2 text-xs">
-                  <span class="px-2.5 py-0.5 rounded-full font-medium" style="background:#EFF6FF; color:var(--primary);">${l.cat}</span>
+                  <span class="px-2.5 py-0.5 rounded-full font-medium" style="background:#F1F1FD; color:var(--primary);">${l.cat}</span>
                   <span style="color:var(--muted);">${l.author}</span>
                   <span class="mono" style="color:var(--muted);">· ${l.duration}</span>
                 </div>
@@ -1820,7 +1900,7 @@ Model   ：claude-sonnet-4
                   <div onclick="openLessonDetail('${o.id}')" class="flex items-center gap-3 cursor-pointer group">
                     <img src="${o.cover}" alt="${o.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 shrink-0" />
                     <div class="min-w-0">
-                      <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#0F4C81] transition">${o.title}</div>
+                      <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#624AFF] transition">${o.title}</div>
                       <div class="text-[11px] mono mt-1" style="color:var(--muted);">${o.author} · ${o.duration}</div>
                     </div>
                   </div>
@@ -1891,7 +1971,7 @@ Model   ：claude-sonnet-4
                   <div onclick="openChallengeDetail('${oc.id}')" class="flex items-center gap-3 cursor-pointer group">
                     <img src="${oc.cover}" alt="${oc.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 shrink-0" />
                     <div class="min-w-0">
-                      <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#0F4C81] transition">${oc.title}</div>
+                      <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#624AFF] transition">${oc.title}</div>
                       <div class="text-[11px] mono mt-1" style="color:var(--accent-ink);">活动 · ${oc.deadline}</div>
                     </div>
                   </div>
@@ -1900,7 +1980,7 @@ Model   ：claude-sonnet-4
                   <div onclick="openLessonDetail('${o.id}')" class="flex items-center gap-3 cursor-pointer group">
                     <img src="${o.cover}" alt="${o.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 shrink-0" />
                     <div class="min-w-0">
-                      <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#0F4C81] transition">${o.title}</div>
+                      <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#624AFF] transition">${o.title}</div>
                       <div class="text-[11px] mono mt-1" style="color:var(--muted);">${o.author} · ${o.duration}</div>
                     </div>
                   </div>
@@ -1951,7 +2031,7 @@ Model   ：claude-sonnet-4
                   <span class="text-sm font-bold">${w.title}</span>
                   ${statusBadge[w.status]}
                   <span class="px-2.5 py-0.5 rounded-full text-[11px]" style="background:var(--bg-subtle);">${w.type}</span>
-                  ${w.featured ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:#EFF6FF; color:var(--primary);">★ 精选应用</span>` : ''}
+                  ${w.featured ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:#F1F1FD; color:var(--primary);">★ 精选应用</span>` : ''}
                   ${w.tag ? `<span class="mono text-[11px]" style="color:var(--accent-ink);">${w.tag}</span>` : ''}
                 </div>
                 <p class="text-xs" style="color:var(--muted);">${w.desc}</p>
@@ -1993,8 +2073,8 @@ Model   ：claude-sonnet-4
 
       document.querySelectorAll('.sq-mode-btn').forEach(b => {
         const a = b.dataset.sqMode === squareMode;
-        b.style.background = a ? '#0A2540' : 'transparent';
-        b.style.color = a ? '#FFFFFF' : '#64748B';
+        b.style.background = a ? '#F1F1FD' : 'transparent';
+        b.style.color = a ? '#624AFF' : '#464D5B';
       });
       document.getElementById('squareAllPane').classList.toggle('hidden', squareMode !== 'all');
       document.getElementById('squareMinePane').classList.toggle('hidden', squareMode !== 'mine');
@@ -2012,7 +2092,7 @@ Model   ：claude-sonnet-4
       ];
       document.getElementById('tagFilters').innerHTML = tags.map(t => {
         const active = activeSquareTag === t.k;
-        return `<button onclick="activeSquareTag='${t.k}'; renderSquare()" class="px-3.5 py-1.5 rounded-full text-xs font-medium border transition" style="${active ? 'background:#0A2540; color:#FFFFFF; border-color:#0A2540;' : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);'}">${t.label}</button>`;
+        return `<button onclick="activeSquareTag='${t.k}'; renderSquare()" class="px-3.5 py-1.5 rounded-full text-xs font-medium border transition" style="${active ? 'background:#27254C; color:#FFFFFF; box-shadow:0 8px 24px rgba(39,37,76,0.20); border-color:#0A2540;' : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);'}">${t.label}</button>`;
       }).join('');
 
       const typeVal = document.getElementById('typeFilter').value;
@@ -2045,14 +2125,14 @@ Model   ：claude-sonnet-4
                 </div>
               </div>
               <div class="p-4 space-y-1.5">
-                <h3 class="text-sm font-bold truncate group-hover:text-[#0F4C81] transition">${w.title}</h3>
+                <h3 class="text-sm font-bold truncate group-hover:text-[#624AFF] transition">${w.title}</h3>
                 <p class="text-xs leading-relaxed line-clamp-2" style="color:var(--muted);">${w.desc}</p>
                 ${w.tag ? `<div class="pt-0.5"><span class="mono text-[11px]" style="color:var(--accent-ink);">${w.tag}</span></div>` : ''}
               </div>
             </div>
             <div class="px-4 py-3 border-t border-slate-100 flex items-center justify-between text-xs">
               <div class="truncate" style="color:var(--muted);"><strong style="color:var(--ink);">${w.author}</strong> · 💬 ${cmtCount}</div>
-              <button onclick="event.stopPropagation(); toggleVote('${w.id}')" class="px-3 py-1 rounded-full mono text-xs font-medium border transition shrink-0" style="${w.voted ? 'background:var(--accent-soft); color:var(--accent-ink); border-color:#5EEAD4;' : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);'}">▲ ${w.likes}</button>
+              <button onclick="event.stopPropagation(); toggleVote('${w.id}')" class="px-3 py-1 rounded-full mono text-xs font-medium border transition shrink-0" style="${w.voted ? 'background:#F1F1FD; color:#624AFF; border-color:#D2C4FF;' : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);'}">▲ ${w.likes}</button>
             </div>
           </div>
         `;
@@ -2072,7 +2152,7 @@ Model   ：claude-sonnet-4
         if (voteBtn) {
           voteBtn.textContent = `${w.voted ? '✓ 已点赞' : '▲ 点赞支持'}（${w.likes}）`;
           voteBtn.style.cssText = w.voted
-            ? 'background:var(--accent-soft); color:var(--accent-ink); border-color:#5EEAD4;'
+            ? 'background:#F1F1FD; color:#624AFF; border-color:#D2C4FF;'
             : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);';
         }
       }
@@ -2118,14 +2198,14 @@ Model   ：claude-sonnet-4
                 <div class="flex flex-wrap items-center gap-2 text-xs">
                   <span class="font-medium" style="color:var(--ink);">${w.author}</span>
                   <span style="color:var(--muted);">· ${w.degree} · ${w.createdAt}</span>
-                  ${w.featured ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-medium" style="background:#EFF6FF; color:var(--primary);">★ 精选应用</span>` : ''}
+                  ${w.featured ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-medium" style="background:#F1F1FD; color:var(--primary);">★ 精选应用</span>` : ''}
                   ${w.tag ? `<span class="mono" style="color:var(--accent-ink);">${w.tag}</span>` : ''}
                 </div>
                 <h1 class="text-xl font-bold tracking-tight">${w.title}</h1>
                 <p class="text-xs leading-relaxed" style="color:var(--muted);">${w.desc}</p>
                 <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100">
                   <div class="flex flex-wrap items-center gap-2.5">
-                    <button id="workDetailVoteBtn" onclick="toggleVote('${w.id}')" class="px-4 py-2 rounded-full text-xs font-semibold border transition" style="${w.voted ? 'background:var(--accent-soft); color:var(--accent-ink); border-color:#5EEAD4;' : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);'}">${w.voted ? '✓ 已点赞' : '▲ 点赞支持'}（${w.likes}）</button>
+                    <button id="workDetailVoteBtn" onclick="toggleVote('${w.id}')" class="px-4 py-2 rounded-full text-xs font-semibold border transition" style="${w.voted ? 'background:#F1F1FD; color:#624AFF; border-color:#D2C4FF;' : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);'}">${w.voted ? '✓ 已点赞' : '▲ 点赞支持'}（${w.likes}）</button>
                     <button onclick="showToast('演示原型：正在${w.type === 'Web' ? '打开在线试用' : '下载安装包'} ${w.url}')" class="cpa-pill-btn px-5 py-2 text-xs font-semibold">${w.type === 'Web' ? '在线试用 →' : '下载安装包 ↓'}</button>
                   </div>
                   <span class="mono text-[11px] truncate max-w-[240px]" style="color:var(--muted);">${w.url}</span>
@@ -2145,7 +2225,7 @@ Model   ：claude-sonnet-4
                   <div onclick="openWorkDetail('${o.id}')" class="flex items-center gap-3 cursor-pointer group">
                     <img src="${o.cover}" alt="${o.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 shrink-0" />
                     <div class="min-w-0">
-                      <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#0F4C81] transition">${o.title}</div>
+                      <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#624AFF] transition">${o.title}</div>
                       <div class="text-[11px] mono mt-1" style="color:var(--muted);">${o.author} · ▲ ${o.likes}</div>
                     </div>
                   </div>
@@ -2187,8 +2267,8 @@ Model   ：claude-sonnet-4
       publishMode = mode;
       document.querySelectorAll('.pub-mode-btn').forEach(b => {
         const a = b.dataset.pubMode === mode;
-        b.style.background = a ? '#0A2540' : 'transparent';
-        b.style.color = a ? '#FFFFFF' : '#64748B';
+        b.style.background = a ? '#F1F1FD' : 'transparent';
+        b.style.color = a ? '#624AFF' : '#464D5B';
       });
       document.getElementById('pubPromptPane').classList.toggle('hidden', mode !== 'prompt');
       document.getElementById('pubManualPane').classList.toggle('hidden', mode !== 'manual');

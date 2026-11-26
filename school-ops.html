@@ -7,67 +7,105 @@
   <script src="./tailwindcss.min.js"></script>
   <style>
     :root {
-      --bg-page: #F7F9FC;
+      --bg-page: #FFFFFF;
       --bg-surface: #FFFFFF;
-      --bg-subtle: #F1F5F9;
-      --border: #E5E9F0;
-      --ink: #0A2540;
-      --muted: #64748B;
-      --primary: #0F4C81;
-      --accent: #0D9488;
-      --accent-soft: #ECFDF5;
-      --accent-ink: #0F766E;
-      --coral: #C85A4A;
-      --coral-soft: #FEF2F2;
-      --warn: #D97706;
-      --warn-soft: #FFFBEB;
+      --bg-subtle: #F7F9FD;
+      --border: #ECEDF1;
+      --ink: #27254C;
+      --muted: #8284A4;
+      --primary: #624AFF;
+      --accent: #13C2C2;
+      --accent-soft: #E6FFFB;
+      --accent-ink: #006D75;
+      --coral: #FF4D4F;
+      --coral-soft: #FFF2F0;
+      --warn: #D48806;
+      --warn-soft: #FFFBE6;
     }
     body {
       background: var(--bg-page);
       color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, sans-serif;
+      font-family: "PingFang SC", "Microsoft Yahei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-variant-numeric: tabular-nums;
       margin: 0;
     }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-variant-numeric: tabular-nums; }
     .cpa-card {
       background: var(--bg-surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: 0 1px 2px rgba(10, 37, 64, 0.03);
+      border-radius: 20px;
+      box-shadow: 0 2px 16px rgba(39, 37, 76, 0.04);
     }
-    .cpa-pill-btn { background: #0A2540; color: #FFFFFF; border-radius: 9999px; transition: background 140ms ease; }
-    .cpa-pill-btn:hover { background: #0F4C81; }
-    .cpa-ghost-pill { background: #FFFFFF; color: var(--ink); border: 1px solid var(--border); border-radius: 9999px; transition: all 140ms ease; }
-    .cpa-ghost-pill:hover { background: var(--bg-subtle); }
-    .side-btn { transition: all 140ms ease; border-radius: 10px; }
-    .side-btn.active { background: #0A2540; color: #FFFFFF; font-weight: 600; }
-    .side-btn:not(.active) { color: var(--muted); }
-    .side-btn:not(.active):hover { background: var(--bg-subtle); color: var(--ink); }
+    aside.cpa-card {
+      background: #F7F9FD;
+      border-color: #ECEDF1;
+      border-radius: 24px;
+    }
+    .cpa-pill-btn {
+      background: linear-gradient(90deg, #27254C 0%, #624AFF 100%);
+      color: #FFFFFF;
+      border-radius: 9999px;
+      box-shadow: 0 6px 16px rgba(98, 74, 255, 0.18);
+      transition: opacity 140ms cubic-bezier(0.22, 0.78, 0.2, 1), transform 140ms cubic-bezier(0.22, 0.78, 0.2, 1);
+    }
+    .cpa-pill-btn:hover { opacity: 0.90; }
+    .cpa-pill-btn:active { transform: scale(0.97); }
+    .cpa-ghost-pill {
+      background: #FFFFFF;
+      color: var(--ink);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      transition: all 160ms ease;
+    }
+    .cpa-ghost-pill:hover { background: #F3F5FA; border-color: #D2C4FF; color: var(--primary); }
+    .cpa-ghost-pill:active { transform: scale(0.97); }
+    .side-btn { transition: all 180ms ease; border-radius: 12px; }
+    .side-btn.active { background: #F1F1FD; color: #624AFF; font-weight: 600; }
+    .side-btn:not(.active) { color: #464D5B; }
+    .side-btn:not(.active):hover { background: #FFFFFF; color: var(--ink); }
     .section-eyebrow { display: flex; align-items: center; gap: 10px; }
-    .section-bar { width: 3px; height: 26px; border-radius: 999px; background: var(--accent); flex-shrink: 0; }
-    .drawer-backdrop { background: rgba(10, 37, 64, 0.34); backdrop-filter: blur(2px); }
+    .section-bar { width: 3.5px; height: 26px; border-radius: 999px; background: linear-gradient(180deg, #624AFF 0%, #36CFD1 100%); flex-shrink: 0; }
+    .drawer-backdrop { background: rgba(39, 37, 76, 0.28); backdrop-filter: blur(3px); }
     #toast { transition: opacity 200ms ease, transform 200ms ease; }
+
+    /* === ModelScope Studios Visual & Micro-Interaction Layer (Element-Preserving) === */
+    @keyframes msNavPop {
+      0% { transform: scale(0.86); }
+      100% { transform: scale(1); }
+    }
+    @keyframes msPulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(98, 74, 255, 0.28); }
+      50% { box-shadow: 0 0 0 5px rgba(98, 74, 255, 0); }
+    }
+    h1, h2, h3 {
+      font-family: 'SFMono-Regular', ui-monospace, Menlo, Monaco, Consolas, "PingFang SC", "Microsoft Yahei", sans-serif;
+      letter-spacing: -0.01em;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #624AFF !important;
+      box-shadow: 0 0 0 3px rgba(98, 74, 255, 0.10);
+    }
   </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
 
   <!-- Unified 4-Portal Prototype Switcher Bar -->
-  <div style="background:#0A2540; color:#E2E8F0;" class="px-4 py-2 text-xs border-b border-white/10">
+  <div style="background:#27254C; color:#E8EAF6;" class="px-4 py-2 text-xs border-b border-white/10">
     <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2 flex-wrap">
         <a href="./overview.html" class="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium">✦ 浣溪AI Lab · V1 原型总览</a>
         <span class="text-slate-500 hidden sm:inline">|</span>
         <a href="./index.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">① 学生端</a>
         <a href="./college-dashboard.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">② 学院端（纯只读）</a>
-        <a href="./school-ops.html" class="px-2.5 py-1 rounded-full bg-teal-600 text-white font-semibold">③ 运营管理端（学校用）</a>
+        <a href="./school-ops.html" class="px-2.5 py-1 rounded-full text-white font-semibold" style="background:#624AFF;">③ 运营管理端（学校用）</a>
         <a href="./platform-admin.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">④ 平台管理端（浣溪内部）</a>
       </div>
-      <span class="text-[11px] text-teal-200 hidden md:inline">校内社团/志愿者日常运营 · 机制 A 激励池制</span>
+      <span class="text-[11px] text-indigo-200 hidden md:inline">校内社团/志愿者日常运营 · 机制 A 激励池制</span>
     </div>
   </div>
 
   <!-- Toast -->
-  <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-medium shadow-lg pointer-events-none opacity-0 -translate-y-2" style="background:#0A2540; color:#FFFFFF;"></div>
+  <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-medium shadow-lg pointer-events-none opacity-0 -translate-y-2" style="background:#27254C; color:#FFFFFF; box-shadow:0 8px 24px rgba(39,37,76,0.20);"></div>
 
   <div class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
@@ -102,7 +140,7 @@
       </nav>
 
       <!-- Clear Permission Boundary Note -->
-      <div class="p-3.5 rounded-xl text-[11px] leading-relaxed border border-slate-200 space-y-1" style="background:var(--bg-page); color:var(--muted);">
+      <div class="p-3.5 rounded-xl text-[11px] leading-relaxed border border-slate-200 space-y-1" style="background:#FFFFFF; color:#464D5B;">
         <div class="font-semibold" style="color:var(--ink);">校内端权限边界</div>
         <div>• 仅操作本院成员核验、作品审核、CMS 内容与激励池内发奖。</div>
         <div>• 学院基础额度、限流与反倒卖审计由<strong>浣溪内部平台端</strong>统一管控；本端每笔发奖自动记入平台审计日志。</div>
@@ -148,7 +186,7 @@
             <button onclick="showToast('已下载模板：hust-software-roster-template.csv')" class="cpa-ghost-pill px-3.5 py-1.5 font-medium">下载标准模板</button>
           </div>
 
-          <div class="p-8 rounded-2xl border-2 border-dashed border-slate-300 text-center space-y-3" style="background:var(--bg-page);">
+          <div class="p-8 rounded-2xl border-2 border-dashed border-slate-300 text-center space-y-3" style="background:#F7F9FD;">
             <div class="text-sm font-semibold">将学院教务处导出的学生邮箱名单拖放到此处</div>
             <div style="color:var(--muted);">支持 UTF-8 CSV / XLSX，单次上限 10,000 行；已存在成员自动跳过不重复发额度</div>
             <button onclick="simulateImportPreview()" class="cpa-pill-btn px-5 py-2 font-medium">模拟上传：2026秋软件学院补录名单.xlsx</button>
@@ -169,13 +207,13 @@
         <!-- Sub 3: Certified Members List -->
         <div id="msub-list" class="hidden cpa-card overflow-hidden text-xs">
           <div class="px-5 py-3.5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
-            <input id="memberSearch" oninput="renderMembersTable()" type="text" placeholder="搜索邮箱或姓名..." class="px-3.5 py-1.5 rounded-full border border-slate-200 text-xs w-56 focus:outline-none focus:border-[#0F4C81]" />
+            <input id="memberSearch" oninput="renderMembersTable()" type="text" placeholder="搜索邮箱或姓名..." class="px-3.5 py-1.5 rounded-full border border-slate-200 text-xs w-56 focus:outline-none focus:border-[#624AFF]" />
             <span style="color:var(--muted);">注：成员额度上限与风控冻结仅限浣溪平台端操作</span>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="border-b border-slate-100 text-[11px]" style="background:var(--bg-page); color:var(--muted);">
+                <tr class="border-b border-slate-100 text-[11px]" style="background:#FFFFFF; color:#464D5B;">
                   <th class="px-5 py-2.5 font-medium">姓名与教育邮箱</th>
                   <th class="px-4 py-2.5 font-medium">身份分层</th>
                   <th class="px-4 py-2.5 font-medium">已消耗 Token</th>
@@ -270,7 +308,7 @@
             </div>
           </div>
           <div class="h-2.5 rounded-full overflow-hidden" style="background:var(--bg-subtle);">
-            <div id="poolBar" class="h-full rounded-full transition-all" style="width:82.5%; background:var(--primary);"></div>
+            <div id="poolBar" class="h-full rounded-full transition-all" style="width:82.5%; background:linear-gradient(90deg,#624AFF,#36CFD1);"></div>
           </div>
           <div class="text-[11px]" style="color:var(--muted);">
             机制说明：在已获批激励池额度内，本院运营人员可自主向双周榜单、挑战赛获奖学生或开发社团志愿者发放奖励；<strong>每一笔发奖均自动同步至浣溪平台安全审计日志</strong>，池子不足时点击右上角向浣溪提交追加预算审批。
@@ -458,8 +496,8 @@
       ['pending', 'import', 'list'].forEach(k => document.getElementById('msub-' + k).classList.toggle('hidden', k !== s));
       document.querySelectorAll('.msub-btn').forEach(b => {
         const a = b.dataset.msub === s;
-        b.style.background = a ? '#0A2540' : 'transparent';
-        b.style.color = a ? '#FFFFFF' : '#64748B';
+        b.style.background = a ? '#F1F1FD' : 'transparent';
+        b.style.color = a ? '#624AFF' : '#464D5B';
       });
       renderPendingMembers();
       renderMembersTable();
@@ -526,7 +564,7 @@
       const tags = [{k:'all',l:'全部作品'}, {k:'#第1期校园黑客松',l:'#第1期校园黑客松'}, {k:'#第2周Workshop实战',l:'#第2周Workshop实战'}];
       document.getElementById('opsWorkTagBar').innerHTML = tags.map(t => {
         const a = opsWorkTag === t.k;
-        return `<button onclick="opsWorkTag='${t.k}'; renderOpsWorks()" class="px-3 py-1.5 rounded-full text-xs font-medium border" style="${a ? 'background:#0A2540; color:#FFFFFF; border-color:#0A2540;' : 'background:#FFFFFF; border-color:var(--border);'}">${t.l}</button>`;
+        return `<button onclick="opsWorkTag='${t.k}'; renderOpsWorks()" class="px-3 py-1.5 rounded-full text-xs font-medium border" style="${a ? 'background:#27254C; color:#FFFFFF; box-shadow:0 8px 24px rgba(39,37,76,0.20); border-color:#0A2540;' : 'background:#FFFFFF; border-color:var(--border);'}">${t.l}</button>`;
       }).join('');
 
       const stFilter = document.getElementById('opsWorkStatusFilter').value;
@@ -543,13 +581,13 @@
       document.getElementById('opsWorksList').innerHTML = list.map(w => `
         <div class="cpa-card p-4 px-5 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div class="flex items-start gap-3">
-            <input type="checkbox" ${selectedWorkIds.has(w.id) ? 'checked' : ''} onchange="toggleSelectWork('${w.id}')" class="mt-1 accent-[#0F4C81]" />
+            <input type="checkbox" ${selectedWorkIds.has(w.id) ? 'checked' : ''} onchange="toggleSelectWork('${w.id}')" class="mt-1 accent-[#624AFF]" />
             <div class="space-y-1">
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-sm font-bold">${w.title}</span>
                 ${stPill[w.status]}
                 <span class="px-2 py-0.5 rounded-full text-[11px]" style="background:var(--bg-subtle);">${w.type}</span>
-                ${w.featured ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-medium" style="background:#EFF6FF; color:var(--primary);">★ 学院精选</span>` : ''}
+                ${w.featured ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-medium" style="background:#F1F1FD; color:var(--primary);">★ 学院精选</span>` : ''}
                 <span class="mono text-[11px]" style="color:var(--accent-ink);">${w.tag}</span>
               </div>
               <div style="color:var(--muted);">作者：${w.author}（<span class="mono">${w.email}</span>） · 当前点赞 <strong class="mono" style="color:var(--ink);">▲ ${w.likes}</strong></div>
@@ -607,7 +645,7 @@
     // CMS
     function renderCmsLists() {
       document.getElementById('opsEventsList').innerHTML = opsEvents.map(e => `
-        <div class="p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-2" style="background:var(--bg-page);">
+        <div class="p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-2" style="background:#F7F9FD;">
           <div>
             <div class="font-semibold">${e.title}</div>
             <div class="mt-0.5 text-[11px]"><span class="mono" style="color:var(--accent-ink);">${e.tag}</span> · <span style="color:var(--muted);">${e.time}</span></div>

@@ -7,59 +7,100 @@
   <script src="./tailwindcss.min.js"></script>
   <style>
     :root {
-      --bg-page: #F7F9FC;
+      --bg-page: #FFFFFF;
       --bg-surface: #FFFFFF;
-      --bg-subtle: #F1F5F9;
-      --border: #E5E9F0;
-      --ink: #0A2540;
-      --muted: #64748B;
-      --primary: #0F4C81;
-      --accent: #0D9488;
-      --accent-soft: #ECFDF5;
-      --accent-ink: #0F766E;
-      --coral: #C85A4A;
-      --coral-soft: #FEF2F2;
-      --warn: #D97706;
-      --warn-soft: #FFFBEB;
+      --bg-subtle: #F7F9FD;
+      --border: #ECEDF1;
+      --ink: #27254C;
+      --muted: #8284A4;
+      --primary: #624AFF;
+      --accent: #13C2C2;
+      --accent-soft: #E6FFFB;
+      --accent-ink: #006D75;
+      --coral: #FF4D4F;
+      --coral-soft: #FFF2F0;
+      --warn: #D48806;
+      --warn-soft: #FFFBE6;
     }
     body {
       background: var(--bg-page);
       color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, sans-serif;
+      font-family: "PingFang SC", "Microsoft Yahei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-variant-numeric: tabular-nums;
       margin: 0;
     }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-variant-numeric: tabular-nums; }
     .cpa-card {
       background: var(--bg-surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: 0 1px 2px rgba(10, 37, 64, 0.03);
+      border-radius: 20px;
+      box-shadow: 0 2px 16px rgba(39, 37, 76, 0.04);
+      transition: background-color 200ms ease, border-color 200ms ease;
     }
-    .cpa-pill-btn { background: #0A2540; color: #FFFFFF; border-radius: 9999px; transition: background 140ms ease; }
-    .cpa-pill-btn:hover { background: #0F4C81; }
-    .cpa-ghost-pill { background: #FFFFFF; color: var(--ink); border: 1px solid var(--border); border-radius: 9999px; transition: all 140ms ease; }
-    .cpa-ghost-pill:hover { background: var(--bg-subtle); }
-    .side-btn { transition: all 140ms ease; border-radius: 10px; }
-    .side-btn.active { background: #0A2540; color: #FFFFFF; font-weight: 600; }
-    .side-btn:not(.active) { color: var(--muted); }
-    .side-btn:not(.active):hover { background: var(--bg-subtle); color: var(--ink); }
+    aside.cpa-card {
+      background: #F7F9FD;
+      border-color: #ECEDF1;
+      border-radius: 24px;
+    }
+    .cpa-pill-btn {
+      background: linear-gradient(90deg, #27254C 0%, #624AFF 100%);
+      color: #FFFFFF;
+      border-radius: 9999px;
+      box-shadow: 0 6px 16px rgba(98, 74, 255, 0.18);
+      transition: opacity 140ms cubic-bezier(0.22, 0.78, 0.2, 1), transform 140ms cubic-bezier(0.22, 0.78, 0.2, 1);
+    }
+    .cpa-pill-btn:hover { opacity: 0.90; }
+    .cpa-pill-btn:active { transform: scale(0.97); }
+    .cpa-ghost-pill {
+      background: #FFFFFF;
+      color: var(--ink);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      transition: all 160ms ease;
+    }
+    .cpa-ghost-pill:hover { background: #F3F5FA; border-color: #D2C4FF; color: var(--primary); }
+    .cpa-ghost-pill:active { transform: scale(0.97); }
+    .side-btn { transition: all 180ms ease; border-radius: 12px; }
+    .side-btn.active { background: #F1F1FD; color: #624AFF; font-weight: 600; }
+    .side-btn:not(.active) { color: #464D5B; }
+    .side-btn:not(.active):hover { background: #FFFFFF; color: var(--ink); }
     .hero-grid-glow {
-      background-image:
-        radial-gradient(ellipse 65% 75% at 45% 35%, rgba(15, 76, 129, 0.07), transparent 72%),
-        linear-gradient(to right, rgba(15, 76, 129, 0.03) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(15, 76, 129, 0.03) 1px, transparent 1px);
-      background-size: 100% 100%, 44px 44px, 44px 44px;
+      background:
+        linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 24%),
+        linear-gradient(180deg, rgba(242, 240, 255, 0) 32%, #F2F0FF 90%),
+        radial-gradient(ellipse 55% 55% at 0% -5%, rgba(203, 228, 255, 0.85), transparent 98%),
+        radial-gradient(ellipse 70% 60% at 100% 12%, rgba(211, 245, 254, 0.72), transparent 76%),
+        #FFFFFF;
+      box-shadow: 0 12px 28px rgba(144, 156, 234, 0.14);
     }
     .section-eyebrow { display: flex; align-items: center; gap: 10px; }
-    .section-bar { width: 3px; height: 26px; border-radius: 999px; background: var(--primary); flex-shrink: 0; }
-    .drawer-backdrop { background: rgba(10, 37, 64, 0.34); backdrop-filter: blur(2px); }
+    .section-bar { width: 3.5px; height: 26px; border-radius: 999px; background: linear-gradient(180deg, #624AFF 0%, #36CFD1 100%); flex-shrink: 0; }
+    .drawer-backdrop { background: rgba(39, 37, 76, 0.28); backdrop-filter: blur(3px); }
     #toast { transition: opacity 200ms ease, transform 200ms ease; }
+
+    /* === ModelScope Studios Visual & Micro-Interaction Layer (Element-Preserving) === */
+    @keyframes msNavPop {
+      0% { transform: scale(0.86); }
+      100% { transform: scale(1); }
+    }
+    @keyframes msPulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(98, 74, 255, 0.28); }
+      50% { box-shadow: 0 0 0 5px rgba(98, 74, 255, 0); }
+    }
+    h1, h2, h3 {
+      font-family: 'SFMono-Regular', ui-monospace, Menlo, Monaco, Consolas, "PingFang SC", "Microsoft Yahei", sans-serif;
+      letter-spacing: -0.01em;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #624AFF !important;
+      box-shadow: 0 0 0 3px rgba(98, 74, 255, 0.10);
+    }
   </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
 
   <!-- Unified 4-Portal Prototype Switcher Bar -->
-  <div style="background:#0A2540; color:#E2E8F0;" class="px-4 py-2 text-xs border-b border-white/10">
+  <div style="background:#27254C; color:#E8EAF6;" class="px-4 py-2 text-xs border-b border-white/10">
     <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2 flex-wrap">
         <a href="./overview.html" class="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium">✦ 浣溪AI Lab · V1 原型总览</a>
@@ -67,14 +108,14 @@
         <a href="./index.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">① 学生端</a>
         <a href="./college-dashboard.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">② 学院端（纯只读）</a>
         <a href="./school-ops.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">③ 运营管理端（学校用）</a>
-        <a href="./platform-admin.html" class="px-2.5 py-1 rounded-full bg-teal-600 text-white font-semibold">④ 平台管理端（浣溪内部）</a>
+        <a href="./platform-admin.html" class="px-2.5 py-1 rounded-full text-white font-semibold" style="background:#624AFF;">④ 平台管理端（浣溪内部）</a>
       </div>
       <span class="text-[11px] text-rose-200 hidden md:inline">浣溪公司内部专用 · 学院治理 / 资金审批 / 安全审计</span>
     </div>
   </div>
 
   <!-- Toast -->
-  <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-medium shadow-lg pointer-events-none opacity-0 -translate-y-2" style="background:#0A2540; color:#FFFFFF;"></div>
+  <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-medium shadow-lg pointer-events-none opacity-0 -translate-y-2" style="background:#27254C; color:#FFFFFF; box-shadow:0 8px 24px rgba(39,37,76,0.20);"></div>
 
   <div class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
@@ -82,7 +123,7 @@
     <aside class="lg:col-span-3 cpa-card p-4 space-y-5 lg:sticky lg:top-6">
       <div class="px-2 space-y-1.5">
         <div class="flex items-center gap-2">
-          <span class="w-7 h-7 rounded-lg inline-flex items-center justify-center font-bold text-xs text-white" style="background:#0A2540;">✦</span>
+          <span class="w-7 h-7 rounded-lg inline-flex items-center justify-center font-bold text-xs text-white" style="background:linear-gradient(135deg,#27254C,#624AFF);">✦</span>
           <span class="text-sm font-bold tracking-tight">浣溪AI Lab</span>
         </div>
         <div class="text-xs font-semibold pt-1">内部平台管理与风控中枢</div>
@@ -107,7 +148,7 @@
         </button>
       </nav>
 
-      <div class="p-3.5 rounded-xl text-[11px] leading-relaxed border border-slate-200 space-y-1" style="background:var(--bg-page); color:var(--muted);">
+      <div class="p-3.5 rounded-xl text-[11px] leading-relaxed border border-slate-200 space-y-1" style="background:#FFFFFF; color:#464D5B;">
         <div class="font-semibold" style="color:var(--ink);">内部治理红线</div>
         <div>• 统一配置合作学院规则、默认初始额度与单日防刷限流。</div>
         <div>• 严审各校追加激励池申请；全程审计校内发奖与倒卖异常，秒级冻结止损。</div>
@@ -175,7 +216,7 @@
                   <span class="font-semibold">华中科技大学软件学院</span>
                   <span class="mono">总预算 214.8M / 300M (71.6%)</span>
                 </div>
-                <div class="h-2 rounded-full overflow-hidden" style="background:var(--bg-subtle);"><div class="h-full rounded-full" style="width:71.6%; background:var(--primary);"></div></div>
+                <div class="h-2 rounded-full overflow-hidden" style="background:var(--bg-subtle);"><div class="h-full rounded-full" style="width:71.6%; background:linear-gradient(90deg,#624AFF,#36CFD1);"></div></div>
                 <div class="text-[11px] flex justify-between" style="color:var(--muted);">
                   <span>认证 642 人 · 作品 96 件</span>
                   <span style="color:var(--warn);">激励池已用 82.5%（已提追加申请）</span>
@@ -303,14 +344,14 @@
                 <option value="校内运营端">校内运营端（含池内发奖）</option>
                 <option value="浣溪平台端">浣溪平台端</option>
               </select>
-              <input id="logSearch" oninput="renderAuditLogs()" type="text" placeholder="搜索账号、动作或单号..." class="px-3.5 py-1.5 rounded-full border border-slate-200 text-xs w-52 focus:outline-none focus:border-[#0F4C81]" />
+              <input id="logSearch" oninput="renderAuditLogs()" type="text" placeholder="搜索账号、动作或单号..." class="px-3.5 py-1.5 rounded-full border border-slate-200 text-xs w-52 focus:outline-none focus:border-[#624AFF]" />
             </div>
             <span class="text-[11px]" style="color:var(--muted);">不可篡改日志 · 不记录任何密钥明文</span>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="border-b border-slate-100 text-[11px]" style="background:var(--bg-page); color:var(--muted);">
+                <tr class="border-b border-slate-100 text-[11px]" style="background:#FFFFFF; color:#464D5B;">
                   <th class="px-5 py-2.5 font-medium">时间</th>
                   <th class="px-4 py-2.5 font-medium">来源端</th>
                   <th class="px-4 py-2.5 font-medium">操作人</th>
@@ -349,7 +390,7 @@
   <div id="approveModal" class="hidden fixed inset-0 z-50 drawer-backdrop flex items-center justify-center p-4" onclick="if(event.target===this) closeApproveModal()">
     <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-4 text-xs">
       <h3 class="text-sm font-bold">二次确认 · 审批通过学院激励池追加</h3>
-      <div id="approveSummaryBox" class="p-3.5 rounded-xl border border-slate-200 leading-relaxed" style="background:var(--bg-page);"></div>
+      <div id="approveSummaryBox" class="p-3.5 rounded-xl border border-slate-200 leading-relaxed" style="background:#F7F9FD;"></div>
       <div class="text-[11px]" style="color:var(--muted);">注：每笔审批绑定唯一幂等单号，防止重复点击多发预算；确认后立即注入该学院激励池并写入审计日志。</div>
       <div class="flex justify-end gap-2">
         <button onclick="closeApproveModal()" class="cpa-ghost-pill px-4 py-1.5">取消</button>
@@ -450,7 +491,7 @@
             <div class="font-semibold">${t.name} <span class="font-normal" style="color:var(--muted);">· ${t.college}</span></div>
             <div class="text-[11px] mt-0.5" style="color:var(--muted);">${t.highlight}</div>
           </div>
-          <button onclick="talents[${i}].tagged=!talents[${i}].tagged; renderTalents(); showToast(talents[${i}].tagged?'已标为校招/实习重点跟进':'已取消跟进标记')" class="px-3 py-1 rounded-full text-[11px] font-medium border shrink-0" style="${t.tagged ? 'background:#EFF6FF; color:var(--primary); border-color:#BFDBFE;' : 'background:#FFFFFF; color:var(--muted); border-color:var(--border);'}">${t.tagged ? '★ 重点跟进' : '+ 标记人才'}</button>
+          <button onclick="talents[${i}].tagged=!talents[${i}].tagged; renderTalents(); showToast(talents[${i}].tagged?'已标为校招/实习重点跟进':'已取消跟进标记')" class="px-3 py-1 rounded-full text-[11px] font-medium border shrink-0" style="${t.tagged ? 'background:#F1F1FD; color:var(--primary); border-color:#D2C4FF;' : 'background:#FFFFFF; color:var(--muted); border-color:var(--border);'}">${t.tagged ? '★ 重点跟进' : '+ 标记人才'}</button>
         </div>
       `).join('');
     }
@@ -472,14 +513,14 @@
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-slate-100">
-            <div class="p-3 rounded-xl border border-slate-200 flex items-center justify-between" style="background:var(--bg-page);">
+            <div class="p-3 rounded-xl border border-slate-200 flex items-center justify-between" style="background:#F7F9FD;">
               <div>
                 <div class="font-semibold">② 学院端只读账号（给院长/领导）</div>
                 <div class="mono text-[11px] mt-0.5" style="color:var(--muted);">${c.collegeAcct} · 严格纯只读权限</div>
               </div>
               <button onclick="showToast('已重置 ${c.collegeAcct} 访问口令并写入审计日志')" class="cpa-ghost-pill px-3 py-1 text-[11px]">重置口令</button>
             </div>
-            <div class="p-3 rounded-xl border border-slate-200 flex items-center justify-between" style="background:var(--bg-page);">
+            <div class="p-3 rounded-xl border border-slate-200 flex items-center justify-between" style="background:#F7F9FD;">
               <div>
                 <div class="font-semibold">③ 校内运营端账号（给社团/志愿者）</div>
                 <div class="mono text-[11px] mt-0.5" style="color:var(--muted);">${c.opsAcct} · 限本院日常运营与池内发奖</div>
@@ -513,8 +554,8 @@
       ['approvals', 'policies'].forEach(k => document.getElementById('qsub-' + k).classList.toggle('hidden', k !== s));
       document.querySelectorAll('.qsub-btn').forEach(b => {
         const a = b.dataset.qsub === s;
-        b.style.background = a ? '#0A2540' : 'transparent';
-        b.style.color = a ? '#FFFFFF' : '#64748B';
+        b.style.background = a ? '#F1F1FD' : 'transparent';
+        b.style.color = a ? '#624AFF' : '#464D5B';
       });
       renderApprovals();
     }
@@ -537,7 +578,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-3 gap-3 p-3 rounded-xl border border-slate-100 text-[11px]" style="background:var(--bg-page);">
+          <div class="grid grid-cols-3 gap-3 p-3 rounded-xl border border-slate-100 text-[11px]" style="background:#F7F9FD;">
             <div><span style="color:var(--muted);">当前激励池余量：</span><strong class="mono">${a.poolLeft}</strong></div>
             <div><span style="color:var(--muted);">学院剩余总预算：</span><strong class="mono">${a.budgetLeft}</strong></div>
             <div><span style="color:var(--muted);">近 30 天产出作品：</span><strong class="mono" style="color:var(--accent-ink);">${a.works30d} 件</strong></div>
@@ -591,8 +632,8 @@
       ['risks', 'logs'].forEach(k => document.getElementById('asub-' + k).classList.toggle('hidden', k !== s));
       document.querySelectorAll('.asub-btn').forEach(b => {
         const a = b.dataset.asub === s;
-        b.style.background = a ? '#0A2540' : 'transparent';
-        b.style.color = a ? '#FFFFFF' : '#64748B';
+        b.style.background = a ? '#F1F1FD' : 'transparent';
+        b.style.color = a ? '#624AFF' : '#464D5B';
       });
       renderRisks();
       renderAuditLogs();
