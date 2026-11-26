@@ -914,6 +914,27 @@
     </div>
   </div>
 
+  <!-- 7. Work Detail Inspection Slide-Over Drawer (#workDetailDrawer) -->
+  <div id="workDetailDrawer" class="hidden fixed inset-0 z-40 drawer-backdrop flex justify-end" onclick="if(event.target===this) closeOpsWorkDetail()">
+    <div class="w-full max-w-[540px] h-full bg-white border-l border-[#E5E8F0] shadow-2xl flex flex-col justify-between overflow-hidden">
+      <!-- Sticky Top Bar -->
+      <div class="h-14 px-5 border-b border-[#E5E8F0] flex items-center justify-between gap-3 shrink-0 bg-white">
+        <div id="wdHeaderLeft" class="flex items-center gap-2 min-w-0"></div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="wdPrevBtn" type="button" onclick="stepOpsWorkDetail(-1)" class="adm-btn px-2 py-1 text-[11px]" title="上一件作品">← 上一件</button>
+          <button id="wdNextBtn" type="button" onclick="stepOpsWorkDetail(1)" class="adm-btn px-2 py-1 text-[11px]" title="下一件作品">下一件 →</button>
+          <button type="button" onclick="closeOpsWorkDetail()" class="w-7 h-7 rounded-lg hover:bg-[#F2F4F9] text-[#848CA4] hover:text-[#1E2238] inline-flex items-center justify-center text-sm ml-1">✕</button>
+        </div>
+      </div>
+
+      <!-- Scrollable Detail Content -->
+      <div id="wdBody" class="flex-1 overflow-y-auto p-5 space-y-4 text-xs"></div>
+
+      <!-- Sticky Moderation Footer -->
+      <div id="wdFooter" class="px-5 py-3.5 border-t border-[#E5E8F0] bg-[#FAFBFE] flex flex-wrap items-center justify-between gap-2 shrink-0"></div>
+    </div>
+  </div>
+
   <script>
     // ==================== STATE & DATA ====================
     let activeMenu = 'members';
@@ -927,6 +948,8 @@
     let selectedWorkIds = new Set();
     let highlightedWorkId = null;
     let rejectingWorkId = null;
+    let inspectingWorkId = null;
+    let inspectingShotIdx = 0;
 
     let cmsFilter = 'all';
     let editingCmsId = null;
@@ -957,20 +980,108 @@
       { email: 'xujiahe@hust.edu.cn', name: '许嘉禾', deg: '研究生', used: '318.0K', works: 1, status: '正常' }
     ];
 
-    // 10 Works Aligned with Student Portal
+    // 10 Works Aligned with Student Portal (with full inspection metadata)
     let opsWorks = [
-      { id: 'ow-1', title: '华科选课排雷助手', author: '林知行', email: 'linzhixing@hust.edu.cn', type: 'Web', tag: '#第1期校园黑客松', status: 'published', featured: true, likes: 148, awardedTier: '', awardedTokens: 0 },
-      { id: 'ow-2', title: '论文精读卡片生成器', author: '周予安', email: 'zhouyuan@hust.edu.cn', type: 'Web', tag: '#第1期校园黑客松', status: 'published', featured: true, likes: 126, awardedTier: '', awardedTokens: 0 },
-      { id: 'ow-3', title: '食堂档口排队实时估算', author: '许嘉禾', email: 'xujiahe@hust.edu.cn', type: 'APP', tag: '#第1期校园黑客松', status: 'published', featured: false, likes: 84, awardedTier: '', awardedTokens: 0 },
-      { id: 'ow-4', title: '宿舍值日公平抽签器', author: '陆星野', email: 'luxingye@hust.edu.cn', type: 'Web', tag: '#第1期校园黑客松', status: 'reviewing', featured: false, likes: 0, awardedTier: '', awardedTokens: 0 },
-
-      { id: 'ow-5', title: '实验室值班语音助手', author: '陈一鸣', email: 'chenyiming@hust.edu.cn', type: 'PC', tag: '#第2期科研工具赛', status: 'published', featured: true, likes: 98, awardedTier: '', awardedTokens: 0 },
-      { id: 'ow-6', title: '算法题解可视化沙盒', author: '陆星野', email: 'luxingye@hust.edu.cn', type: 'Web', tag: '#第2期科研工具赛', status: 'published', featured: false, likes: 73, awardedTier: '', awardedTokens: 0 },
-      { id: 'ow-7', title: '文献公式一键转 LaTeX', author: '林知行', email: 'linzhixing@hust.edu.cn', type: 'Web', tag: '#第2期科研工具赛', status: 'reviewing', featured: false, likes: 0, awardedTier: '', awardedTokens: 0 },
-
-      { id: 'ow-8', title: '华科选课排雷助手（先导版）', author: '林知行', email: 'linzhixing@hust.edu.cn', type: 'Web', tag: '#先导期小应用赛', status: 'published', featured: true, likes: 148, awardedTier: '一等奖', awardedTokens: 500000 },
-      { id: 'ow-9', title: '论文精读卡片生成器（先导版）', author: '周予安', email: 'zhouyuan@hust.edu.cn', type: 'Web', tag: '#先导期小应用赛', status: 'published', featured: true, likes: 126, awardedTier: '优胜奖', awardedTokens: 300000 },
-      { id: 'ow-10', title: '毕设开题答辩模拟评委', author: '苏明澈', email: 'sumingche@hust.edu.cn', type: 'Web', tag: '#先导期小应用赛', status: 'published', featured: false, likes: 61, awardedTier: '优胜奖', awardedTokens: 300000 }
+      {
+        id: 'ow-1', title: '华科选课排雷助手', author: '林知行', degree: '本科 · 大三', email: 'linzhixing@hust.edu.cn',
+        type: 'Web', tag: '#第1期校园黑客松', status: 'published', featured: true, likes: 148, awardedTier: '', awardedTokens: 0,
+        submittedAt: '2026-11-23 16:40', modelStack: 'claude-sonnet-4 · 单页 HTML/JS',
+        url: 'https://apps.huanxi-lab.cn/hust-course-helper',
+        shots: ['./media/demo_campus_events_1.jpg', './media/demo_campus_events_2.jpg'],
+        desc: '结合历年课程口碑与时间冲突检测，AI 一键排出最优课表并支持导出 ICS 日历文件。',
+        detailNote: '支持按院系/公选课检索教师评价，勾选备选课后实时标红周次与节次冲突，纯前端静态托管无外链风险。',
+        rejectReason: ''
+      },
+      {
+        id: 'ow-2', title: '论文精读卡片生成器', author: '周予安', degree: '研究生 · 研一', email: 'zhouyuan@hust.edu.cn',
+        type: 'Web', tag: '#第1期校园黑客松', status: 'published', featured: true, likes: 126, awardedTier: '', awardedTokens: 0,
+        submittedAt: '2026-11-24 14:15', modelStack: 'claude-sonnet-4 · Markdown 解析',
+        url: 'https://apps.huanxi-lab.cn/paper-cards',
+        shots: ['./media/demo_cms_web.jpg', './media/demo_cms_codex.jpg'],
+        desc: '上传论文摘要或全文文本，自动拆解核心贡献、关键公式推导与实验复现清单，支持一键导出 Markdown。',
+        detailNote: '针对顶会论文结构优化提取模板，支持中英双语对照卡片预览与飞书文档格式复制。',
+        rejectReason: ''
+      },
+      {
+        id: 'ow-3', title: '食堂档口排队实时估算', author: '许嘉禾', degree: '研究生 · 研二', email: 'xujiahe@hust.edu.cn',
+        type: 'APP', tag: '#第1期校园黑客松', status: 'published', featured: false, likes: 84, awardedTier: '', awardedTokens: 0,
+        submittedAt: '2026-11-25 12:30', modelStack: 'gpt-5-codex · Android APK (8.4MB)',
+        url: 'https://apps.huanxi-lab.cn/pkg/canteen-eta-v0.8.apk',
+        shots: ['./media/demo_homework_app_1.jpg', './media/demo_homework_app_2.jpg'],
+        desc: 'Android 轻量应用，基于东/西区教学楼下课潮汐规律预测各食堂热门窗口等待时长。',
+        detailNote: '安装包已附签名校验与实机运行截图，覆盖东一、百景园、集锦园等 6 个主要食堂档口数据。',
+        rejectReason: ''
+      },
+      {
+        id: 'ow-4', title: '宿舍值日公平抽签器', author: '陆星野', degree: '本科 · 大二', email: 'luxingye@hust.edu.cn',
+        type: 'Web', tag: '#第1期校园黑客松', status: 'reviewing', featured: false, likes: 0, awardedTier: '', awardedTokens: 0,
+        submittedAt: '2026-11-26 10:15', modelStack: 'gpt-5-codex · 静态 Web + localStorage',
+        url: 'https://apps.huanxi-lab.cn/dorm-duty-wheel',
+        shots: ['./media/demo_focus_timer_2.jpg', './media/demo_focus_timer_1.jpg'],
+        desc: '输入寝室成员与本周早八课表，自动避开满课日生成四周轮值表并导出群公告。',
+        detailNote: '待核验项：在线演示链接可正常访问，附 2 张桌面与移动端自适应预览截图，无违规内容。',
+        rejectReason: ''
+      },
+      {
+        id: 'ow-5', title: '实验室值班语音助手', author: '陈一鸣', degree: '本科 · 大四', email: 'chenyiming@hust.edu.cn',
+        type: 'PC', tag: '#第2期科研工具赛', status: 'published', featured: true, likes: 98, awardedTier: '', awardedTokens: 0,
+        submittedAt: '2026-11-25 19:05', modelStack: 'claude-sonnet-4 · macOS/Win 桌面端',
+        url: 'https://apps.huanxi-lab.cn/pkg/lab-voice-v1.1.zip',
+        shots: ['./media/demo_cms_agent.jpg', './media/demo_cms_hackathon.jpg'],
+        desc: '本地轻量桌面客户端，自动整理组会口头待办、仪器借还登记并生成飞书打卡提醒。',
+        detailNote: '压缩包内含 README 启动说明与示例音频测试脚本，API Key 通过本地环境变量注入，未硬编码密钥。',
+        rejectReason: ''
+      },
+      {
+        id: 'ow-6', title: '算法题解可视化沙盒', author: '陆星野', degree: '本科 · 大二', email: 'luxingye@hust.edu.cn',
+        type: 'Web', tag: '#第2期科研工具赛', status: 'published', featured: false, likes: 73, awardedTier: '', awardedTokens: 0,
+        submittedAt: '2026-11-26 08:50', modelStack: 'gpt-5-codex · Canvas 动画可视化',
+        url: 'https://apps.huanxi-lab.cn/algo-sandbox',
+        shots: ['./media/demo_focus_timer_1.jpg', './media/demo_focus_timer_2.jpg'],
+        desc: '输入动态规划或图论代码，自动生成状态转移数组与节点遍历步进动画。',
+        detailNote: '内置背包 DP、最短路 Dijkstra、二叉树遍历 3 组数据结构课程演示案例，支持单步回放。',
+        rejectReason: ''
+      },
+      {
+        id: 'ow-7', title: '文献公式一键转 LaTeX', author: '林知行', degree: '本科 · 大三', email: 'linzhixing@hust.edu.cn',
+        type: 'Web', tag: '#第2期科研工具赛', status: 'reviewing', featured: false, likes: 0, awardedTier: '', awardedTokens: 0,
+        submittedAt: '2026-11-26 11:20', modelStack: 'gemini-2.5-pro · 多模态公式识别',
+        url: 'https://apps.huanxi-lab.cn/latex-snap',
+        shots: ['./media/demo_cms_codex.jpg', './media/demo_cms_web.jpg'],
+        desc: '截图粘贴论文复杂矩阵或积分公式，自动输出可编译 LaTeX 代码与变量符号含义注释。',
+        detailNote: '待核验项：与学生端「我的作品」实时同源提交，静态托管产物完整，支持剪贴板直接粘贴图片测试。',
+        rejectReason: ''
+      },
+      {
+        id: 'ow-8', title: '华科选课排雷助手（先导版）', author: '林知行', degree: '本科 · 大三', email: 'linzhixing@hust.edu.cn',
+        type: 'Web', tag: '#先导期小应用赛', status: 'published', featured: true, likes: 148, awardedTier: '一等奖', awardedTokens: 500000,
+        submittedAt: '2026-11-15 20:10', modelStack: 'claude-sonnet-4 · 百行单文件 Web',
+        url: 'https://apps.huanxi-lab.cn/hust-course-v1',
+        shots: ['./media/demo_campus_events_2.jpg', './media/demo_campus_events_1.jpg'],
+        desc: '先导期一等奖获奖作品：用百行以内核心排课冲突检测算法实现秒级课表校验。',
+        detailNote: '已于 2026-11-18 完成先导赛结算公示（实发 500,000 Token）。',
+        rejectReason: ''
+      },
+      {
+        id: 'ow-9', title: '论文精读卡片生成器（先导版）', author: '周予安', degree: '研究生 · 研一', email: 'zhouyuan@hust.edu.cn',
+        type: 'Web', tag: '#先导期小应用赛', status: 'published', featured: true, likes: 126, awardedTier: '优胜奖', awardedTokens: 300000,
+        submittedAt: '2026-11-16 18:25', modelStack: 'claude-sonnet-4 · 单文件 Web',
+        url: 'https://apps.huanxi-lab.cn/paper-cards-v1',
+        shots: ['./media/demo_club_poster_2.jpg', './media/demo_cms_web.jpg'],
+        desc: '先导期优胜奖作品：粘贴英文摘要一键生成结构化三栏读书卡片。',
+        detailNote: '已于 2026-11-18 完成先导赛结算公示（实发 300,000 Token）。',
+        rejectReason: ''
+      },
+      {
+        id: 'ow-10', title: '毕设开题答辩模拟评委', author: '苏明澈', degree: '研究生 · 研三', email: 'sumingche@hust.edu.cn',
+        type: 'Web', tag: '#先导期小应用赛', status: 'published', featured: false, likes: 61, awardedTier: '优胜奖', awardedTokens: 300000,
+        submittedAt: '2026-11-17 21:40', modelStack: 'gpt-5-codex · 角色扮演追问流',
+        url: 'https://apps.huanxi-lab.cn/defense-mock',
+        shots: ['./media/demo_club_poster_1.jpg', './media/demo_club_poster_2.jpg'],
+        desc: '导入开题 PPT 大纲，自动扮演三位不同风格答辩评委进行犀利追问与改进打分。',
+        detailNote: '已于 2026-11-18 完成先导赛结算公示（实发 300,000 Token）。',
+        rejectReason: ''
+      }
     ];
 
     let opsLessons = [
@@ -1418,25 +1529,34 @@
         if (w.awardedTier) honors.push(`<span class="adm-badge badge-warn mono">🏆 ${escHtml(w.awardedTier)} +${fmtShortK(w.awardedTokens)}</span>`);
         const honorHtml = honors.length ? `<div class="flex items-center gap-1 flex-wrap">${honors.join('')}</div>` : `<span class="text-[#848CA4]">—</span>`;
 
-        let actionHtml = '';
+        let actionHtml = `<button onclick="openOpsWorkDetail('${w.id}')" class="adm-btn px-2.5 py-1 text-xs font-medium">详情</button>`;
         if (w.status === 'reviewing') {
-          actionHtml = `
+          actionHtml += `
             <button onclick="approveWork('${w.id}')" class="adm-btn-primary px-2.5 py-1 text-xs font-medium">通过</button>
             <button onclick="openRejectModal('${w.id}')" class="adm-btn px-2.5 py-1 text-xs font-medium">驳回</button>
           `;
         } else if (w.status === 'published') {
-          actionHtml = `
+          actionHtml += `
             <button onclick="toggleFeatured('${w.id}')" class="adm-btn px-2.5 py-1 text-xs font-medium">${w.featured ? '取消精选' : '精选'}</button>
             <button onclick="jumpWorkToIncentives('${w.id}')" class="adm-btn-soft px-2.5 py-1 text-xs font-medium">${ch && ch.status === 'settled' ? '看公示' : '去定奖'}</button>
           `;
         } else {
-          actionHtml = `<button onclick="approveWork('${w.id}')" class="adm-btn px-2.5 py-1 text-xs font-medium">恢复上架</button>`;
+          actionHtml += `<button onclick="approveWork('${w.id}')" class="adm-btn px-2.5 py-1 text-xs font-medium">恢复上架</button>`;
         }
 
+        const thumb = (w.shots && w.shots[0]) || './media/demo_cms_web.jpg';
         return `
           <tr>
             <td><input type="checkbox" ${selectedWorkIds.has(w.id) ? 'checked' : ''} onchange="toggleSelectWork('${w.id}')" class="accent-[#624AFF] rounded cursor-pointer" /></td>
-            <td class="font-semibold text-[#1E2238]">${escHtml(w.title)}</td>
+            <td>
+              <button type="button" onclick="openOpsWorkDetail('${w.id}')" class="group flex items-center gap-2.5 text-left">
+                <img src="${escHtml(thumb)}" alt="" class="w-10 h-7 rounded object-cover border border-[#E5E8F0] shrink-0 hidden sm:block" loading="lazy" />
+                <div class="min-w-0">
+                  <div class="font-semibold text-[#1E2238] group-hover:text-[#624AFF] transition truncate max-w-[210px]">${escHtml(w.title)}</div>
+                  <div class="text-[11px] text-[#848CA4] truncate max-w-[210px]">${escHtml(w.desc || '')}</div>
+                </div>
+              </button>
+            </td>
             <td><span class="adm-badge badge-neutral mono">${escHtml(w.type)}</span></td>
             <td>
               <div class="font-medium text-[#1E2238]">${escHtml(w.author)}</div>
@@ -1467,13 +1587,222 @@
       renderOpsWorks();
     }
 
+    function getInspectionSequence() {
+      if (activeMenu === 'incentives' && incSub === 'challenges' && activeChallengeId) {
+        const ch = challenges.find(c => c.id === activeChallengeId);
+        if (ch) return opsWorks.filter(w => w.tag === ch.tag);
+      }
+      const filtered = getFilteredWorks();
+      return filtered.length ? filtered : opsWorks;
+    }
+
+    function openOpsWorkDetail(id) {
+      const w = opsWorks.find(x => x.id === id);
+      if (!w) return;
+      inspectingWorkId = id;
+      inspectingShotIdx = 0;
+      renderOpsWorkDetail();
+      document.getElementById('workDetailDrawer').classList.remove('hidden');
+    }
+
+    function closeOpsWorkDetail() {
+      inspectingWorkId = null;
+      document.getElementById('workDetailDrawer').classList.add('hidden');
+    }
+
+    function stepOpsWorkDetail(delta) {
+      if (!inspectingWorkId) return;
+      const seq = getInspectionSequence();
+      const idx = seq.findIndex(x => x.id === inspectingWorkId);
+      if (idx < 0 || seq.length <= 1) return;
+      const next = seq[(idx + delta + seq.length) % seq.length];
+      inspectingWorkId = next.id;
+      inspectingShotIdx = 0;
+      renderOpsWorkDetail();
+    }
+
+    function selectOpsWorkShot(idx) {
+      inspectingShotIdx = idx;
+      renderOpsWorkDetail();
+    }
+
+    function copyOpsText(txt, tip) {
+      if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {});
+      showToast(tip || '已复制到剪贴板');
+    }
+
+    function renderOpsWorkDetail() {
+      if (!inspectingWorkId) return;
+      const w = opsWorks.find(x => x.id === inspectingWorkId);
+      if (!w) return;
+
+      const seq = getInspectionSequence();
+      const pos = seq.findIndex(x => x.id === w.id);
+      const shots = (w.shots && w.shots.length) ? w.shots : ['./media/demo_cms_web.jpg'];
+      const activeShot = shots[Math.min(inspectingShotIdx, shots.length - 1)];
+      const ch = challenges.find(c => c.tag === w.tag);
+
+      const stBadge = {
+        reviewing: `<span class="adm-badge badge-warn">待审核</span>`,
+        published: `<span class="adm-badge badge-teal">已上架</span>`,
+        rejected: `<span class="adm-badge badge-coral">需修改</span>`
+      };
+
+      document.getElementById('wdHeaderLeft').innerHTML = `
+        <span class="font-semibold text-xs text-[#1E2238]">作品详情</span>
+        <span class="mono text-[11px] text-[#848CA4]">${escHtml(w.id.toUpperCase())}</span>
+        ${stBadge[w.status] || ''}
+        ${pos >= 0 ? `<span class="mono text-[11px] text-[#848CA4]">(${pos + 1}/${seq.length})</span>` : ''}
+      `;
+      document.getElementById('wdPrevBtn').disabled = seq.length <= 1;
+      document.getElementById('wdNextBtn').disabled = seq.length <= 1;
+
+      const isWeb = w.type === 'Web';
+      const launchLabel = isWeb ? '在线体验预览 ↗' : '下载测试包 ↓';
+
+      document.getElementById('wdBody').innerHTML = `
+        ${w.status === 'rejected' ? `
+          <div class="px-3.5 py-2.5 rounded-lg border border-[#FFCCC7] bg-[#FFF2F0] text-[#CF1322] space-y-0.5">
+            <div class="font-semibold">当前处于「需修改」状态</div>
+            <div class="text-[11px]">驳回意见：${escHtml(w.rejectReason || '请补充运行预览截图与可访问演示地址后重新提交。')}</div>
+          </div>
+        ` : ''}
+
+        <!-- Preview Screenshot Box -->
+        <div class="space-y-2">
+          <div class="aspect-video w-full rounded-lg border border-[#E5E8F0] bg-[#F5F7FB] overflow-hidden relative">
+            <img src="${escHtml(activeShot)}" alt="${escHtml(w.title)}" class="w-full h-full object-cover" />
+            <div class="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+              <span class="px-2 py-0.5 rounded bg-black/70 text-white mono text-[11px]">${escHtml(w.type)}</span>
+              ${w.featured ? `<span class="px-2 py-0.5 rounded bg-white/95 text-[#624AFF] font-semibold text-[11px]">★ 学院精选</span>` : ''}
+              ${w.awardedTier ? `<span class="px-2 py-0.5 rounded bg-white/95 text-[#D48806] font-semibold mono text-[11px]">🏆 ${escHtml(w.awardedTier)} +${fmtShortK(w.awardedTokens)}</span>` : ''}
+            </div>
+          </div>
+          ${shots.length > 1 ? `
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                ${shots.map((s, idx) => `
+                  <button type="button" onclick="selectOpsWorkShot(${idx})" class="flex items-center gap-1.5 px-2 py-1 rounded border text-[11px] transition ${idx === inspectingShotIdx ? 'border-[#624AFF] bg-[#F1F1FD] text-[#624AFF] font-semibold' : 'border-[#E5E8F0] bg-white text-[#4E5569] hover:bg-[#F8FAFE]'}">
+                    <img src="${escHtml(s)}" alt="" class="w-6 h-4 rounded-sm object-cover" />
+                    <span>截图 ${idx + 1}</span>
+                  </button>
+                `).join('')}
+              </div>
+              <span class="text-[11px] text-[#848CA4]">共 ${shots.length} 张实机截图</span>
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Title & Demo Access Bar -->
+        <div class="space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 class="text-base font-bold text-[#1E2238]">${escHtml(w.title)}</h2>
+            ${w.tag ? `<button type="button" onclick="closeOpsWorkDetail(); jumpWorkToIncentives('${w.id}')" class="adm-badge badge-teal mono hover:opacity-80 cursor-pointer">${escHtml(w.tag)} ↗</button>` : ''}
+          </div>
+
+          <div class="px-3 py-2.5 rounded-lg bg-[#FAFBFE] border border-[#E5E8F0] flex flex-wrap items-center justify-between gap-2">
+            <div class="min-w-0 flex-1">
+              <div class="text-[11px] text-[#848CA4]">${isWeb ? '托管演示地址' : '安装包归档地址'}</div>
+              <div class="mono text-xs text-[#1E2238] truncate mt-0.5" title="${escHtml(w.url || '')}">${escHtml(w.url || '—')}</div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" onclick="copyOpsText('${escHtml(w.url || '')}', '已复制作品访问地址')" class="adm-btn px-2.5 py-1.5 text-xs">复制地址</button>
+              <button type="button" onclick="showToast('正在${isWeb ? '新窗口打开演示预览' : '下载安装包核验'}：${escHtml(w.url || '')}')" class="adm-btn-primary px-3 py-1.5 text-xs font-medium">${launchLabel}</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Structured Metadata Table -->
+        <div class="rounded-lg border border-[#E5E8F0] overflow-hidden divide-y divide-[#EEF0F6]">
+          <div class="grid grid-cols-2 divide-x divide-[#EEF0F6]">
+            <div class="px-3.5 py-2.5">
+              <div class="text-[11px] text-[#848CA4]">提交作者</div>
+              <div class="font-medium text-[#1E2238] mt-0.5">${escHtml(w.author)} <span class="text-[#848CA4] font-normal">· ${escHtml(w.degree || '本院学生')}</span></div>
+            </div>
+            <div class="px-3.5 py-2.5">
+              <div class="text-[11px] text-[#848CA4]">教育邮箱</div>
+              <div class="mono text-[#1E2238] mt-0.5 truncate">${escHtml(w.email)}</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 divide-x divide-[#EEF0F6]">
+            <div class="px-3.5 py-2.5">
+              <div class="text-[11px] text-[#848CA4]">提交时间</div>
+              <div class="mono text-[#1E2238] mt-0.5">${escHtml(w.submittedAt || '2026-11-26')}</div>
+            </div>
+            <div class="px-3.5 py-2.5">
+              <div class="text-[11px] text-[#848CA4]">实名点赞热度</div>
+              <div class="mono font-semibold text-[#1E2238] mt-0.5">▲ ${fmtNum(w.likes)}</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 divide-x divide-[#EEF0F6]">
+            <div class="px-3.5 py-2.5">
+              <div class="text-[11px] text-[#848CA4]">调用模型与技术栈</div>
+              <div class="mono text-[#4E5569] mt-0.5 truncate" title="${escHtml(w.modelStack || '')}">${escHtml(w.modelStack || 'claude-sonnet-4 · Web')}</div>
+            </div>
+            <div class="px-3.5 py-2.5">
+              <div class="text-[11px] text-[#848CA4]">关联挑战状态</div>
+              <div class="text-[#1E2238] mt-0.5">${ch ? `${escHtml(ch.deadlineLabel)}` : '日常投稿'}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description & Audit Notes -->
+        <div class="rounded-lg border border-[#E5E8F0] p-3.5 space-y-2.5 bg-white">
+          <div>
+            <div class="text-[11px] font-semibold text-[#848CA4] mb-1">作品功能简介</div>
+            <p class="text-xs leading-relaxed text-[#1E2238]">${escHtml(w.desc || '')}</p>
+          </div>
+          ${w.detailNote ? `
+            <div class="pt-2.5 border-t border-[#EEF0F6]">
+              <div class="text-[11px] font-semibold text-[#848CA4] mb-1">实现说明与核验摘要</div>
+              <p class="text-xs leading-relaxed text-[#4E5569]">${escHtml(w.detailNote)}</p>
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      // Footer Moderation Actions
+      const footerEl = document.getElementById('wdFooter');
+      if (w.status === 'reviewing') {
+        footerEl.innerHTML = `
+          <button type="button" onclick="openRejectModal('${w.id}')" class="adm-btn-danger-ghost px-3.5 py-1.5 text-xs font-medium">驳回修改</button>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="closeOpsWorkDetail()" class="adm-btn px-3 py-1.5 text-xs">关闭</button>
+            <button type="button" onclick="approveWork('${w.id}')" class="adm-btn-primary px-4 py-1.5 text-xs font-medium">审核通过上架</button>
+          </div>
+        `;
+      } else if (w.status === 'published') {
+        footerEl.innerHTML = `
+          <button type="button" onclick="openRejectModal('${w.id}')" class="adm-btn-danger-ghost px-3 py-1.5 text-xs font-medium">下架驳回</button>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="toggleFeatured('${w.id}')" class="${w.featured ? 'adm-btn-soft' : 'adm-btn'} px-3 py-1.5 text-xs font-medium">${w.featured ? '★ 已设精选' : '设为精选'}</button>
+            <button type="button" onclick="closeOpsWorkDetail(); jumpWorkToIncentives('${w.id}')" class="adm-btn-primary px-3.5 py-1.5 text-xs font-medium">${ch && ch.status === 'settled' ? '查看挑战结算单' : '去挑战定奖'}</button>
+          </div>
+        `;
+      } else {
+        footerEl.innerHTML = `
+          <span class="text-[11px] text-[#848CA4]">等待学生修改重提或手动恢复</span>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="closeOpsWorkDetail()" class="adm-btn px-3 py-1.5 text-xs">关闭</button>
+            <button type="button" onclick="approveWork('${w.id}')" class="adm-btn-primary px-3.5 py-1.5 text-xs font-medium">恢复通过上架</button>
+          </div>
+        `;
+      }
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && inspectingWorkId) closeOpsWorkDetail();
+    });
+
     function approveWork(id) {
       const w = opsWorks.find(x => x.id === id);
       if (!w) return;
       w.status = 'published';
+      w.rejectReason = '';
       updateGlobalBadges();
       if (activeMenu === 'works') renderOpsWorks();
       if (activeMenu === 'incentives') renderIncentives();
+      if (inspectingWorkId === id) renderOpsWorkDetail();
       showToast(`已通过《${w.title}》`);
     }
 
@@ -1483,12 +1812,14 @@
       w.featured = !w.featured;
       if (activeMenu === 'works') renderOpsWorks();
       if (activeMenu === 'incentives') renderIncentives();
+      if (inspectingWorkId === id) renderOpsWorkDetail();
       showToast(w.featured ? `已设为精选：《${w.title}》` : '已取消精选');
     }
 
     function openRejectModal(id) {
       rejectingWorkId = id;
-      document.getElementById('rejectReasonInput').value = '';
+      const w = opsWorks.find(x => x.id === id);
+      document.getElementById('rejectReasonInput').value = (w && w.rejectReason) || '';
       document.getElementById('rejectModal').classList.remove('hidden');
     }
 
@@ -1498,11 +1829,16 @@
 
     function confirmRejectWork() {
       const w = opsWorks.find(x => x.id === rejectingWorkId);
-      if (w) w.status = 'rejected';
+      const reason = document.getElementById('rejectReasonInput').value.trim();
+      if (w) {
+        w.status = 'rejected';
+        w.rejectReason = reason || '请补充运行预览截图与可访问演示地址后重新提交。';
+      }
       closeRejectModal();
       updateGlobalBadges();
       if (activeMenu === 'works') renderOpsWorks();
       if (activeMenu === 'incentives') renderIncentives();
+      if (inspectingWorkId === rejectingWorkId) renderOpsWorkDetail();
       showToast('已驳回作品');
     }
 
@@ -1913,7 +2249,7 @@
                   ${(ch.winners || []).map(w => `
                     <tr>
                       <td><span class="adm-badge badge-violet">${escHtml(w.tierName)}</span></td>
-                      <td class="font-semibold text-[#1E2238]">${escHtml(w.workTitle)}</td>
+                      <td><button type="button" onclick="openOpsWorkDetail('${w.workId}')" class="font-semibold text-[#1E2238] hover:text-[#624AFF] transition text-left">${escHtml(w.workTitle)}</button></td>
                       <td>${escHtml(w.author)}</td>
                       <td class="mono text-[#4E5569]">${escHtml(w.email)}</td>
                       <td class="text-right mono font-semibold text-[#006D75]">+${fmtNum(w.amount)}</td>
@@ -1930,14 +2266,16 @@
       const pendingRows = pendingWorks.map(w => `
         <tr style="background:#FFFDF2;">
           <td><span class="adm-badge badge-warn">待审</span></td>
-          <td class="font-semibold text-[#1E2238]">${escHtml(w.title)}</td>
+          <td>
+            <button type="button" onclick="openOpsWorkDetail('${w.id}')" class="font-semibold text-[#1E2238] hover:text-[#624AFF] transition text-left">${escHtml(w.title)} <span class="text-[11px] font-normal text-[#624AFF]">详情</span></button>
+          </td>
           <td><span class="adm-badge badge-neutral mono">${escHtml(w.type)}</span></td>
           <td>
             <span class="font-medium text-[#1E2238]">${escHtml(w.author)}</span>
             <span class="mono text-[11px] text-[#848CA4] ml-1.5">${escHtml(w.email)}</span>
           </td>
           <td class="text-right mono text-[#848CA4]">0</td>
-          <td><span class="text-[#848CA4]">—</span></td>
+          <td><button type="button" onclick="openOpsWorkDetail('${w.id}')" class="adm-btn px-2.5 py-1 text-[11px] font-medium">查看详情</button></td>
           <td class="text-right whitespace-nowrap space-x-1.5">
             <button onclick="approveWork('${w.id}')" class="adm-btn-primary px-2.5 py-1 text-xs font-medium">过审上架</button>
             <button onclick="openRejectModal('${w.id}')" class="adm-btn px-2.5 py-1 text-xs font-medium">驳回</button>
@@ -1971,14 +2309,17 @@
         return `
           <tr style="${isHighlighted ? 'background:#F1F1FD;' : ''}">
             <td class="mono font-semibold ${idx < 3 ? 'text-[#624AFF]' : 'text-[#4E5569]'}">#${idx + 1}</td>
-            <td class="font-semibold text-[#1E2238]">${escHtml(w.title)}</td>
+            <td>
+              <button type="button" onclick="openOpsWorkDetail('${w.id}')" class="font-semibold text-[#1E2238] hover:text-[#624AFF] transition text-left">${escHtml(w.title)}</button>
+            </td>
             <td><span class="adm-badge badge-neutral mono">${escHtml(w.type)}</span></td>
             <td>
               <span class="font-medium text-[#1E2238]">${escHtml(w.author)}</span>
               <span class="mono text-[11px] text-[#848CA4] ml-1.5">${escHtml(w.email)}</span>
             </td>
             <td class="text-right mono font-medium">${fmtNum(w.likes)}</td>
-            <td>
+            <td class="whitespace-nowrap space-x-1">
+              <button type="button" onclick="openOpsWorkDetail('${w.id}')" class="adm-btn px-2 py-1 text-[11px]">详情</button>
               <button onclick="toggleFeatured('${w.id}')" class="${w.featured ? 'adm-btn-soft' : 'adm-btn'} px-2.5 py-1 text-[11px] font-medium">${w.featured ? '★ 精选' : '设为精选'}</button>
             </td>
             <td class="text-right whitespace-nowrap">${awardControlHtml}</td>
@@ -1989,14 +2330,16 @@
       const rejectedRows = rejectedWorks.map(w => `
         <tr>
           <td><span class="adm-badge badge-coral">需修改</span></td>
-          <td class="font-medium text-[#848CA4]">${escHtml(w.title)}</td>
+          <td>
+            <button type="button" onclick="openOpsWorkDetail('${w.id}')" class="font-medium text-[#848CA4] hover:text-[#624AFF] transition text-left">${escHtml(w.title)}</button>
+          </td>
           <td><span class="adm-badge badge-neutral mono">${escHtml(w.type)}</span></td>
           <td>
             <span class="text-[#4E5569]">${escHtml(w.author)}</span>
             <span class="mono text-[11px] text-[#848CA4] ml-1.5">${escHtml(w.email)}</span>
           </td>
           <td class="text-right mono text-[#848CA4]">${fmtNum(w.likes)}</td>
-          <td><span class="text-[#848CA4]">—</span></td>
+          <td><button type="button" onclick="openOpsWorkDetail('${w.id}')" class="adm-btn px-2 py-1 text-[11px]">详情</button></td>
           <td class="text-right whitespace-nowrap">
             <button onclick="approveWork('${w.id}')" class="adm-btn px-2.5 py-1 text-xs font-medium">恢复上架</button>
           </td>
