@@ -29,7 +29,11 @@
     }
     html { scroll-behavior: smooth; }
     body {
-      background: var(--bg-page);
+      background:
+        radial-gradient(ellipse 44% 32% at 6% 4%, rgba(214, 206, 255, 0.30), transparent 72%),
+        radial-gradient(ellipse 38% 28% at 94% 6%, rgba(203, 246, 252, 0.28), transparent 70%),
+        var(--bg-page);
+      background-attachment: fixed;
       color: var(--ink);
       font-family: "PingFang SC", "Microsoft Yahei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-variant-numeric: tabular-nums;
@@ -75,31 +79,118 @@
       box-shadow: 0 10px 30px rgba(98, 74, 255, 0.07), 0 1px 2px rgba(39, 37, 76, 0.04);
     }
 
-    /* Frosted Top Nav with ModelScope Elastic Pop */
-    header.sticky {
-      background: rgba(255, 255, 255, 0.90) !important;
-      backdrop-filter: blur(20px) !important;
-      border-bottom-color: #ECEDF1 !important;
+    /* C-End Creator Studio Floating Aurora Left Dock (Distinct from B-End Admin Console) */
+    .stu-dock {
+      background:
+        radial-gradient(ellipse 92% 42% at 12% 0%, rgba(205, 224, 255, 0.62), transparent 74%),
+        radial-gradient(ellipse 85% 38% at 96% 22%, rgba(204, 246, 252, 0.54), transparent 72%),
+        radial-gradient(ellipse 85% 44% at 48% 100%, rgba(231, 222, 255, 0.52), transparent 75%),
+        rgba(247, 249, 253, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(226, 230, 246, 0.96);
+      border-radius: 28px;
+      padding: 18px 14px;
+      box-shadow: 0 16px 40px -12px rgba(98, 74, 255, 0.10), 0 2px 6px rgba(39, 37, 76, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.92);
     }
-    .nav-tab {
+    .nav-tab, .stu-sub-pill {
       position: relative;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 18px;
+      border: 1px solid transparent;
       color: #464D5B;
       font-size: 13.5px;
+      text-align: left;
+      background: transparent;
+      transition: background-color 180ms ease, border-color 180ms ease, box-shadow 200ms ease, color 160ms ease, transform 160ms cubic-bezier(0.22, 0.78, 0.2, 1);
+    }
+    .nav-tab:hover:not(.active), .stu-sub-pill:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.78);
+      border-color: rgba(210, 196, 255, 0.55);
+      color: var(--ink);
+    }
+    .nav-icon-box {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.92);
+      color: #5C5782;
+      border: 1px solid rgba(230, 233, 245, 0.95);
+      box-shadow: 0 2px 6px rgba(39, 37, 76, 0.04);
+      transition: background 200ms ease, color 200ms ease, border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+    }
+    .nav-sub {
+      font-size: 11px;
+      color: var(--muted);
       transition: color 160ms ease;
     }
-    .nav-tab:hover { color: var(--ink); }
-    .nav-tab.active {
+    .nav-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: transparent;
+      margin-left: auto;
+      flex-shrink: 0;
+      transition: background-color 180ms ease, box-shadow 180ms ease;
+    }
+    .nav-tab.active, .stu-sub-pill.active {
+      background: #FFFFFF;
+      border-color: #DCD6FF;
       color: var(--ink);
       font-weight: 600;
-      animation: msNavPop 325ms cubic-bezier(0.2727, 0.0986, 0.8333, 1);
+      box-shadow: 0 10px 24px -6px rgba(98, 74, 255, 0.16), 0 2px 6px rgba(39, 37, 76, 0.04);
+      animation: msNavPop 300ms cubic-bezier(0.2727, 0.0986, 0.8333, 1);
     }
-    .nav-tab.active::after {
+    .nav-tab.active .nav-icon-box, .stu-sub-pill.active .nav-icon-box {
+      background: linear-gradient(135deg, #624AFF 0%, #36CFD1 100%);
+      color: #FFFFFF;
+      border-color: transparent;
+      box-shadow: 0 6px 14px rgba(98, 74, 255, 0.28);
+    }
+    .nav-tab.active .nav-sub {
+      color: #624AFF;
+    }
+    .nav-tab.active .nav-dot {
+      background: #624AFF;
+      box-shadow: 0 0 0 4px rgba(98, 74, 255, 0.14);
+    }
+
+    /* Bulletproof 16:9 Cover Box (Zero Collapse Across Dynamic Tabs & Browsers) */
+    .aspect-video {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      width: 100%;
+    }
+    @media (min-width: 1024px) {
+      .lg\:aspect-auto { aspect-ratio: auto; }
+    }
+    .cover-box {
+      position: relative;
+      width: 100%;
+      aspect-ratio: auto !important;
+      overflow: hidden;
+      background: linear-gradient(135deg, #EEF0FF 0%, #E6FAFA 100%);
+    }
+    .cover-box::before {
       content: "";
+      display: block;
+      padding-top: 56.25%;
+    }
+    .cover-box > img.cover-img {
       position: absolute;
-      left: 10%; right: 10%; bottom: -18px;
-      height: 2.5px;
-      background: var(--primary);
-      border-radius: 999px;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
     .section-eyebrow {
       display: flex;
@@ -178,23 +269,22 @@
 </head>
 <body class="antialiased min-h-screen">
 
-  <!-- Unified 4-Portal Prototype Switcher Bar -->
-  <div style="background:#27254C; color:#E8EAF6;" class="px-4 py-2 text-xs border-b border-white/10">
-    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
-      <div class="flex items-center gap-1.5 flex-wrap">
-        <a href="./overview.html" class="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium">✦ 浣溪AI Lab · 总览</a>
-        <a href="./index.html" class="px-2.5 py-1 rounded-full text-white font-semibold" style="background:#624AFF;">① 学生端</a>
-        <a href="./college-dashboard.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">② 学院端</a>
-        <a href="./school-ops.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">③ 运营端</a>
-        <a href="./platform-admin.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">④ 平台端(浣溪)</a>
-      </div>
-      <div class="flex items-center gap-1 flex-wrap">
-        <span class="text-slate-400 text-[11px] mr-1 hidden md:inline">学生态：</span>
-        <button onclick="setAppState('normal')" data-state-btn="normal" class="state-pill px-2.5 py-1 rounded-full text-[11px] font-medium">已认证</button>
-        <button onclick="setAppState('auth')" data-state-btn="auth" class="state-pill px-2.5 py-1 rounded-full text-[11px] font-medium">登录页</button>
-        <button onclick="setAppState('pending')" data-state-btn="pending" class="state-pill px-2.5 py-1 rounded-full text-[11px] font-medium">待审核</button>
-        <button onclick="setAppState('frozen')" data-state-btn="frozen" class="state-pill px-2.5 py-1 rounded-full text-[11px] font-medium">风控冻结</button>
-      </div>
+  <!-- Top 32px Prototype Switcher Bar -->
+  <div id="protoSwitcherBar" class="h-8 shrink-0 bg-[#1E1D3A] text-slate-300 text-[11px] px-4 flex items-center justify-between gap-3 border-b border-white/10 overflow-x-auto">
+    <div class="flex items-center gap-1.5 whitespace-nowrap shrink-0">
+      <a href="./overview.html" class="hover:text-white px-1.5 py-0.5 rounded transition">✦ 原型总览</a>
+      <span class="text-slate-600">|</span>
+      <a href="./index.html" class="bg-[#624AFF] text-white font-medium rounded px-2 py-0.5">① 学生端</a>
+      <a href="./college-dashboard.html" class="hover:text-white px-1.5 py-0.5 rounded transition">② 学院大盘</a>
+      <a href="./school-ops.html" class="hover:text-white px-1.5 py-0.5 rounded transition">③ 运营端</a>
+      <a href="./platform-admin.html" class="hover:text-white px-1.5 py-0.5 rounded transition">④ 平台管理端</a>
+    </div>
+    <div class="flex items-center gap-1 whitespace-nowrap shrink-0">
+      <span class="text-slate-400 text-[10.5px] mr-0.5 hidden md:inline">学生态：</span>
+      <button onclick="setAppState('normal')" data-state-btn="normal" class="state-pill px-2 py-0.5 rounded-full text-[10.5px] font-medium transition">已认证</button>
+      <button onclick="setAppState('auth')" data-state-btn="auth" class="state-pill px-2 py-0.5 rounded-full text-[10.5px] font-medium transition">登录页</button>
+      <button onclick="setAppState('pending')" data-state-btn="pending" class="state-pill px-2 py-0.5 rounded-full text-[10.5px] font-medium transition">待审核</button>
+      <button onclick="setAppState('frozen')" data-state-btn="frozen" class="state-pill px-2 py-0.5 rounded-full text-[10.5px] font-medium transition">风控冻结</button>
     </div>
   </div>
 
@@ -202,7 +292,7 @@
   <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-medium shadow-lg pointer-events-none opacity-0 -translate-y-2" style="background:#27254C; color:#FFFFFF; box-shadow:0 8px 24px rgba(39,37,76,0.20);"></div>
 
   <!-- ==================== VIEW 0: CPAMC-INSPIRED SPLIT AUTH VIEW ==================== -->
-  <div id="authView" class="hidden min-h-[calc(100vh-36px)] bg-white grid-cols-1 lg:grid-cols-12">
+  <div id="authView" class="hidden min-h-[calc(100vh-32px)] bg-white grid-cols-1 lg:grid-cols-12">
     <!-- Left Dot-Matrix Geometric Canvas -->
     <div class="hidden lg:flex lg:col-span-6 relative flex-col justify-between p-12 border-r border-slate-100 overflow-hidden bg-white">
       <svg id="dotMatrixSvg" viewBox="0 0 520 580" class="absolute inset-0 w-full h-full object-cover opacity-80 pointer-events-none"></svg>
@@ -281,67 +371,125 @@
     </div>
   </div>
 
-  <!-- ==================== MAIN PORTAL SHELL ==================== -->
+  <!-- ==================== MAIN PORTAL SHELL (LEFT C-END CREATOR DOCK + RIGHT STUDIO WORKSPACE) ==================== -->
   <div id="portalShell">
-    <!-- Calm Frosted Header (Strict 3 Top Tabs) -->
-    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200/80">
-      <div class="max-w-6xl mx-auto px-5 h-[62px] flex items-center justify-between gap-4">
-        <div class="flex items-center gap-8">
-          <button onclick="switchTab('token')" class="flex items-center gap-2.5 text-left">
-            <span class="w-7 h-7 rounded-lg inline-flex items-center justify-center font-bold text-xs text-white" style="background:var(--primary);">✦</span>
-            <span class="text-sm font-semibold tracking-tight">浣溪AI Lab</span>
-          </button>
+    <div class="max-w-[1380px] mx-auto px-4 sm:px-6 py-5 lg:py-6 flex flex-col md:flex-row items-start gap-6 lg:gap-7">
 
-          <nav class="flex items-center gap-7 text-xs">
-            <button onclick="switchTab('token')" data-tab="token" class="nav-tab py-1">Token 门户</button>
-            <button onclick="switchTab('studio')" data-tab="studio" class="nav-tab py-1">学习与挑战</button>
-            <button onclick="switchTab('square')" data-tab="square" class="nav-tab py-1">作品广场</button>
-          </nav>
-        </div>
-
-        <div class="flex items-center">
-          <!-- Clickable Avatar Menu (Direct Access to My Works + Logout) -->
-          <div class="relative">
-            <button id="userMenuBtn" onclick="toggleUserMenu(event)" class="flex items-center gap-2 text-xs px-2 py-1 rounded-full hover:bg-slate-100 transition text-left" title="查看我的作品与账号操作">
-              <span class="relative w-7 h-7 rounded-full inline-flex items-center justify-center text-[11px] font-semibold text-white shrink-0" style="background:linear-gradient(135deg,#27254C,#624AFF);">
-                林
-                <span id="avatarAlertDot" class="hidden absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ring-2 ring-white" style="background:var(--coral);"></span>
-              </span>
-              <div class="hidden sm:block leading-tight">
-                <div id="headerUserName" class="font-medium text-xs">林知行</div>
-                <div id="headerStudentId" class="mono text-[11px]" style="color:var(--muted);">linzhixing@hust.edu.cn</div>
+      <!-- Left Floating Aurora Creator Studio Dock -->
+      <aside class="stu-dock w-full md:w-[240px] lg:w-[256px] shrink-0 md:sticky md:top-5 md:min-h-[calc(100vh-72px)] flex flex-col justify-between gap-5">
+        <div class="space-y-4">
+          <!-- Brand Capsule + Mobile Quick Avatar -->
+          <div class="flex items-center justify-between gap-2 px-1.5">
+            <button onclick="switchTab('token')" class="flex items-center gap-3 text-left group">
+              <span class="w-10 h-10 rounded-2xl inline-flex items-center justify-center font-bold text-sm text-white shrink-0 transition group-hover:scale-105" style="background:linear-gradient(135deg, #27254C 0%, #624AFF 62%, #36CFD1 100%); box-shadow:0 8px 18px rgba(98, 74, 255, 0.26);">✦</span>
+              <div class="leading-tight">
+                <div class="text-[15px] font-bold tracking-tight" style="color:var(--ink);">浣溪AI Lab</div>
+                <div class="text-[11px] font-medium mt-0.5" style="color:var(--primary);">华科软件学院 · 创空间</div>
               </div>
-              <span class="hidden sm:inline text-[10px] text-slate-400 pr-1">▾</span>
+            </button>
+            <button onclick="openPublishModal()" class="md:hidden cpa-pill-btn px-3.5 py-1.5 text-xs font-semibold shrink-0">+ 发作品</button>
+          </div>
+
+          <!-- Primary C-End Studio Navigation (3 Core Spaces) -->
+          <nav class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-1 gap-1.5" aria-label="学生端主导航">
+            <button onclick="switchTab('token')" data-tab="token" class="nav-tab">
+              <span class="nav-icon-box">
+                <svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"/></svg>
+              </span>
+              <span class="min-w-0 leading-tight">
+                <span class="block text-[13.5px] truncate">Token 门户</span>
+                <span class="nav-sub hidden md:block mt-0.5 truncate">算力余额 · 专属密钥</span>
+              </span>
+              <span class="nav-dot hidden md:inline-block"></span>
             </button>
 
-            <div id="userMenuDropdown" class="hidden absolute right-0 mt-2 w-56 rounded-2xl bg-white border border-slate-200 shadow-lg py-1.5 z-50 text-xs">
-              <div class="px-3.5 py-2 border-b border-slate-100">
-                <div id="menuUserName" class="font-semibold" style="color:var(--ink);">林知行</div>
-                <div id="menuUserEmail" class="mono text-[11px] truncate" style="color:var(--muted);">linzhixing@hust.edu.cn</div>
-              </div>
-              <button onclick="openMyWorks()" class="w-full px-3.5 py-2.5 flex items-center justify-between hover:bg-slate-50 transition text-left">
-                <span class="font-medium" style="color:var(--ink);">我的作品</span>
-                <span class="flex items-center gap-1.5">
-                  <span id="menuRejectedTag" class="hidden px-1.5 py-0.5 rounded-full text-[10px] font-medium" style="background:var(--coral-soft); color:var(--coral);">1 待修改</span>
-                  <span id="menuMyWorksCount" class="mono text-[11px] px-1.5 py-0.5 rounded-full" style="background:var(--bg-subtle); color:var(--muted);">3</span>
-                </span>
-              </button>
-              <div class="my-1 border-t border-slate-100"></div>
-              <button id="headerAuthBtn" onclick="closeUserMenu(); setAppState('auth')" class="w-full px-3.5 py-2 text-left hover:bg-slate-50 transition" style="color:var(--coral);">退出登录</button>
+            <button onclick="switchTab('studio')" data-tab="studio" class="nav-tab">
+              <span class="nav-icon-box">
+                <svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </span>
+              <span class="min-w-0 leading-tight">
+                <span class="block text-[13.5px] truncate">学习与挑战</span>
+                <span class="nav-sub hidden md:block mt-0.5 truncate">实战课堂 · 赢取算力</span>
+              </span>
+              <span class="nav-dot hidden md:inline-block"></span>
+            </button>
+
+            <button onclick="openAllSquare()" data-tab="square" class="nav-tab">
+              <span class="nav-icon-box">
+                <svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"/></svg>
+              </span>
+              <span class="min-w-0 leading-tight">
+                <span class="block text-[13.5px] truncate">作品广场</span>
+                <span class="nav-sub hidden md:block mt-0.5 truncate">校园灵感 · 在线体验</span>
+              </span>
+              <span class="nav-dot hidden md:inline-block"></span>
+            </button>
+
+            <!-- Mobile inline My Works pill -->
+            <button data-mine-nav="1" onclick="openMyWorks()" class="stu-sub-pill md:hidden">
+              <span class="nav-icon-box">
+                <svg class="w-[16px] h-[16px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+              </span>
+              <span class="text-[13px] truncate">我的作品</span>
+            </button>
+          </nav>
+
+          <!-- Personal Creation Pod (Desktop/Tablet) -->
+          <div class="hidden md:block pt-3 border-t border-[#27254C]/[0.07] space-y-2.5">
+            <div class="px-2 flex items-center justify-between text-[11px] font-medium" style="color:var(--muted);">
+              <span>我的创作空间</span>
+              <span class="px-1.5 py-0.5 rounded-full text-[10px]" style="background:rgba(255,255,255,0.85); color:var(--primary);">个人资产</span>
             </div>
+
+            <button id="sideMyWorksBtn" data-mine-nav="1" onclick="openMyWorks()" class="stu-sub-pill">
+              <span class="nav-icon-box">
+                <svg class="w-[16px] h-[16px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+              </span>
+              <span class="flex-1 min-w-0 flex items-center justify-between gap-1.5">
+                <span class="text-[13px] font-medium truncate">我的作品</span>
+                <span class="inline-flex items-center gap-1 shrink-0">
+                  <span id="menuRejectedTag" class="hidden px-1.5 py-0.5 rounded-full text-[10px] font-semibold" style="background:var(--coral-soft); color:var(--coral);">1 待修改</span>
+                  <span id="menuMyWorksCount" class="mono text-[11px] px-2 py-0.5 rounded-full bg-white border border-slate-200/80" style="color:var(--ink);">3</span>
+                </span>
+              </span>
+            </button>
+
+            <button onclick="openPublishModal()" class="cpa-pill-btn w-full py-2.5 px-4 text-xs font-semibold flex items-center justify-center gap-1.5">
+              <span>+ 发布新作品</span>
+            </button>
           </div>
         </div>
-      </div>
-    </header>
 
-    <!-- Status Notice Banner (Pending / Frozen) -->
-    <div id="statusBanner" class="hidden max-w-6xl mx-auto px-5 pt-4"></div>
+        <!-- Bottom Student Creator Profile Card -->
+        <div class="rounded-2xl bg-white/90 border border-white p-3 space-y-2.5" style="box-shadow:0 6px 18px rgba(39, 37, 76, 0.05);">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="relative w-9 h-9 rounded-full inline-flex items-center justify-center text-xs font-bold text-white shrink-0" style="background:linear-gradient(135deg, #27254C 0%, #624AFF 100%);">
+              <span id="avatarInitial">林</span>
+              <span id="avatarAlertDot" class="hidden absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ring-2 ring-white" style="background:var(--coral);"></span>
+            </span>
+            <div class="min-w-0 flex-1 leading-tight">
+              <div class="flex items-center gap-1.5">
+                <span id="headerUserName" class="font-semibold text-xs truncate" style="color:var(--ink);">林知行</span>
+                <span id="sideRoleTag" class="px-1.5 py-0.5 rounded-full text-[10px] font-medium shrink-0" style="background:var(--accent-soft); color:var(--accent-ink);">已认证</span>
+              </div>
+              <div id="headerStudentId" class="mono text-[11px] truncate mt-0.5" style="color:var(--muted);">linzhixing@hust.edu.cn</div>
+            </div>
+          </div>
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+            <span class="text-[11px]" style="color:var(--muted);">教育邮箱通行证</span>
+            <button id="headerAuthBtn" onclick="setAppState('auth')" class="font-medium hover:underline transition" style="color:var(--coral);">退出登录</button>
+          </div>
+        </div>
+      </aside>
 
-    <!-- Main Content -->
-    <main class="max-w-6xl mx-auto px-5 pb-12">
+      <!-- Right Main Content Column -->
+      <main class="flex-1 min-w-0 w-full pb-12 space-y-5">
 
-      <!-- ==================== TAB 1: TOKEN 门户 (CPAMC v8.1.2 INSPIRED) ==================== -->
-      <section id="tab-token" class="space-y-8 pt-4">
+        <!-- Status Notice Banner (Pending / Frozen) -->
+        <div id="statusBanner" class="hidden"></div>
+
+        <!-- ==================== TAB 1: TOKEN 门户 (CPAMC v8.1.2 INSPIRED) ==================== -->
+        <section id="tab-token" class="space-y-7">
 
         <!-- Pending Mask -->
         <div id="tokenPendingMask" class="hidden cpa-card p-10 text-center space-y-3 mt-4">
@@ -630,7 +778,7 @@
       </section>
 
       <!-- ==================== TAB 2: 学习与挑战 (VERTICAL LINEAR FLOW + STANDALONE LESSON/CHALLENGE DETAIL PAGES) ==================== -->
-      <section id="tab-studio" class="hidden pt-6">
+      <section id="tab-studio" class="hidden">
 
         <!-- ===== 学习与挑战主页（01 Token 接入 → 02 实战创作 → 03 参赛赢 Token） ===== -->
         <div id="studioHomeView" class="space-y-12">
@@ -740,7 +888,7 @@
       </section>
 
       <!-- ==================== TAB 3: 作品广场（广场作品 + 我的作品 + 作品独立详情页） ==================== -->
-      <section id="tab-square" class="hidden pt-5">
+      <section id="tab-square" class="hidden">
 
         <!-- ===== 作品广场主视图（广场作品 / 我的作品 轻切换） ===== -->
         <div id="squareHomeView" class="space-y-5">
@@ -815,7 +963,8 @@
         <div id="squareDetailView" class="hidden space-y-6"></div>
       </section>
 
-    </main>
+      </main>
+    </div>
   </div>
 
   <!-- ==================== PUBLISH WORK MODAL ==================== -->
@@ -1419,6 +1568,24 @@ Model   ：claude-sonnet-4
       const displayEmail = state === 'pending' ? (window.__pendingEmail || 'new@hust.edu.cn') : 'linzhixing@hust.edu.cn';
       document.getElementById('headerUserName').textContent = displayName;
       document.getElementById('headerStudentId').textContent = displayEmail;
+      const avInit = document.getElementById('avatarInitial');
+      if (avInit) avInit.textContent = displayName.slice(0, 1);
+      const roleTag = document.getElementById('sideRoleTag');
+      if (roleTag) {
+        if (state === 'pending') {
+          roleTag.textContent = '待核验';
+          roleTag.style.background = 'var(--warn-soft)';
+          roleTag.style.color = 'var(--warn)';
+        } else if (state === 'frozen') {
+          roleTag.textContent = '风控受限';
+          roleTag.style.background = 'var(--coral-soft)';
+          roleTag.style.color = 'var(--coral)';
+        } else {
+          roleTag.textContent = '已认证';
+          roleTag.style.background = 'var(--accent-soft)';
+          roleTag.style.color = 'var(--accent-ink)';
+        }
+      }
       const mn = document.getElementById('menuUserName'); if (mn) mn.textContent = displayName;
       const me = document.getElementById('menuUserEmail'); if (me) me.textContent = displayEmail;
       document.getElementById('headerAuthBtn').textContent = state === 'pending' ? '切换登录' : '退出登录';
@@ -1519,14 +1686,37 @@ Model   ：claude-sonnet-4
       setAppState('pending');
     }
 
+    function syncNavHighlight() {
+      const isMine = activeTab === 'square' && squareMode === 'mine' && !activeWorkDetailId;
+      document.querySelectorAll('.nav-tab').forEach(btn => {
+        const shouldActive = btn.dataset.tab === activeTab && !(btn.dataset.tab === 'square' && isMine);
+        btn.classList.toggle('active', shouldActive);
+      });
+      document.querySelectorAll('[data-mine-nav]').forEach(el => {
+        el.classList.toggle('active', isMine);
+      });
+    }
+
+    function openAllSquare() {
+      squareMode = 'all';
+      activeWorkDetailId = null;
+      switchTab('square');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function handleCoverError(img) {
+      if (!img || img.dataset.fallbackApplied) return;
+      img.dataset.fallbackApplied = '1';
+      const label = encodeURIComponent((img.getAttribute('alt') || '浣溪AI Lab').slice(0, 14));
+      img.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="%23ECE8FF"/><stop offset="55%" stop-color="%23E6F9FC"/><stop offset="100%" stop-color="%23F5F3FF"/></linearGradient></defs><rect width="640" height="360" fill="url(%23g)"/><circle cx="520" cy="70" r="110" fill="%23624AFF" fill-opacity="0.08"/><circle cx="120" cy="290" r="120" fill="%2313C2C2" fill-opacity="0.10"/><text x="320" y="168" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="28" font-weight="700" fill="%23624AFF">✦</text><text x="320" y="208" text-anchor="middle" font-family="PingFang SC,sans-serif" font-size="18" font-weight="600" fill="%2327254C">${label}</text></svg>`;
+    }
+
     function switchTab(tab) {
       activeTab = tab;
       ['token', 'studio', 'square'].forEach(t => {
         document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
       });
-      document.querySelectorAll('.nav-tab').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tab === tab);
-      });
+      syncNavHighlight();
       if (tab !== 'studio') {
         ensureFeaturedVideo(false);
         clearStudioDetailPlayer();
@@ -1771,11 +1961,11 @@ Model   ：claude-sonnet-4
         const cmtCount = (DISCUSSIONS['lesson:' + l.id] || []).length;
         return `
           <div onclick="openLessonDetail('${l.id}')" class="cpa-card lesson-card group overflow-hidden cursor-pointer">
-            <div class="aspect-video w-full overflow-hidden relative bg-slate-100">
-              <img src="${l.cover}" alt="${l.title}" class="w-full h-full object-cover group-hover:scale-[1.03] transition duration-300" loading="lazy" />
-              <div class="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent"></div>
-              <span class="absolute bottom-3 left-3 w-8 h-8 rounded-full bg-white/95 text-[#27254C] inline-flex items-center justify-center text-xs font-bold shadow-sm group-hover:scale-105 transition">▶</span>
-              <span class="absolute bottom-3 right-3 px-2 py-0.5 rounded-md bg-black/65 text-white mono text-[11px] backdrop-blur-sm">${l.duration}</span>
+            <div class="aspect-video cover-box w-full overflow-hidden relative bg-slate-100">
+              <img src="${l.cover}" alt="${l.title}" class="cover-img group-hover:scale-[1.03] transition duration-300" onerror="handleCoverError(this)" />
+              <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent"></div>
+              <span class="absolute bottom-3 left-3 w-8 h-8 rounded-full bg-white/95 text-[#27254C] inline-flex items-center justify-center text-xs font-bold shadow-sm group-hover:scale-105 transition z-10">▶</span>
+              <span class="absolute bottom-3 right-3 px-2 py-0.5 rounded-md bg-black/65 text-white mono text-[11px] backdrop-blur-sm z-10">${l.duration}</span>
             </div>
             <div class="p-4 space-y-1.5">
               <h3 class="text-sm font-semibold truncate" style="color:var(--ink);">${l.title}</h3>
@@ -1861,11 +2051,11 @@ Model   ：claude-sonnet-4
             `;
         return `
           <div onclick="openChallengeDetail('${ch.id}')" class="cpa-card lesson-card group overflow-hidden cursor-pointer flex flex-col justify-between">
-            <div>
-              <div class="aspect-video w-full overflow-hidden relative bg-slate-100">
-                <img src="${ch.cover}" alt="${ch.title}" class="w-full h-full object-cover group-hover:scale-[1.03] transition duration-300" loading="lazy" />
-                <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[11px] font-semibold shadow-sm" style="${ch.statusStyle}">${ch.statusBadge}</span>
-                <span class="absolute bottom-3 right-3 px-2.5 py-0.5 rounded-full text-[11px] mono bg-black/65 text-white backdrop-blur-sm">${ch.deadline}</span>
+            <div class="w-full">
+              <div class="aspect-video cover-box w-full overflow-hidden relative bg-slate-100">
+                <img src="${ch.cover}" alt="${ch.title}" class="cover-img group-hover:scale-[1.03] transition duration-300" onerror="handleCoverError(this)" />
+                <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[11px] font-semibold shadow-sm z-10" style="${ch.statusStyle}">${ch.statusBadge}</span>
+                <span class="absolute bottom-3 right-3 px-2.5 py-0.5 rounded-full text-[11px] mono bg-black/65 text-white backdrop-blur-sm z-10">${ch.deadline}</span>
               </div>
               <div class="p-5 space-y-2.5">
                 <h3 class="text-sm sm:text-base font-bold leading-snug group-hover:text-[#624AFF] transition">${ch.title}</h3>
@@ -2035,7 +2225,7 @@ Model   ：claude-sonnet-4
               <div class="space-y-3">
                 ${others.map(o => `
                   <div onclick="openLessonDetail('${o.id}')" class="flex items-center gap-3 cursor-pointer group">
-                    <img src="${o.cover}" alt="${o.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 shrink-0" />
+                    <img src="${o.cover}" alt="${o.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 bg-slate-100 shrink-0" onerror="handleCoverError(this)" />
                     <div class="min-w-0">
                       <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#624AFF] transition">${o.title}</div>
                       <div class="text-[11px] mono mt-1" style="color:var(--muted);">${o.author} · ${o.duration}</div>
@@ -2076,7 +2266,7 @@ Model   ：claude-sonnet-4
                 <div onclick="lastChallengeReturnId='${ch.id}'; openWorkDetail('${w.id}')" class="p-3.5 rounded-2xl border border-slate-200/85 hover:border-[#624AFF]/45 hover:bg-[#F7F9FD] transition flex flex-wrap sm:flex-nowrap items-center justify-between gap-3.5 cursor-pointer">
                   <div class="flex items-center gap-3 min-w-0 flex-1">
                     <span class="w-8 h-8 rounded-xl mono text-xs font-bold inline-flex items-center justify-center shrink-0" style="${rankStyle}">#${rank}</span>
-                    <img src="${w.cover}" alt="${w.title}" class="w-20 h-14 rounded-xl object-cover border border-slate-200 shrink-0 hidden sm:block" loading="lazy" />
+                    <img src="${w.cover}" alt="${w.title}" class="w-20 h-14 rounded-xl object-cover border border-slate-200 bg-slate-100 shrink-0 hidden sm:block" onerror="handleCoverError(this)" />
                     <div class="min-w-0 space-y-1">
                       <div class="flex items-center gap-2 flex-wrap">
                         <span class="text-xs sm:text-sm font-bold truncate hover:text-[#624AFF] transition">${w.title}</span>
@@ -2185,10 +2375,10 @@ Model   ：claude-sonnet-4
 
             <!-- 模块 ②：封面、挑战背景规则与「奖项激励档位表」 -->
             <div class="cpa-card overflow-hidden bg-white">
-              <div class="aspect-video w-full relative bg-slate-100">
-                <img src="${ch.cover}" alt="${ch.title}" class="w-full h-full object-cover" />
-                <span class="absolute top-3.5 left-3.5 px-3 py-1 rounded-full text-xs font-semibold shadow-sm" style="${ch.statusStyle}">${ch.statusBadge}</span>
-                <span class="absolute bottom-3.5 right-3.5 px-2.5 py-0.5 rounded-full text-xs mono bg-black/65 text-white backdrop-blur-sm">${ch.deadline}</span>
+              <div class="aspect-video cover-box w-full relative bg-slate-100">
+                <img src="${ch.cover}" alt="${ch.title}" class="cover-img" onerror="handleCoverError(this)" />
+                <span class="absolute top-3.5 left-3.5 px-3 py-1 rounded-full text-xs font-semibold shadow-sm z-10" style="${ch.statusStyle}">${ch.statusBadge}</span>
+                <span class="absolute bottom-3.5 right-3.5 px-2.5 py-0.5 rounded-full text-xs mono bg-black/65 text-white backdrop-blur-sm z-10">${ch.deadline}</span>
               </div>
               <div class="p-5 sm:p-6 space-y-5">
                 <div class="space-y-2.5">
@@ -2285,7 +2475,7 @@ Model   ：claude-sonnet-4
               <div class="space-y-3">
                 ${otherChallenges.map(oc => `
                   <div onclick="openChallengeDetail('${oc.id}')" class="flex items-center gap-3 cursor-pointer group">
-                    <img src="${oc.cover}" alt="${oc.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 shrink-0" />
+                    <img src="${oc.cover}" alt="${oc.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 bg-slate-100 shrink-0" onerror="handleCoverError(this)" />
                     <div class="min-w-0">
                       <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#624AFF] transition">${oc.title}</div>
                       <div class="text-[11px] mono mt-1" style="color:var(--accent-ink);">${oc.shortPoolText} · ${oc.deadline}</div>
@@ -2300,7 +2490,7 @@ Model   ：claude-sonnet-4
               <div class="space-y-3">
                 ${topLessons.map(o => `
                   <div onclick="openLessonDetail('${o.id}')" class="flex items-center gap-3 cursor-pointer group">
-                    <img src="${o.cover}" alt="${o.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 shrink-0" />
+                    <img src="${o.cover}" alt="${o.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 bg-slate-100 shrink-0" onerror="handleCoverError(this)" />
                     <div class="min-w-0">
                       <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#624AFF] transition">${o.title}</div>
                       <div class="text-[11px] mono mt-1" style="color:var(--muted);">${o.author} · ${o.duration}</div>
@@ -2348,7 +2538,7 @@ Model   ：claude-sonnet-4
         <div class="cpa-card p-4 sm:p-5 space-y-3 bg-white">
           <div class="flex flex-wrap sm:flex-nowrap items-start justify-between gap-4">
             <div class="flex items-start gap-3.5 min-w-0">
-              <img src="${w.cover || './media/demo_cms_web.jpg'}" alt="${w.title}" class="w-24 h-16 rounded-xl object-cover border border-slate-200 shrink-0 hidden sm:block" loading="lazy" />
+              <img src="${w.cover || './media/demo_cms_web.jpg'}" alt="${w.title}" class="w-24 h-16 rounded-xl object-cover border border-slate-200 bg-slate-100 shrink-0 hidden sm:block" onerror="handleCoverError(this)" />
               <div class="space-y-1.5 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="text-sm font-bold">${w.title}</span>
@@ -2402,6 +2592,7 @@ Model   ：claude-sonnet-4
       });
       document.getElementById('squareAllPane').classList.toggle('hidden', squareMode !== 'all');
       document.getElementById('squareMinePane').classList.toggle('hidden', squareMode !== 'mine');
+      syncNavHighlight();
       if (squareMode === 'all') renderSquare();
       else renderMyWorks();
       syncMyWorksBadges();
@@ -2439,11 +2630,11 @@ Model   ：claude-sonnet-4
         const cmtCount = (DISCUSSIONS['work:' + w.id] || []).length;
         return `
           <div class="cpa-card lesson-card group overflow-hidden flex flex-col justify-between cursor-pointer" onclick="lastChallengeReturnId=null; openWorkDetail('${w.id}')">
-            <div>
-              <div class="aspect-video w-full overflow-hidden relative bg-slate-100 border-b border-slate-100">
-                <img src="${w.cover}" alt="${w.title}" class="w-full h-full object-cover group-hover:scale-[1.03] transition duration-300" loading="lazy" />
-                <div class="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent"></div>
-                <div class="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2">
+            <div class="w-full">
+              <div class="aspect-video cover-box w-full overflow-hidden relative bg-slate-100 border-b border-slate-100">
+                <img src="${w.cover}" alt="${w.title}" class="cover-img group-hover:scale-[1.03] transition duration-300" onerror="handleCoverError(this)" />
+                <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent"></div>
+                <div class="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 z-10">
                   <span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-white/95 backdrop-blur-sm shadow-sm">${w.type === 'Web' ? 'Web · 在线体验' : w.type + ' · 安装包'}</span>
                   <div class="flex items-center gap-1.5">
                     ${w.featured ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-white/95 shadow-sm" style="color:var(--primary);">★ 精选</span>` : ''}
@@ -2508,6 +2699,7 @@ Model   ：claude-sonnet-4
       if (activeTab !== 'square') switchTab('square');
       activeWorkDetailId = id;
       lastChallengeReturnId = returnChId;
+      syncNavHighlight();
       document.getElementById('squareHomeView').classList.add('hidden');
       const container = document.getElementById('squareDetailView');
       container.classList.remove('hidden');
@@ -2532,9 +2724,9 @@ Model   ：claude-sonnet-4
           <!-- Left (8): 封面与体验入口 + 标题简介与点赞 + 互动评论 -->
           <div class="lg:col-span-8 space-y-6">
             <div class="cpa-card overflow-hidden bg-white">
-              <div class="aspect-video w-full relative bg-slate-100">
-                <img src="${w.cover}" alt="${w.title}" class="w-full h-full object-cover" />
-                <div class="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between gap-2">
+              <div class="aspect-video cover-box w-full relative bg-slate-100">
+                <img src="${w.cover}" alt="${w.title}" class="cover-img" onerror="handleCoverError(this)" />
+                <div class="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between gap-2 z-10">
                   <span class="px-3 py-1 rounded-full text-xs font-medium bg-white/95 shadow-sm">${w.type === 'Web' ? 'Web · 在线体验' : w.type + ' · 安装包'}</span>
                   <span id="workDetailRankBadge" class="mono text-xs font-bold px-2.5 py-1 rounded-full bg-black/65 text-white backdrop-blur-sm">广场热度 #${r}</span>
                 </div>
@@ -2569,7 +2761,7 @@ Model   ：claude-sonnet-4
               <div class="space-y-3">
                 ${others.map(o => `
                   <div onclick="openWorkDetail('${o.id}')" class="flex items-center gap-3 cursor-pointer group">
-                    <img src="${o.cover}" alt="${o.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 shrink-0" />
+                    <img src="${o.cover}" alt="${o.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 bg-slate-100 shrink-0" onerror="handleCoverError(this)" />
                     <div class="min-w-0">
                       <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#624AFF] transition">${o.title}</div>
                       <div class="text-[11px] mono mt-1" style="color:var(--muted);">${o.author} · ▲ ${o.likes}</div>
@@ -2590,6 +2782,7 @@ Model   ：claude-sonnet-4
       document.getElementById('squareDetailView').classList.add('hidden');
       document.getElementById('squareDetailView').innerHTML = '';
       document.getElementById('squareHomeView').classList.remove('hidden');
+      syncNavHighlight();
       if (squareMode === 'all') renderSquare();
       else renderMyWorks();
       if (scrollTop) window.scrollTo({ top: 0, behavior: 'smooth' });

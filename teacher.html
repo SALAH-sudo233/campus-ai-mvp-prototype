@@ -146,13 +146,29 @@
       box-shadow: var(--card-hover-shadow);
     }
     .work-card .thumb-wrap {
+      position: relative;
       margin: -14px 14px 0 14px;
       width: calc(100% - 28px);
+      overflow: hidden;
       border-radius: 18px;
       border: 2px solid var(--work-thumb-border);
+      background: linear-gradient(135deg, #EEF0FF 0%, #E6FAFA 100%);
       box-shadow: 0 12px 24px rgba(62, 52, 148, 0.18);
       transform-origin: 50% 50%;
       transition: transform 240ms cubic-bezier(0.22, 0.78, 0.2, 1), box-shadow 240ms ease;
+    }
+    .work-card .thumb-wrap::before {
+      content: "";
+      display: block;
+      padding-top: 56.25%;
+    }
+    .work-card .thumb-wrap > img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
     .work-card:hover .thumb-wrap {
       transform: translateY(-4px) rotate(-2.2deg);
@@ -853,10 +869,10 @@
       const list = WORKS.filter(w => activeCat === 'all' || w.cat === activeCat);
       document.getElementById('worksGrid').innerHTML = list.map(w => `
         <div onclick="openWorkDrawer('${w.id}')" class="work-card group cursor-pointer flex flex-col justify-between">
-          <div>
-            <div class="thumb-wrap aspect-video overflow-hidden relative bg-slate-900">
-              <img src="${w.cover}" alt="${w.title}" class="w-full h-full object-cover group-hover:scale-[1.04] transition duration-300" loading="lazy" />
-              <div class="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between text-[11px]">
+          <div class="w-full">
+            <div class="thumb-wrap overflow-hidden relative bg-slate-100">
+              <img src="${w.cover}" alt="${w.title}" class="group-hover:scale-[1.04] transition duration-300" />
+              <div class="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between text-[11px] z-10">
                 <span class="px-2.5 py-0.5 rounded-full text-white font-medium shadow-sm" style="background:${catColor(w.cat)};">${w.cat}</span>
                 <span class="px-2.5 py-0.5 rounded-full bg-white/95 text-[#1E1D3A] font-medium shadow-sm">${w.type}</span>
               </div>
