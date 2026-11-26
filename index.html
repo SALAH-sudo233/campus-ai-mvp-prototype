@@ -519,23 +519,20 @@
         <!-- ===== 创作中心主页（竖向平铺） ===== -->
         <div id="studioHomeView" class="space-y-12">
 
-          <!-- ===== 01 · TOKEN 接入（官方教程 · 视频 + 提示词） ===== -->
+          <!-- ===== 01 · TOKEN 接入（官方教程 · 单视频覆盖全工具 + 按工具复制提示词） ===== -->
           <div id="studioConnectSection" class="space-y-4">
-            <div class="flex items-center gap-3">
-              <span class="w-8 h-8 rounded-xl mono text-xs font-bold inline-flex items-center justify-center text-white shrink-0" style="background:#0A2540;">01</span>
-              <div>
-                <h2 class="text-base font-bold leading-tight">Token 接入 · 官方教程</h2>
-                <div class="text-xs mt-0.5" style="color:var(--muted);">选择常用开发工具，看演示视频并复制提示词，2 分钟接入浣溪 Token</div>
+            <div class="flex flex-wrap items-end justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-xl mono text-xs font-bold inline-flex items-center justify-center text-white shrink-0" style="background:#0A2540;">01</span>
+                <div>
+                  <h2 class="text-base font-bold leading-tight">Token 接入 · 官方教程</h2>
+                  <div class="text-xs mt-0.5" style="color:var(--muted);">一个视频讲清全工具接入流程，右侧按所用工具一键复制提示词</div>
+                </div>
               </div>
+              <button onclick="copyCurrentKey()" class="cpa-ghost-pill px-3.5 py-1.5 text-xs font-medium bg-white shrink-0">复制我的 Key</button>
             </div>
 
-            <!-- Dedicated Tool Switcher Row (Outside Title) -->
-            <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
-              <div id="officialToolTabs" class="inline-flex p-1 rounded-full border border-slate-200 bg-white text-xs flex-wrap"></div>
-              <button onclick="copyCurrentKey()" class="cpa-ghost-pill px-3.5 py-1.5 text-xs font-medium bg-white">复制我的 Key</button>
-            </div>
-
-            <!-- Interactive Official Video + Prompt Workbench -->
+            <!-- Single Official Video + Per-Tool Prompt Panel -->
             <div class="cpa-card overflow-hidden grid grid-cols-1 lg:grid-cols-12">
               <div class="lg:col-span-7 bg-[#0A2540] relative aspect-video lg:aspect-auto lg:min-h-[340px]">
                 <iframe
@@ -544,26 +541,27 @@
                   scrolling="no"
                   allowfullscreen="true"
                   referrerpolicy="no-referrer"
-                  title="官方工具接入与创作视频教程"></iframe>
+                  title="浣溪 Token 全工具接入官方教程"></iframe>
               </div>
               <div class="lg:col-span-5 p-5 sm:p-6 flex flex-col justify-between gap-4 bg-white">
                 <div class="space-y-3">
                   <div class="flex items-center justify-between gap-2 text-xs">
                     <div class="flex items-center gap-2">
-                      <span id="ogBadge" class="px-2.5 py-0.5 rounded-full font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">推荐首选</span>
-                      <span id="ogDuration" class="mono" style="color:var(--muted);">07:00 · 视频演示</span>
+                      <span class="px-2.5 py-0.5 rounded-full font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">官方合集视频</span>
+                      <span class="mono" style="color:var(--muted);">07:00 · 含全工具演示</span>
                     </div>
-                    <a id="ogBiliLink" href="https://www.bilibili.com/video/BV1XtoKB2Ewr/" target="_blank" rel="noopener noreferrer" class="font-medium hover:underline shrink-0" style="color:var(--primary);">B 站原视频 ↗</a>
+                    <a href="https://www.bilibili.com/video/BV1XtoKB2Ewr/" target="_blank" rel="noopener noreferrer" class="font-medium hover:underline shrink-0" style="color:var(--primary);">B 站原视频 ↗</a>
                   </div>
                   <div>
-                    <h3 id="ogTitle" class="text-base font-bold leading-snug">在 Claude Code 中使用浣溪 Token</h3>
+                    <h3 class="text-base font-bold leading-snug">3 分钟把浣溪 Token 接入你的开发工具</h3>
                     <p id="ogSummary" class="text-xs leading-relaxed mt-1" style="color:var(--muted);"></p>
                   </div>
-                  <div class="space-y-1.5">
-                    <div class="flex items-center justify-between text-xs">
-                      <span class="font-semibold" style="color:var(--ink);">官方接入与首作提示词</span>
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between gap-2 text-xs">
+                      <span class="font-semibold" style="color:var(--ink);">按工具复制接入提示词</span>
                       <button onclick="copyActiveOfficialPrompt()" class="font-medium hover:underline" style="color:var(--primary);">一键复制</button>
                     </div>
+                    <div id="officialToolTabs" class="flex items-center gap-1.5 flex-wrap text-[11px]"></div>
                     <pre id="ogPromptBox" class="p-3.5 rounded-xl mono text-[11px] leading-relaxed whitespace-pre-wrap overflow-y-auto max-h-40 m-0" style="background:#0A2540; color:#E2E8F0;"></pre>
                   </div>
                 </div>
@@ -582,7 +580,7 @@
                 <span class="w-8 h-8 rounded-xl mono text-xs font-bold inline-flex items-center justify-center text-white shrink-0" style="background:var(--primary);">02</span>
                 <div>
                   <h2 class="text-base font-bold leading-tight">实战创作 · 精选教程</h2>
-                  <div class="text-xs mt-0.5" style="color:var(--muted);">点击任意教程进入独立详情页，观看视频、复制 Prompt 并参与评论交流</div>
+                  <div class="text-xs mt-0.5" style="color:var(--muted);">点击任意教程进入独立详情页，观看视频并参与互动评论</div>
                 </div>
               </div>
               <input id="cmsSearch" oninput="renderCmsGrid()" type="text" placeholder="搜索实战教程..." class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0F4C81] w-44 sm:w-52" />
@@ -602,7 +600,7 @@
                 <span class="w-8 h-8 rounded-xl mono text-xs font-bold inline-flex items-center justify-center text-white shrink-0" style="background:var(--accent);">03</span>
                 <div>
                   <h2 class="text-base font-bold leading-tight">参赛赢 Token · 主题挑战与双周榜</h2>
-                  <div class="text-xs mt-0.5" style="color:var(--muted);">点击任意挑战进入独立活动页查看规则、参赛作品并参与组队评论，单件最高奖 500,000 Token</div>
+                  <div class="text-xs mt-0.5" style="color:var(--muted);">点击任意活动进入独立详情页查看简介并互动评论，单件最高奖 500,000 Token</div>
                 </div>
               </div>
               <button onclick="switchTab('square')" class="cpa-ghost-pill px-4 py-1.5 text-xs font-medium bg-white shrink-0">查看双周作品榜 →</button>
@@ -1439,14 +1437,14 @@ Model   ：claude-sonnet-4
       showToast('API Key 已重置，旧密钥已立即失效');
     }
 
-    // ===== STUDIO (OFFICIAL VIDEO+PROMPT + CREATION LESSONS + CHALLENGES + MY WORKS) =====
+    // ===== STUDIO (SINGLE OFFICIAL VIDEO + PER-TOOL PROMPTS + STANDALONE DETAIL PAGES) =====
+    const OFFICIAL_VIDEO_SRC = 'https://player.bilibili.com/player.html?isOutside=true&bvid=BV1XtoKB2Ewr&p=1&danmaku=0&autoplay=0';
+
     function ensureFeaturedVideo(active) {
       const frame = document.getElementById('officialBiliFrame');
       if (!frame) return;
       if (active) {
-        const g = OFFICIAL_GUIDES.find(x => x.id === activeOfficialTool) || OFFICIAL_GUIDES[0];
-        const target = `https://player.bilibili.com/player.html?isOutside=true&bvid=${g.bvid}&p=1&danmaku=0&autoplay=0`;
-        if (frame.getAttribute('src') !== target) frame.setAttribute('src', target);
+        if (frame.getAttribute('src') !== OFFICIAL_VIDEO_SRC) frame.setAttribute('src', OFFICIAL_VIDEO_SRC);
       } else {
         if (frame.getAttribute('src')) frame.removeAttribute('src');
       }
@@ -1495,14 +1493,10 @@ Model   ：claude-sonnet-4
       const g = OFFICIAL_GUIDES.find(x => x.id === activeOfficialTool) || OFFICIAL_GUIDES[0];
       document.getElementById('officialToolTabs').innerHTML = OFFICIAL_GUIDES.map(item => {
         const a = item.id === g.id;
-        return `<button onclick="selectOfficialTool('${item.id}')" class="px-3.5 py-1 rounded-full font-medium transition" style="${a ? 'background:#0A2540; color:#FFFFFF;' : 'background:transparent; color:#64748B;'}">${item.name}</button>`;
+        return `<button onclick="selectOfficialTool('${item.id}')" class="px-2.5 py-1 rounded-full font-medium border transition" style="${a ? 'background:#0A2540; color:#FFFFFF; border-color:#0A2540;' : 'background:#FFFFFF; color:#64748B; border-color:var(--border);'}">${item.name}</button>`;
       }).join('');
 
-      document.getElementById('ogBadge').textContent = g.badge;
-      document.getElementById('ogDuration').textContent = `${g.time} · 视频演示`;
-      document.getElementById('ogTitle').textContent = `在 ${g.name} 中使用浣溪 Token`;
       document.getElementById('ogSummary').textContent = g.summary;
-      document.getElementById('ogBiliLink').href = `https://www.bilibili.com/video/${g.bvid}/`;
       document.getElementById('ogPromptBox').textContent = g.code.replace(/sk-hx-live-98f2c71a0e4b3d9f4a/g, currentKeyPlain);
 
       ensureFeaturedVideo(activeTab === 'studio' && !activeStudioDetail);
@@ -1672,24 +1666,20 @@ Model   ：claude-sonnet-4
       const threadKey = 'lesson:' + l.id;
       const embedUrl = `https://player.bilibili.com/player.html?isOutside=true&bvid=${l.bvid}&p=1&danmaku=0&autoplay=0`;
       const biliUrl = `https://www.bilibili.com/video/${l.bvid}/`;
-      const relatedChallenge = CHALLENGES.find(c => c.tag === l.tag) || CHALLENGES[0];
-      const others = CMS_LESSONS.filter(x => x.id !== l.id).slice(0, 4);
+      const others = CMS_LESSONS.filter(x => x.id !== l.id);
 
       container.innerHTML = `
-        <!-- Standalone Page Breadcrumb Header -->
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2.5 text-xs">
             <button onclick="closeStudioDetail()" class="cpa-ghost-pill px-3.5 py-1.5 font-medium bg-white">← 返回创作中心</button>
             <span style="color:var(--muted);">/</span>
-            <span style="color:var(--muted);">实战创作</span>
-            <span style="color:var(--muted);">/</span>
-            <span class="font-medium truncate max-w-[240px]">${l.title}</span>
+            <span class="font-medium truncate max-w-[260px]">${l.title}</span>
           </div>
           <a href="${biliUrl}" target="_blank" rel="noopener noreferrer" class="cpa-ghost-pill px-3.5 py-1.5 text-xs font-medium bg-white">在 B 站打开原视频 ↗</a>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <!-- Left Main Column (8): Video + Steps + Interactive Comments -->
+          <!-- Left (8): 播放 + 标题与简介 + 互动评论 -->
           <div class="lg:col-span-8 space-y-6">
             <div class="cpa-card overflow-hidden bg-white">
               <div class="aspect-video w-full bg-[#0A2540]">
@@ -1701,62 +1691,31 @@ Model   ：claude-sonnet-4
                   referrerpolicy="no-referrer"
                   title="${l.title}"></iframe>
               </div>
-              <div class="p-5 sm:p-6 space-y-3">
+              <div class="p-5 sm:p-6 space-y-2.5">
                 <div class="flex flex-wrap items-center gap-2 text-xs">
                   <span class="px-2.5 py-0.5 rounded-full font-medium" style="background:#EFF6FF; color:var(--primary);">${l.cat}</span>
                   <span style="color:var(--muted);">${l.author}</span>
                   <span class="mono" style="color:var(--muted);">· ${l.duration}</span>
-                  ${l.tag ? `<button onclick="openChallengeDetail('${relatedChallenge.id}')" class="mono hover:underline" style="color:var(--accent-ink);">${l.tag}</button>` : ''}
                 </div>
                 <h1 class="text-xl font-bold tracking-tight">${l.title}</h1>
                 <p class="text-xs leading-relaxed" style="color:var(--muted);">${l.summary}</p>
-
-                <div class="pt-3 border-t border-slate-100 space-y-2.5">
-                  <div class="text-xs font-bold">实操步骤拆解</div>
-                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                    ${l.steps.map((st, idx) => `
-                      <div class="p-3 rounded-xl border border-slate-200 space-y-1.5" style="background:var(--bg-page);">
-                        <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-[10px] font-bold mono text-white" style="background:var(--primary);">STEP 0${idx + 1}</span>
-                        <div class="leading-relaxed">${st}</div>
-                      </div>
-                    `).join('')}
-                  </div>
-                </div>
               </div>
             </div>
 
-            <div id="studioDiscussionMount">${renderDiscussionHtml(threadKey, '写下你的实操问题、调试心得，或贴出你的练习成果一起交流...')}</div>
+            <div id="studioDiscussionMount">${renderDiscussionHtml(threadKey, '写下你的学习问题、实操心得或讨论内容...')}</div>
           </div>
 
-          <!-- Right Sidebar (4): Copyable Prompt + Publish CTA + More Lessons -->
-          <div class="lg:col-span-4 space-y-4">
-            <div class="cpa-card p-5 space-y-3 bg-white">
-              <div class="flex items-center justify-between text-xs">
-                <span class="font-bold">配套脚本 / Starter Prompt</span>
-                <button onclick="copyLessonCode('${l.id}')" class="font-medium hover:underline" style="color:var(--primary);">一键复制</button>
-              </div>
-              <pre class="p-3.5 rounded-xl mono text-[11px] leading-relaxed whitespace-pre-wrap overflow-x-auto m-0" style="background:#0A2540; color:#E2E8F0;">${escapeHtml(l.code)}</pre>
-              <button onclick="copyLessonCode('${l.id}')" class="cpa-ghost-pill w-full py-2 text-xs font-medium">复制本课提示词</button>
-            </div>
-
-            <div class="cpa-card p-5 space-y-3 bg-white" style="border-color:#99F6E4; background:linear-gradient(180deg, #F0FDFA 0%, #FFFFFF 55%);">
-              <div class="text-xs font-bold">学完了？提交作品赢 500K Token</div>
-              <p class="text-xs leading-relaxed" style="color:var(--muted);">把你的实战成果发布到作品广场，参与主题挑战与双周 Top 10 激励。</p>
-              <div class="space-y-2">
-                <button onclick="openPublishModal('${l.tag}')" class="cpa-pill-btn w-full py-2 text-xs font-medium">${l.tag ? `带 ${l.tag} 发布作品 →` : '发布我的实战作品 →'}</button>
-                <button onclick="openChallengeDetail('${relatedChallenge.id}')" class="cpa-ghost-pill w-full py-2 text-xs font-medium bg-white">查看关联挑战赛详情</button>
-              </div>
-            </div>
-
-            <div class="cpa-card p-5 space-y-3 bg-white">
-              <div class="text-xs font-bold">继续看其他实战教程</div>
-              <div class="space-y-2.5">
+          <!-- Right (4): 其他教程 -->
+          <div class="lg:col-span-4">
+            <div class="cpa-card p-5 space-y-3.5 bg-white">
+              <div class="text-xs font-bold">其他教程</div>
+              <div class="space-y-3">
                 ${others.map(o => `
                   <div onclick="openLessonDetail('${o.id}')" class="flex items-center gap-3 cursor-pointer group">
-                    <img src="${o.cover}" alt="${o.title}" class="w-20 h-12 rounded-lg object-cover border border-slate-200 shrink-0" />
+                    <img src="${o.cover}" alt="${o.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 shrink-0" />
                     <div class="min-w-0">
-                      <div class="text-xs font-semibold truncate group-hover:text-[#0F4C81] transition">${o.title}</div>
-                      <div class="text-[11px] mono mt-0.5" style="color:var(--muted);">${o.author} · ${o.duration}</div>
+                      <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#0F4C81] transition">${o.title}</div>
+                      <div class="text-[11px] mono mt-1" style="color:var(--muted);">${o.author} · ${o.duration}</div>
                     </div>
                   </div>
                 `).join('')}
@@ -1778,118 +1737,70 @@ Model   ：claude-sonnet-4
       container.classList.remove('hidden');
 
       const threadKey = 'challenge:' + ch.id;
-      const entries = squareWorks.filter(w => w.tag === ch.tag);
       const otherChallenges = CHALLENGES.filter(x => x.id !== ch.id);
+      const topLessons = CMS_LESSONS.slice(0, 4);
 
       container.innerHTML = `
-        <!-- Standalone Page Breadcrumb Header -->
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2.5 text-xs">
             <button onclick="closeStudioDetail()" class="cpa-ghost-pill px-3.5 py-1.5 font-medium bg-white">← 返回创作中心</button>
-            <span style="color:var(--muted);">/</span>
-            <span style="color:var(--muted);">参赛赢 Token</span>
             <span style="color:var(--muted);">/</span>
             <span class="font-medium truncate max-w-[260px]">${ch.title}</span>
           </div>
           <button onclick="openPublishModal('${ch.tag}')" class="cpa-pill-btn px-4 py-1.5 text-xs font-medium">${ch.ctaText}</button>
         </div>
 
-        <!-- Hero Card -->
-        <div class="cpa-card overflow-hidden grid grid-cols-1 lg:grid-cols-12 bg-white">
-          <div class="lg:col-span-6 aspect-video lg:aspect-auto relative bg-slate-100">
-            <img src="${ch.cover}" alt="${ch.title}" class="w-full h-full object-cover min-h-[240px]" />
-            <span class="absolute top-3.5 left-3.5 px-3 py-1 rounded-full text-xs font-semibold shadow-sm" style="${ch.statusStyle}">${ch.statusBadge}</span>
-          </div>
-          <div class="lg:col-span-6 p-6 flex flex-col justify-between gap-5">
-            <div class="space-y-3">
-              <div class="flex flex-wrap items-center gap-2 text-xs">
-                <span class="mono px-2.5 py-0.5 rounded-full font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">${ch.tag}</span>
-                <span class="mono" style="color:var(--muted);">${ch.deadline}</span>
-              </div>
-              <h1 class="text-xl sm:text-2xl font-bold tracking-tight">${ch.title}</h1>
-              <p class="text-xs leading-relaxed" style="color:var(--muted);">${ch.subtitle}</p>
-              <div class="p-3.5 rounded-xl border border-slate-200 space-y-1 text-xs" style="background:var(--bg-page);">
-                <div><strong style="color:var(--ink);">Token 奖励：</strong><span style="color:var(--accent-ink); font-weight:600;">${ch.reward}</span></div>
-                <div><strong style="color:var(--ink);">赛程安排：</strong><span style="color:var(--muted);">${ch.timeline}</span></div>
-              </div>
-            </div>
-            <div class="flex flex-wrap items-center gap-2.5">
-              <button onclick="openPublishModal('${ch.tag}')" class="cpa-pill-btn px-5 py-2 text-xs font-semibold">${ch.ctaText} →</button>
-              <button onclick="copyText('${ch.tag}', '专题标签 ${ch.tag} 已复制')" class="cpa-ghost-pill px-4 py-2 text-xs font-medium">复制专题标签</button>
-            </div>
-          </div>
-        </div>
-
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          <!-- Left Main Column (8): Rules + Competing Works + Interactive Discussion -->
+          <!-- Left (8): 封面展示 + 标题与简介 + 互动评论 -->
           <div class="lg:col-span-8 space-y-6">
-            <div class="cpa-card p-5 sm:p-6 space-y-3 bg-white">
-              <h3 class="text-sm font-bold">赛题要求与参与规则</h3>
-              <div class="space-y-2 text-xs">
-                ${ch.rules.map((r, idx) => `
-                  <div class="p-3 rounded-xl border border-slate-200 flex items-start gap-2.5" style="background:var(--bg-page);">
-                    <span class="w-5 h-5 rounded-full text-[11px] font-bold mono inline-flex items-center justify-center shrink-0 text-white" style="background:var(--accent);">${idx + 1}</span>
-                    <span class="leading-relaxed">${r}</span>
-                  </div>
-                `).join('')}
+            <div class="cpa-card overflow-hidden bg-white">
+              <div class="aspect-video w-full relative bg-slate-100">
+                <img src="${ch.cover}" alt="${ch.title}" class="w-full h-full object-cover" />
+                <span class="absolute top-3.5 left-3.5 px-3 py-1 rounded-full text-xs font-semibold shadow-sm" style="${ch.statusStyle}">${ch.statusBadge}</span>
+                <span class="absolute bottom-3.5 right-3.5 px-2.5 py-0.5 rounded-full text-xs mono bg-black/65 text-white backdrop-blur-sm">${ch.deadline}</span>
+              </div>
+              <div class="p-5 sm:p-6 space-y-3">
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                  <span class="mono px-2.5 py-0.5 rounded-full font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">${ch.tag}</span>
+                  <span style="color:var(--muted);">${ch.timeline}</span>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight">${ch.title}</h1>
+                <p class="text-xs leading-relaxed" style="color:var(--muted);">${ch.subtitle} ${ch.reward}。</p>
+                <div class="pt-2 flex flex-wrap items-center gap-2.5">
+                  <button onclick="openPublishModal('${ch.tag}')" class="cpa-pill-btn px-5 py-2 text-xs font-semibold">${ch.ctaText} →</button>
+                  <button onclick="copyText('${ch.tag}', '专题标签 ${ch.tag} 已复制')" class="cpa-ghost-pill px-4 py-2 text-xs font-medium">复制专题标签</button>
+                </div>
               </div>
             </div>
 
-            <div class="cpa-card p-5 sm:p-6 space-y-4 bg-white">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-bold">本期热门参赛作品 <span class="mono text-xs font-normal ml-1" style="color:var(--muted);">(${entries.length})</span></h3>
-                <button onclick="activeSquareTag='${ch.tag}'; switchTab('square')" class="text-xs font-medium hover:underline" style="color:var(--primary);">去作品广场看全部 →</button>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                ${entries.map(w => `
-                  <div onclick="openDetailDrawer('${w.id}')" class="rounded-xl border border-slate-200 overflow-hidden cursor-pointer hover:border-[#0F4C81] transition bg-white">
-                    <img src="${w.cover}" alt="${w.title}" class="w-full aspect-video object-cover" />
-                    <div class="p-3.5 space-y-1">
-                      <div class="flex items-center justify-between gap-2">
-                        <span class="text-xs font-bold truncate">${w.title}</span>
-                        <span class="mono text-[11px] font-medium shrink-0" style="color:var(--accent-ink);">▲ ${w.likes}</span>
-                      </div>
-                      <div class="text-[11px]" style="color:var(--muted);">${w.author} · ${w.degree}</div>
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-            <div id="studioDiscussionMount">${renderDiscussionHtml(threadKey, '聊聊你的参赛想法、找队友组队，或向校内运营提问...')}</div>
+            <div id="studioDiscussionMount">${renderDiscussionHtml(threadKey, '聊聊你的参赛想法、找队友或向组织者提问...')}</div>
           </div>
 
-          <!-- Right Sidebar (4): Key Stats + Switch Challenge -->
+          <!-- Right (4): 其他活动与教程 -->
           <div class="lg:col-span-4 space-y-4">
-            <div class="cpa-card p-5 space-y-3 bg-white text-xs">
-              <div class="font-bold">活动实时概况</div>
-              <div class="grid grid-cols-2 gap-2.5">
-                <div class="p-3 rounded-xl border border-slate-200" style="background:var(--bg-page);">
-                  <div class="text-[11px]" style="color:var(--muted);">已报名同学</div>
-                  <div class="text-xl font-bold mono mt-0.5">${ch.participants}</div>
-                </div>
-                <div class="p-3 rounded-xl border border-slate-200" style="background:var(--bg-page);">
-                  <div class="text-[11px]" style="color:var(--muted);">已提交作品</div>
-                  <div class="text-xl font-bold mono mt-0.5" style="color:var(--primary);">${ch.submissions}</div>
-                </div>
-              </div>
-              <button onclick="openPublishModal('${ch.tag}')" class="cpa-pill-btn w-full py-2 text-xs font-medium">立即带 ${ch.tag} 参赛</button>
-            </div>
-
-            ${otherChallenges.length ? `
-              <div class="cpa-card p-5 space-y-3 bg-white">
-                <div class="text-xs font-bold">其他进行中活动</div>
+            <div class="cpa-card p-5 space-y-3.5 bg-white">
+              <div class="text-xs font-bold">其他活动与教程</div>
+              <div class="space-y-3">
                 ${otherChallenges.map(oc => `
                   <div onclick="openChallengeDetail('${oc.id}')" class="flex items-center gap-3 cursor-pointer group">
-                    <img src="${oc.cover}" alt="${oc.title}" class="w-20 h-12 rounded-lg object-cover border border-slate-200 shrink-0" />
+                    <img src="${oc.cover}" alt="${oc.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 shrink-0" />
                     <div class="min-w-0">
-                      <div class="text-xs font-semibold truncate group-hover:text-[#0F4C81] transition">${oc.title}</div>
-                      <div class="text-[11px] mono mt-0.5" style="color:var(--muted);">${oc.deadline} · ${oc.participants} 人参与</div>
+                      <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#0F4C81] transition">${oc.title}</div>
+                      <div class="text-[11px] mono mt-1" style="color:var(--accent-ink);">活动 · ${oc.deadline}</div>
+                    </div>
+                  </div>
+                `).join('')}
+                ${topLessons.map(o => `
+                  <div onclick="openLessonDetail('${o.id}')" class="flex items-center gap-3 cursor-pointer group">
+                    <img src="${o.cover}" alt="${o.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 shrink-0" />
+                    <div class="min-w-0">
+                      <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#0F4C81] transition">${o.title}</div>
+                      <div class="text-[11px] mono mt-1" style="color:var(--muted);">${o.author} · ${o.duration}</div>
                     </div>
                   </div>
                 `).join('')}
               </div>
-            ` : ''}
+            </div>
           </div>
         </div>
       `;
