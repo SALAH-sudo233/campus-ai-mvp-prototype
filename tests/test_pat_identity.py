@@ -172,7 +172,7 @@ class PatIdentityMigrationTests(unittest.TestCase):
                 rows = dict(conn.execute("SELECT id, owner_ref FROM pat_tokens"))
                 self.assertEqual(rows, {"legacy-valid": "legacy-second", "legacy-first-org": "legacy-first",
                                         "legacy-orphan": None, "legacy-ambiguous": None,
-                                        "legacy-unmatched": None, "legacy-null": "legacy-null-org"})
+                                        "legacy-unmatched": None, "legacy-null": None})
                 self.assertEqual(dict(conn.execute("SELECT owner_ref, balance FROM students WHERE mode = 'email'")),
                                  {"legacy-first": 123, "legacy-second": 456, "ambiguous-first": 789,
                                   "ambiguous-second": 789, "legacy-null-org": 123})
@@ -191,12 +191,56 @@ class PatIdentityMigrationTests(unittest.TestCase):
                 owner = conn.execute("SELECT owner_ref FROM relay_keys WHERE key_hint = ? AND revoked_at IS NULL",
                                      (rotated["hint"],)).fetchone()[0]
                 self.assertEqual(owner, "legacy-second")
-            for token_id in ("legacy-ambiguous", "legacy-unmatched", "legacy-orphan"):
+            for token_id in ("legacy-ambiguous", "legacy-unmatched", "legacy-orphan", "legacy-null"):
                 with self.subTest(token_id=token_id):
                     self.assertEqual(server.get("/api/me", tokens[token_id])[0], 401)
                     self.assertEqual(server.post("/api/key/rotate", {"requestId": token_id}, tokens[token_id])[0], 401)
             with sqlite3.connect(server.db_path) as conn:
                 self.assertEqual(conn.execute("SELECT balance FROM students WHERE owner_ref = 'legacy-first'").fetchone()[0], 123)
+
+    def test_platform_legacy_null_org_pat_requires_reissue_but_session_and_new_pat_work(self):
+        server = DemoServer()
+        self.seed_v11_tokens(server.db_path)
+        legacy_pat = "cpat_" + secrets.token_urlsafe(32)
+        session = secrets.token_urlsafe(32)
+        with sqlite3.connect(server.db_path) as conn:
+            user_id = migrations._new_user(conn, "历史平台管理员")
+            conn.execute("INSERT INTO platform_admins (user_id, created_at) VALUES (?, 1)", (user_id,))
+            conn.execute("INSERT INTO students (owner_ref, mode, identity, pw_salt, pw_hash, balance, spent, created_at, user_id, org_id) "
+                         "VALUES ('legacy-platform', 'email', 'legacy-platform@example.edu.cn', '00', '00', 123, 0, 1, ?, NULL)",
+                         (user_id,))
+            conn.execute("INSERT INTO sessions (token_hash, owner_ref, expires_at, user_id, org_id) "
+                         "VALUES (?, 'legacy-platform', 9999999999, ?, NULL)",
+                         (hashlib.sha256(session.encode()).hexdigest(), user_id))
+            conn.execute("INSERT INTO pat_tokens (id, user_id, token_hash, token_hint, label, role_snapshot, org_snapshot, "
+                         "created_at, created_by, expires_at, request_id) "
+                         "VALUES ('legacy-platform-pat', ?, ?, 'legacy', 'legacy', 'platform_admin', NULL, 1, ?, "
+                         "9999999999, 'legacy-platform-pat')",
+                         (user_id, hashlib.sha256(legacy_pat.encode()).hexdigest(), user_id))
+        with server:
+            code, profile = server.get("/api/me", session)
+            self.assertEqual(code, 200, profile)
+            self.assertEqual(profile["role"], "platform_admin")
+            self.assertIsNone(profile["org"])
+            for path in ("/api/me", "/api/orgs"):
+                with self.subTest(path=path):
+                    code, denied = server.get(path, legacy_pat)
+                    self.assertEqual(code, 401, denied)
+                    self.assertEqual(denied["error"], "个人访问令牌已失效，请重新签发")
+            self.assertEqual(server.post("/api/key/rotate", {"requestId": "legacy-platform-key"}, legacy_pat)[0], 401)
+            with sqlite3.connect(server.db_path) as conn:
+                row = conn.execute("SELECT owner_ref, last_used_at FROM pat_tokens WHERE id = 'legacy-platform-pat'").fetchone()
+                self.assertEqual(row, (None, None))
+                self.assertEqual(conn.execute("SELECT balance FROM students WHERE owner_ref = 'legacy-platform'").fetchone()[0], 123)
+            code, issued = server.post("/api/me/tokens", {"requestId": "platform-reissued"}, session)
+            self.assertEqual(code, 201, issued)
+            self.assertIsNone(issued["item"]["orgSnapshot"])
+            code, renewed = server.get("/api/me", issued["token"])
+            self.assertEqual(code, 200, renewed)
+            self.assertEqual(renewed["role"], "platform_admin")
+            self.assertEqual(renewed["identity"], "legacy-platform@example.edu.cn")
+            self.assertIsNone(renewed["org"])
+            self.assertEqual(server.get("/api/orgs", issued["token"])[0], 200)
 
 
 if __name__ == "__main__":
