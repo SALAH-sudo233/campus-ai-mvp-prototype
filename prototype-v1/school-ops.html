@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>浣溪AI Lab · 运营管理端（学校用 · V1 原型）</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    :root {
+      --bg-page: #F7F9FC;
+      --bg-surface: #FFFFFF;
+      --bg-subtle: #F1F5F9;
+      --border: #E5E9F0;
+      --ink: #0A2540;
+      --muted: #64748B;
+      --primary: #0F4C81;
+      --accent: #0D9488;
+      --accent-soft: #ECFDF5;
+      --accent-ink: #0F766E;
+      --coral: #C85A4A;
+      --coral-soft: #FEF2F2;
+      --warn: #D97706;
+      --warn-soft: #FFFBEB;
+    }
+    body {
+      background: var(--bg-page);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+    }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-variant-numeric: tabular-nums; }
+    .cpa-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 1px 2px rgba(10, 37, 64, 0.03);
+    }
+    .cpa-pill-btn { background: #0A2540; color: #FFFFFF; border-radius: 9999px; transition: background 140ms ease; }
+    .cpa-pill-btn:hover { background: #0F4C81; }
+    .cpa-ghost-pill { background: #FFFFFF; color: var(--ink); border: 1px solid var(--border); border-radius: 9999px; transition: all 140ms ease; }
+    .cpa-ghost-pill:hover { background: var(--bg-subtle); }
+    .side-btn { transition: all 140ms ease; border-radius: 10px; }
+    .side-btn.active { background: #0A2540; color: #FFFFFF; font-weight: 600; }
+    .side-btn:not(.active) { color: var(--muted); }
+    .side-btn:not(.active):hover { background: var(--bg-subtle); color: var(--ink); }
+    .section-eyebrow { display: flex; align-items: center; gap: 10px; }
+    .section-bar { width: 3px; height: 26px; border-radius: 999px; background: var(--accent); flex-shrink: 0; }
+    .drawer-backdrop { background: rgba(10, 37, 64, 0.34); backdrop-filter: blur(2px); }
+    #toast { transition: opacity 200ms ease, transform 200ms ease; }
+  </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+  <!-- Unified 4-Portal Prototype Switcher Bar -->
+  <div style="background:#0A2540; color:#E2E8F0;" class="px-4 py-2 text-xs border-b border-white/10">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
+        <a href="./index.html" class="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium">✦ 浣溪AI Lab · V1 原型总览</a>
+        <span class="text-slate-500 hidden sm:inline">|</span>
+        <a href="./student-portal.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">① 学生端</a>
+        <a href="./college-dashboard.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">② 学院端（纯只读）</a>
+        <a href="./school-ops.html" class="px-2.5 py-1 rounded-full bg-teal-600 text-white font-semibold">③ 运营管理端（学校用）</a>
+        <a href="./platform-admin.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">④ 平台管理端（浣溪内部）</a>
+      </div>
+      <span class="text-[11px] text-teal-200 hidden md:inline">校内社团/志愿者日常运营 · 机制 A 激励池制</span>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-medium shadow-lg pointer-events-none opacity-0 -translate-y-2" style="background:#0A2540; color:#FFFFFF;"></div>
+
+  <div class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+    <!-- Left Sidebar (Strict 4 Menus) -->
+    <aside class="lg:col-span-3 cpa-card p-4 space-y-5 lg:sticky lg:top-6">
+      <div class="px-2 space-y-1.5">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg inline-flex items-center justify-center font-bold text-xs text-white" style="background:var(--primary);">✦</span>
+          <span class="text-sm font-bold tracking-tight">浣溪AI Lab</span>
+        </div>
+        <div class="text-xs font-semibold pt-1">华中科技大学软件学院</div>
+        <div class="text-[11px] px-2.5 py-0.5 rounded-full inline-block" style="background:var(--accent-soft); color:var(--accent-ink);">校内运营管理端 · 社团志愿者</div>
+      </div>
+
+      <nav class="space-y-1 text-xs">
+        <button onclick="switchMenu('members')" data-menu="members" class="side-btn w-full px-3 py-2.5 flex items-center justify-between text-left">
+          <span>① 成员与准入</span>
+          <span id="badgePendingMembers" class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:var(--warn-soft); color:var(--warn);">3</span>
+        </button>
+        <button onclick="switchMenu('works')" data-menu="works" class="side-btn w-full px-3 py-2.5 flex items-center justify-between text-left">
+          <span>② 作品管理</span>
+          <span id="badgePendingWorks" class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:var(--warn-soft); color:var(--warn);">2</span>
+        </button>
+        <button onclick="switchMenu('cms')" data-menu="cms" class="side-btn w-full px-3 py-2.5 flex items-center justify-between text-left">
+          <span>③ 内容与活动 (CMS)</span>
+          <span class="mono text-[11px] opacity-70">8</span>
+        </button>
+        <button onclick="switchMenu('incentives')" data-menu="incentives" class="side-btn w-full px-3 py-2.5 flex items-center justify-between text-left">
+          <span>④ 激励管理（激励池）</span>
+          <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:var(--accent-soft); color:var(--accent-ink);">3.5M 余</span>
+        </button>
+      </nav>
+
+      <!-- Clear Permission Boundary Note -->
+      <div class="p-3.5 rounded-xl text-[11px] leading-relaxed border border-slate-200 space-y-1" style="background:var(--bg-page); color:var(--muted);">
+        <div class="font-semibold" style="color:var(--ink);">校内端权限边界</div>
+        <div>• 仅操作本院成员核验、作品审核、CMS 内容与激励池内发奖。</div>
+        <div>• 学院基础额度、限流与反倒卖审计由<strong>浣溪内部平台端</strong>统一管控；本端每笔发奖自动记入平台审计日志。</div>
+      </div>
+    </aside>
+
+    <!-- Main Right Workspace -->
+    <main class="lg:col-span-9 space-y-5">
+
+      <!-- ==================== MENU 1: 成员与准入 ==================== -->
+      <section id="menu-members" class="space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="section-eyebrow">
+            <div class="section-bar"></div>
+            <div>
+              <div class="text-[11px]" style="color:var(--muted);">校内准入管理</div>
+              <h1 class="text-lg font-bold">成员与教育邮箱白名单</h1>
+            </div>
+          </div>
+          <div class="inline-flex p-0.5 rounded-full border border-slate-200 bg-white text-xs">
+            <button onclick="setMemSub('pending')" data-msub="pending" class="msub-btn px-3.5 py-1.5 rounded-full font-medium">待审核申请</button>
+            <button onclick="setMemSub('import')" data-msub="import" class="msub-btn px-3.5 py-1.5 rounded-full font-medium">白名单 Excel 导入</button>
+            <button onclick="setMemSub('list')" data-msub="list" class="msub-btn px-3.5 py-1.5 rounded-full font-medium">已认证成员 (642)</button>
+          </div>
+        </div>
+
+        <!-- Sub 1: Pending Email Applications -->
+        <div id="msub-pending" class="cpa-card overflow-hidden">
+          <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between text-xs">
+            <span class="font-semibold">已验证 `@hust.edu.cn` 邮箱、但未在首批白名单内的申请</span>
+            <span style="color:var(--muted);">审核通过后自动发放初始免费额度 1,000,000</span>
+          </div>
+          <div id="pendingMembersList" class="divide-y divide-slate-100 text-xs"></div>
+        </div>
+
+        <!-- Sub 2: Excel Roster Import -->
+        <div id="msub-import" class="hidden cpa-card p-6 space-y-5 text-xs">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-sm font-bold">批量导入学院学生邮箱白名单（Excel / CSV）</h2>
+              <p class="mt-0.5" style="color:var(--muted);">导入列：`email, name, degree(本科/研究生)`，系统先预览去重与身份分布，确认后再入库。</p>
+            </div>
+            <button onclick="showToast('已下载模板：hust-software-roster-template.csv')" class="cpa-ghost-pill px-3.5 py-1.5 font-medium">下载标准模板</button>
+          </div>
+
+          <div class="p-8 rounded-2xl border-2 border-dashed border-slate-300 text-center space-y-3" style="background:var(--bg-page);">
+            <div class="text-sm font-semibold">将学院教务处导出的学生邮箱名单拖放到此处</div>
+            <div style="color:var(--muted);">支持 UTF-8 CSV / XLSX，单次上限 10,000 行；已存在成员自动跳过不重复发额度</div>
+            <button onclick="simulateImportPreview()" class="cpa-pill-btn px-5 py-2 font-medium">模拟上传：2026秋软件学院补录名单.xlsx</button>
+          </div>
+
+          <div id="importPreviewBox" class="hidden p-4 rounded-xl border border-teal-200 space-y-3" style="background:var(--accent-soft);">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="font-semibold" style="color:var(--accent-ink);">预览校验通过：共解析 128 行</div>
+              <div class="mono text-[11px]" style="color:var(--accent-ink);">新增有效 124 人（本科 86 / 研究生 38） · 重复跳过 4 行 · 异常 0 行</div>
+            </div>
+            <div class="flex justify-end gap-2">
+              <button onclick="document.getElementById('importPreviewBox').classList.add('hidden')" class="cpa-ghost-pill px-3.5 py-1.5">取消</button>
+              <button onclick="confirmImport()" class="cpa-pill-btn px-4 py-1.5 font-medium">确认导入 124 人白名单</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub 3: Certified Members List -->
+        <div id="msub-list" class="hidden cpa-card overflow-hidden text-xs">
+          <div class="px-5 py-3.5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+            <input id="memberSearch" oninput="renderMembersTable()" type="text" placeholder="搜索邮箱或姓名..." class="px-3.5 py-1.5 rounded-full border border-slate-200 text-xs w-56 focus:outline-none focus:border-[#0F4C81]" />
+            <span style="color:var(--muted);">注：成员额度上限与风控冻结仅限浣溪平台端操作</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[11px]" style="background:var(--bg-page); color:var(--muted);">
+                  <th class="px-5 py-2.5 font-medium">姓名与教育邮箱</th>
+                  <th class="px-4 py-2.5 font-medium">身份分层</th>
+                  <th class="px-4 py-2.5 font-medium">已消耗 Token</th>
+                  <th class="px-4 py-2.5 font-medium">作品数</th>
+                  <th class="px-5 py-2.5 font-medium text-right">状态</th>
+                </tr>
+              </thead>
+              <tbody id="certifiedMembersBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== MENU 2: 作品管理 ==================== -->
+      <section id="menu-works" class="hidden space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="section-eyebrow">
+            <div class="section-bar" style="background:var(--primary);"></div>
+            <div>
+              <div class="text-[11px]" style="color:var(--muted);">内容质量与专题评奖筛选</div>
+              <h1 class="text-lg font-bold">学生作品审核与精选管理</h1>
+            </div>
+          </div>
+          <button id="batchRewardBtn" onclick="sendSelectedToIncentives()" class="hidden cpa-pill-btn px-4 py-1.5 text-xs font-medium">带入选定作品去「激励管理」发奖 →</button>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div class="flex items-center gap-2 flex-wrap" id="opsWorkTagBar"></div>
+          <select id="opsWorkStatusFilter" onchange="renderOpsWorks()" class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs">
+            <option value="all">全部审核状态</option>
+            <option value="reviewing">待审核</option>
+            <option value="published">已上架</option>
+            <option value="rejected">需修改</option>
+          </select>
+        </div>
+
+        <div id="opsWorksList" class="space-y-3"></div>
+      </section>
+
+      <!-- ==================== MENU 3: 内容与活动 (CMS) ==================== -->
+      <section id="menu-cms" class="hidden space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="section-eyebrow">
+            <div class="section-bar"></div>
+            <div>
+              <div class="text-[11px]" style="color:var(--muted);">轻量 CMS 运营（1 分高 ROI）</div>
+              <h1 class="text-lg font-bold">实战教程库与校园活动专题配置</h1>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <button onclick="openCmsModal('lesson')" class="cpa-ghost-pill px-3.5 py-1.5 font-medium">+ 添加教程 / 外链视频</button>
+            <button onclick="openCmsModal('event')" class="cpa-pill-btn px-4 py-1.5 font-medium">+ 新建活动与专题 Tag</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div class="cpa-card p-5 space-y-3">
+            <div class="font-bold text-sm">正在进行的活动与专题 Tag</div>
+            <div id="opsEventsList" class="space-y-2.5"></div>
+          </div>
+          <div class="cpa-card p-5 space-y-3">
+            <div class="font-bold text-sm">学生端「创作中心」已上架教程</div>
+            <div id="opsLessonsList" class="space-y-2.5"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== MENU 4: 激励管理 (机制 A · 学院激励池制) ==================== -->
+      <section id="menu-incentives" class="hidden space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="section-eyebrow">
+            <div class="section-bar"></div>
+            <div>
+              <div class="text-[11px]" style="color:var(--muted);">机制 A · 学院激励池制</div>
+              <h1 class="text-lg font-bold">学院激励池与自主发奖</h1>
+            </div>
+          </div>
+          <button onclick="openPoolTopupModal()" class="cpa-pill-btn px-4 py-2 text-xs font-medium">向浣溪申请追加激励池</button>
+        </div>
+
+        <!-- College Incentive Pool Card (CPAMC Signature Meter) -->
+        <div class="cpa-card p-6 space-y-4">
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div class="text-xs" style="color:var(--muted);">本院当前可用激励池余额（由浣溪平台端统一批复）</div>
+              <div id="poolRemainBig" class="text-3xl font-bold mono mt-1">3,500,000 <span class="text-xs font-normal" style="color:var(--muted);">Tokens</span></div>
+            </div>
+            <div class="flex items-center gap-4 text-xs">
+              <div><span style="color:var(--muted);">总获批激励池</span><div class="mono font-bold mt-0.5">20,000,000</div></div>
+              <div><span style="color:var(--muted);">校内已自主发放</span><div id="poolUsedText" class="mono font-bold mt-0.5" style="color:var(--primary);">16,500,000</div></div>
+              <span id="poolWaterBadge" class="px-2.5 py-1 rounded-full text-xs font-medium" style="background:var(--warn-soft); color:var(--warn);">已用 82.5% · 建议申请增额</span>
+            </div>
+          </div>
+          <div class="h-2.5 rounded-full overflow-hidden" style="background:var(--bg-subtle);">
+            <div id="poolBar" class="h-full rounded-full transition-all" style="width:82.5%; background:var(--primary);"></div>
+          </div>
+          <div class="text-[11px]" style="color:var(--muted);">
+            机制说明：在已获批激励池额度内，本院运营人员可自主向双周榜单、挑战赛获奖学生或开发社团志愿者发放奖励；<strong>每一笔发奖均自动同步至浣溪平台安全审计日志</strong>，池子不足时点击右上角向浣溪提交追加预算审批。
+          </div>
+        </div>
+
+        <!-- Dispatch Form + Records -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <!-- Left (5): Dispatch Reward from Pool -->
+          <div class="lg:col-span-5 cpa-card p-5 space-y-3.5 text-xs">
+            <h2 class="text-sm font-bold">从激励池发放 Token 奖励</h2>
+            <div>
+              <label class="block font-medium mb-1">奖励类型</label>
+              <select id="rewType" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs">
+                <option value="双周点赞 Top 10 奖励">双周点赞 Top 10 奖励</option>
+                <option value="第 1 期黑客松优胜奖">第 1 期黑客松优胜奖</option>
+                <option value="校内开发社团志愿者激励">校内开发社团志愿者激励</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-medium mb-1">受益学生邮箱（可从作品管理勾选带入）</label>
+              <input id="rewTarget" type="text" value="zhouyuan@hust.edu.cn" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono text-xs" />
+            </div>
+            <div>
+              <label class="block font-medium mb-1">单次发放额度（Token）</label>
+              <input id="rewAmount" type="number" value="500000" step="100000" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono text-xs" />
+            </div>
+            <div>
+              <label class="block font-medium mb-1">关联作品 / 发奖事由（同步写入审计日志）</label>
+              <input id="rewReason" type="text" value="《论文精读卡片生成器》双周榜第 #2 名奖励" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs" />
+            </div>
+            <button onclick="dispatchFromPool()" class="cpa-pill-btn w-full py-2.5 text-xs font-semibold">确认从激励池发放</button>
+          </div>
+
+          <!-- Right (7): Dispatch History + Topup Requests -->
+          <div class="lg:col-span-7 space-y-4 text-xs">
+            <div class="cpa-card overflow-hidden">
+              <div class="px-5 py-3 border-b border-slate-100 font-bold">向浣溪提交的「追加激励池」审批进度</div>
+              <div id="topupRequestsList" class="divide-y divide-slate-100"></div>
+            </div>
+            <div class="cpa-card overflow-hidden">
+              <div class="px-5 py-3 border-b border-slate-100 font-bold">近期池内自主发奖流水（已同步平台审计）</div>
+              <div id="dispatchHistoryList" class="divide-y divide-slate-100"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Reject Reason Modal -->
+  <div id="rejectModal" class="hidden fixed inset-0 z-50 drawer-backdrop flex items-center justify-center p-4" onclick="if(event.target===this) closeRejectModal()">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-sm p-6 space-y-4 text-xs">
+      <h3 class="text-sm font-bold">填写驳回修改原因</h3>
+      <textarea id="rejectReasonInput" rows="3" placeholder="例如：安装包缺少界面运行截图，请补充后重提..." class="w-full p-3 rounded-xl border border-slate-300 text-xs"></textarea>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeRejectModal()" class="cpa-ghost-pill px-4 py-1.5">取消</button>
+        <button onclick="confirmRejectWork()" class="px-4 py-1.5 rounded-full text-white font-semibold" style="background:var(--coral);">确认驳回</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pool Topup Application Modal -->
+  <div id="topupModal" class="hidden fixed inset-0 z-50 drawer-backdrop flex items-center justify-center p-4" onclick="if(event.target===this) closePoolTopupModal()">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-4 text-xs">
+      <div>
+        <h3 class="text-sm font-bold">向浣溪平台端申请追加学院激励池</h3>
+        <p class="mt-1" style="color:var(--muted);">提交后将进入「浣溪内部平台管理端 · 额度审批中心」，审核通过后自动计入本院激励池。</p>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block font-medium mb-1">申请追加额度（Token）</label>
+          <input id="topupAmount" type="number" value="10000000" step="1000000" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono text-xs" />
+        </div>
+        <div>
+          <label class="block font-medium mb-1">用途与活动计划说明</label>
+          <textarea id="topupReason" rows="3" class="w-full p-3 rounded-xl border border-slate-300 text-xs">用于 12 月第 1 期黑客松优胜奖发放、第 3 期双周 Top 10 奖励及 6 名校内开发社团志愿者激励。</textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button onclick="closePoolTopupModal()" class="cpa-ghost-pill px-4 py-1.5">取消</button>
+        <button onclick="submitPoolTopup()" class="cpa-pill-btn px-5 py-1.5 font-semibold">提交浣溪审批</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CMS Add Modal -->
+  <div id="cmsModal" class="hidden fixed inset-0 z-50 drawer-backdrop flex items-center justify-center p-4" onclick="if(event.target===this) closeCmsModal()">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-4 text-xs">
+      <h3 id="cmsModalTitle" class="text-sm font-bold">新建内容</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="block font-medium mb-1">标题</label>
+          <input id="cmsTitleInput" type="text" placeholder="输入教程标题或活动名称" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs" />
+        </div>
+        <div>
+          <label id="cmsMetaLabel" class="block font-medium mb-1">来源或绑定专题 Tag</label>
+          <input id="cmsMetaInput" type="text" placeholder="例如：小红书精选 / #第3周AI视频实战" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeCmsModal()" class="cpa-ghost-pill px-4 py-1.5">取消</button>
+        <button onclick="submitCmsItem()" class="cpa-pill-btn px-5 py-1.5 font-semibold">发布到学生端</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let activeMenu = 'members';
+    let memSub = 'pending';
+    let opsWorkTag = 'all';
+    let selectedWorkIds = new Set();
+    let rejectingWorkId = null;
+    let cmsModalKind = 'lesson';
+
+    let poolTotal = 20000000;
+    let poolUsed = 16500000;
+
+    let pendingMembers = [
+      { id: 'pm-1', email: 'new@hust.edu.cn', name: '王思远', deg: '本科', time: '10 分钟前', note: '转专业新生，未在首批教务名单内' },
+      { id: 'pm-2', email: 'chenlei@hust.edu.cn', name: '陈磊', deg: '研究生', time: '1 小时前', note: '研一联培生，教育邮箱已验证' },
+      { id: 'pm-3', email: 'wangyu@hust.edu.cn', name: '王雨桐', deg: '本科', time: '3 小时前', note: '软件工程 2024 级' }
+    ];
+
+    let certifiedMembers = [
+      { email: 'linzhixing@hust.edu.cn', name: '林知行', deg: '本科', used: '517.5K', works: 2, status: '正常' },
+      { email: 'zhouyuan@hust.edu.cn', name: '周予安', deg: '研究生', used: '426.0K', works: 2, status: '正常' },
+      { email: 'chenyiming@hust.edu.cn', name: '陈一鸣', deg: '本科', used: '365.0K', works: 2, status: '正常' },
+      { email: 'xujiahe@hust.edu.cn', name: '许嘉禾', deg: '研究生', used: '318.0K', works: 1, status: '正常' }
+    ];
+
+    let opsWorks = [
+      { id: 'ow-1', title: '文献公式一键转 LaTeX', author: '林知行', email: 'linzhixing@hust.edu.cn', type: 'Web', tag: '#第2周Workshop实战', status: 'reviewing', featured: false, likes: 0 },
+      { id: 'ow-2', title: '宿舍值日公平抽签器', author: '陆星野', email: 'luxingye@hust.edu.cn', type: 'Web', tag: '#第1期校园黑客松', status: 'reviewing', featured: false, likes: 0 },
+      { id: 'ow-3', title: '华科选课排雷助手', author: '林知行', email: 'linzhixing@hust.edu.cn', type: 'Web', tag: '#第1期校园黑客松', status: 'published', featured: true, likes: 148 },
+      { id: 'ow-4', title: '论文精读卡片生成器', author: '周予安', email: 'zhouyuan@hust.edu.cn', type: 'Web', tag: '#第1期校园黑客松', status: 'published', featured: true, likes: 126 },
+      { id: 'ow-5', title: '实验室值班语音助手', author: '陈一鸣', email: 'chenyiming@hust.edu.cn', type: 'PC', tag: '#第2周Workshop实战', status: 'published', featured: true, likes: 98 }
+    ];
+
+    let opsEvents = [
+      { title: '第 1 期校园效率工具黑客松', tag: '#第1期校园黑客松', time: '12-05 截稿', status: '进行中' },
+      { title: '每周三晚 AI 开发答疑 Workshop', tag: '#第2周Workshop实战', time: '每周三 19:30', status: '进行中' }
+    ];
+
+    let opsLessons = [
+      { title: '3 分钟把 浣溪AI Lab 接入 Codex / Claude Code', meta: '图文指南 · 必看入门', active: true },
+      { title: '从零对话做出可公网访问的校园工具站', meta: '浣溪自录 · 08:24', active: true },
+      { title: '零代码用 Claude Code 写论文精读助手', meta: '小红书精选 · 06:15', active: true }
+    ];
+
+    let topupRequests = [
+      { id: 'REQ-1126-01', amount: 10000000, reason: '第 1 期黑客松优胜奖与双周 Top 10 预算补充', time: '今日 09:40', status: '待浣溪审批' },
+      { id: 'REQ-1116-01', amount: 20000000, reason: '华科软件学院首期激励池开通', time: '2026-11-16', status: '已通过到账' }
+    ];
+
+    let dispatchHistory = [
+      { target: 'linzhixing@hust.edu.cn', type: '双周点赞 Top 1 奖励', amount: 500000, reason: '华科选课排雷助手', time: '2026-11-24 18:20' },
+      { target: 'chenyiming@hust.edu.cn', type: '校内开发社团志愿者激励', amount: 300000, reason: '协助核验首批 200 人名单', time: '2026-11-20 20:10' }
+    ];
+
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.remove('opacity-0', '-translate-y-2');
+      el.classList.add('opacity-100', 'translate-y-0');
+      clearTimeout(window.__t);
+      window.__t = setTimeout(() => { el.classList.add('opacity-0', '-translate-y-2'); el.classList.remove('opacity-100', 'translate-y-0'); }, 2400);
+    }
+
+    function switchMenu(m) {
+      activeMenu = m;
+      ['members', 'works', 'cms', 'incentives'].forEach(k => {
+        document.getElementById('menu-' + k).classList.toggle('hidden', k !== m);
+      });
+      document.querySelectorAll('.side-btn').forEach(b => b.classList.toggle('active', b.dataset.menu === m));
+      if (m === 'members') setMemSub(memSub);
+      if (m === 'works') renderOpsWorks();
+      if (m === 'cms') renderCmsLists();
+      if (m === 'incentives') renderIncentives();
+    }
+
+    function setMemSub(s) {
+      memSub = s;
+      ['pending', 'import', 'list'].forEach(k => document.getElementById('msub-' + k).classList.toggle('hidden', k !== s));
+      document.querySelectorAll('.msub-btn').forEach(b => {
+        const a = b.dataset.msub === s;
+        b.style.background = a ? '#0A2540' : 'transparent';
+        b.style.color = a ? '#FFFFFF' : '#64748B';
+      });
+      renderPendingMembers();
+      renderMembersTable();
+    }
+
+    function renderPendingMembers() {
+      document.getElementById('badgePendingMembers').textContent = pendingMembers.length;
+      const box = document.getElementById('pendingMembersList');
+      if (!pendingMembers.length) {
+        box.innerHTML = `<div class="p-8 text-center" style="color:var(--muted);">当前没有待审核的邮箱申请 ✓</div>`;
+        return;
+      }
+      box.innerHTML = pendingMembers.map(m => `
+        <div class="px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div class="font-semibold">${m.name} <span class="mono ml-1.5" style="color:var(--primary);">${m.email}</span> <span class="ml-1.5 px-2 py-0.5 rounded-full text-[11px]" style="background:var(--bg-subtle);">${m.deg}</span></div>
+            <div class="text-[11px] mt-1" style="color:var(--muted);">提交于 ${m.time} · 备注：${m.note}</div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="approveMember('${m.id}')" class="cpa-pill-btn px-3.5 py-1.5 text-xs font-medium">核验通过</button>
+            <button onclick="rejectMember('${m.id}')" class="cpa-ghost-pill px-3 py-1.5 text-xs">驳回</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function approveMember(id) {
+      const m = pendingMembers.find(x => x.id === id);
+      if (!m) return;
+      pendingMembers = pendingMembers.filter(x => x.id !== id);
+      certifiedMembers.unshift({ email: m.email, name: m.name, deg: m.deg, used: '0', works: 0, status: '正常' });
+      renderPendingMembers();
+      showToast(`已通过 ${m.email}，自动发放 1,000,000 初始免费额度`);
+    }
+    function rejectMember(id) {
+      pendingMembers = pendingMembers.filter(x => x.id !== id);
+      renderPendingMembers();
+      showToast('已驳回该非本院申请');
+    }
+
+    function simulateImportPreview() { document.getElementById('importPreviewBox').classList.remove('hidden'); }
+    function confirmImport() {
+      document.getElementById('importPreviewBox').classList.add('hidden');
+      showToast('已成功导入 124 名本院学生邮箱白名单（本科 86 / 研究生 38）');
+    }
+
+    function renderMembersTable() {
+      const q = (document.getElementById('memberSearch').value || '').trim().toLowerCase();
+      const list = certifiedMembers.filter(m => !q || m.email.toLowerCase().includes(q) || m.name.includes(q));
+      document.getElementById('certifiedMembersBody').innerHTML = list.map(m => `
+        <tr>
+          <td class="px-5 py-3"><div class="font-medium">${m.name}</div><div class="mono text-[11px]" style="color:var(--muted);">${m.email}</div></td>
+          <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full text-[11px]" style="background:var(--bg-subtle);">${m.deg}</span></td>
+          <td class="px-4 py-3 mono">${m.used}</td>
+          <td class="px-4 py-3 mono">${m.works}</td>
+          <td class="px-5 py-3 text-right"><span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">${m.status}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    // Works Moderation
+    function renderOpsWorks() {
+      document.getElementById('badgePendingWorks').textContent = opsWorks.filter(w => w.status === 'reviewing').length;
+      const tags = [{k:'all',l:'全部作品'}, {k:'#第1期校园黑客松',l:'#第1期校园黑客松'}, {k:'#第2周Workshop实战',l:'#第2周Workshop实战'}];
+      document.getElementById('opsWorkTagBar').innerHTML = tags.map(t => {
+        const a = opsWorkTag === t.k;
+        return `<button onclick="opsWorkTag='${t.k}'; renderOpsWorks()" class="px-3 py-1.5 rounded-full text-xs font-medium border" style="${a ? 'background:#0A2540; color:#FFFFFF; border-color:#0A2540;' : 'background:#FFFFFF; border-color:var(--border);'}">${t.l}</button>`;
+      }).join('');
+
+      const stFilter = document.getElementById('opsWorkStatusFilter').value;
+      const list = opsWorks.filter(w => (opsWorkTag === 'all' || w.tag === opsWorkTag) && (stFilter === 'all' || w.status === stFilter));
+
+      document.getElementById('batchRewardBtn').classList.toggle('hidden', selectedWorkIds.size === 0);
+
+      const stPill = {
+        reviewing: `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:var(--warn-soft); color:var(--warn);">待审核</span>`,
+        published: `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">已上架</span>`,
+        rejected: `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:var(--coral-soft); color:var(--coral);">需修改</span>`
+      };
+
+      document.getElementById('opsWorksList').innerHTML = list.map(w => `
+        <div class="cpa-card p-4 px-5 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-start gap-3">
+            <input type="checkbox" ${selectedWorkIds.has(w.id) ? 'checked' : ''} onchange="toggleSelectWork('${w.id}')" class="mt-1 accent-[#0F4C81]" />
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm font-bold">${w.title}</span>
+                ${stPill[w.status]}
+                <span class="px-2 py-0.5 rounded-full text-[11px]" style="background:var(--bg-subtle);">${w.type}</span>
+                ${w.featured ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-medium" style="background:#EFF6FF; color:var(--primary);">★ 学院精选</span>` : ''}
+                <span class="mono text-[11px]" style="color:var(--accent-ink);">${w.tag}</span>
+              </div>
+              <div style="color:var(--muted);">作者：${w.author}（<span class="mono">${w.email}</span>） · 当前点赞 <strong class="mono" style="color:var(--ink);">▲ ${w.likes}</strong></div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            ${w.status === 'reviewing' ? `
+              <button onclick="approveWork('${w.id}')" class="cpa-pill-btn px-3.5 py-1.5 text-xs font-medium">审核通过</button>
+              <button onclick="openRejectModal('${w.id}')" class="cpa-ghost-pill px-3 py-1.5 text-xs">驳回</button>
+            ` : `
+              <button onclick="toggleFeatured('${w.id}')" class="cpa-ghost-pill px-3 py-1.5 text-xs">${w.featured ? '取消精选' : '★ 标为精选'}</button>
+              <button onclick="quickReward('${w.id}')" class="cpa-pill-btn px-3.5 py-1.5 text-xs">发激励</button>
+            `}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleSelectWork(id) {
+      if (selectedWorkIds.has(id)) selectedWorkIds.delete(id);
+      else selectedWorkIds.add(id);
+      renderOpsWorks();
+    }
+    function approveWork(id) {
+      const w = opsWorks.find(x => x.id === id);
+      if (w) { w.status = 'published'; renderOpsWorks(); showToast(`《${w.title}》已审核上架到作品广场`); }
+    }
+    function toggleFeatured(id) {
+      const w = opsWorks.find(x => x.id === id);
+      if (w) { w.featured = !w.featured; renderOpsWorks(); showToast(w.featured ? `已将《${w.title}》同步推上学生广场精选与学院成果墙` : '已取消精选标记'); }
+    }
+    function openRejectModal(id) { rejectingWorkId = id; document.getElementById('rejectModal').classList.remove('hidden'); }
+    function closeRejectModal() { document.getElementById('rejectModal').classList.add('hidden'); }
+    function confirmRejectWork() {
+      const w = opsWorks.find(x => x.id === rejectingWorkId);
+      if (w) w.status = 'rejected';
+      closeRejectModal();
+      renderOpsWorks();
+      showToast('已驳回作品并反馈修改原因给学生');
+    }
+    function quickReward(id) {
+      const w = opsWorks.find(x => x.id === id);
+      if (!w) return;
+      document.getElementById('rewTarget').value = w.email;
+      document.getElementById('rewReason').value = `《${w.title}》（${w.tag}）获奖激励`;
+      switchMenu('incentives');
+    }
+    function sendSelectedToIncentives() {
+      const firstId = [...selectedWorkIds][0];
+      selectedWorkIds.clear();
+      quickReward(firstId);
+      showToast('已带入选定获奖作品至「激励管理」');
+    }
+
+    // CMS
+    function renderCmsLists() {
+      document.getElementById('opsEventsList').innerHTML = opsEvents.map(e => `
+        <div class="p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-2" style="background:var(--bg-page);">
+          <div>
+            <div class="font-semibold">${e.title}</div>
+            <div class="mt-0.5 text-[11px]"><span class="mono" style="color:var(--accent-ink);">${e.tag}</span> · <span style="color:var(--muted);">${e.time}</span></div>
+          </div>
+          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">${e.status}</span>
+        </div>
+      `).join('');
+
+      document.getElementById('opsLessonsList').innerHTML = opsLessons.map((l, i) => `
+        <div class="p-3.5 rounded-xl border border-slate-200 flex items-center justify-between gap-2">
+          <div>
+            <div class="font-semibold">${l.title}</div>
+            <div class="mt-0.5 text-[11px]" style="color:var(--muted);">${l.meta}</div>
+          </div>
+          <button onclick="opsLessons[${i}].active=!opsLessons[${i}].active; renderCmsLists()" class="px-2.5 py-1 rounded-full text-[11px] font-medium border" style="${l.active ? 'background:var(--accent-soft); color:var(--accent-ink); border-color:#A7F3D0;' : 'background:var(--bg-subtle); color:var(--muted); border-color:var(--border);'}">${l.active ? '已上架' : '已隐藏'}</button>
+        </div>
+      `).join('');
+    }
+    function openCmsModal(kind) {
+      cmsModalKind = kind;
+      document.getElementById('cmsModalTitle').textContent = kind === 'lesson' ? '添加教程 / 外链视频到学生端 CMS' : '新建校园活动并生成专题 Tag';
+      document.getElementById('cmsMetaLabel').textContent = kind === 'lesson' ? '内容来源与时长（如：小红书精选 · 05:20）' : '绑定专题 Tag（如：#第3周AI小应用）';
+      document.getElementById('cmsModal').classList.remove('hidden');
+    }
+    function closeCmsModal() { document.getElementById('cmsModal').classList.add('hidden'); }
+    function submitCmsItem() {
+      const t = document.getElementById('cmsTitleInput').value.trim();
+      const m = document.getElementById('cmsMetaInput').value.trim();
+      if (!t) return;
+      if (cmsModalKind === 'lesson') opsLessons.unshift({ title: t, meta: m || '校内精选', active: true });
+      else opsEvents.unshift({ title: t, tag: m.startsWith('#') ? m : '#' + (m || '新专题'), time: '即将开始', status: '进行中' });
+      document.getElementById('cmsTitleInput').value = '';
+      document.getElementById('cmsMetaInput').value = '';
+      closeCmsModal();
+      renderCmsLists();
+      showToast('已发布至学生端「创作中心」CMS');
+    }
+
+    // Incentives (Mechanism A)
+    function renderIncentives() {
+      const remain = poolTotal - poolUsed;
+      const pct = Math.min(100, (poolUsed / poolTotal) * 100);
+      document.getElementById('poolRemainBig').innerHTML = `${remain.toLocaleString('zh-CN')} <span class="text-xs font-normal" style="color:var(--muted);">Tokens</span>`;
+      document.getElementById('poolUsedText').textContent = poolUsed.toLocaleString('zh-CN');
+      document.getElementById('poolBar').style.width = pct.toFixed(1) + '%';
+      document.getElementById('poolWaterBadge').textContent = `已用 ${pct.toFixed(1)}%${pct >= 80 ? ' · 建议申请增额' : ' · 余额充裕'}`;
+
+      document.getElementById('topupRequestsList').innerHTML = topupRequests.map(r => `
+        <div class="px-5 py-3 flex items-center justify-between gap-3">
+          <div>
+            <div class="font-semibold mono">${r.id} · +${(r.amount/1000000).toFixed(0)}M Token</div>
+            <div class="text-[11px] mt-0.5" style="color:var(--muted);">${r.reason} · ${r.time}</div>
+          </div>
+          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium shrink-0" style="${r.status.includes('待') ? 'background:var(--warn-soft); color:var(--warn);' : 'background:var(--accent-soft); color:var(--accent-ink);'}">${r.status}</span>
+        </div>
+      `).join('');
+
+      document.getElementById('dispatchHistoryList').innerHTML = dispatchHistory.map(d => `
+        <div class="px-5 py-3 flex items-center justify-between gap-3">
+          <div>
+            <div class="font-medium"><span class="mono">${d.target}</span> · ${d.type}</div>
+            <div class="text-[11px] mt-0.5" style="color:var(--muted);">${d.reason} · ${d.time}</div>
+          </div>
+          <span class="mono font-semibold shrink-0" style="color:var(--accent-ink);">+${d.amount.toLocaleString('zh-CN')}</span>
+        </div>
+      `).join('');
+    }
+
+    function dispatchFromPool() {
+      const target = document.getElementById('rewTarget').value.trim();
+      const amount = Number(document.getElementById('rewAmount').value);
+      const type = document.getElementById('rewType').value;
+      const reason = document.getElementById('rewReason').value.trim();
+      if (!target || !amount || amount <= 0) { showToast('请填写有效邮箱和额度'); return; }
+      if (poolUsed + amount > poolTotal) {
+        showToast('本院激励池余额不足，请先点击右上角「向浣溪申请追加激励池」');
+        return;
+      }
+      poolUsed += amount;
+      dispatchHistory.unshift({ target, type, amount, reason: reason || type, time: '刚刚' });
+      renderIncentives();
+      showToast(`已从本院激励池向 ${target} 发放 ${amount.toLocaleString('zh-CN')} Token（已同步记入浣溪审计日志）`);
+    }
+
+    function openPoolTopupModal() { document.getElementById('topupModal').classList.remove('hidden'); }
+    function closePoolTopupModal() { document.getElementById('topupModal').classList.add('hidden'); }
+    function submitPoolTopup() {
+      const amount = Number(document.getElementById('topupAmount').value) || 10000000;
+      const reason = document.getElementById('topupReason').value.trim() || '学院激励池额度补充';
+      topupRequests.unshift({ id: 'REQ-1126-0' + (topupRequests.length + 1), amount, reason, time: '刚刚', status: '待浣溪审批' });
+      closePoolTopupModal();
+      renderIncentives();
+      showToast('追加激励池申请已提交至「浣溪内部平台管理端」审批');
+    }
+
+    switchMenu('members');
+  </script>
+</body>
+</html>
