@@ -1,7 +1,7 @@
 # 0009 个人访问令牌与 CLI/skill 边界
 
-状态：草案
-日期：2026-11-24
+状态：已接受
+日期：2026-11-24（2026-11-26 按 #9 补 owner_ref 绑定）
 
 ## 背景
 
@@ -11,7 +11,7 @@
 
 ### 个人访问令牌（PAT）
 
-- 新增表 `pat_tokens`，字段含 id、user_id、token_hash（唯一）、token_hint、label、role_snapshot、org_snapshot、created_at、created_by、expires_at、last_used_at、revoked_at、revoked_by。
+- 新增表 `pat_tokens`，字段含 id、user_id、owner_ref、token_hash（唯一）、token_hint、label、role_snapshot、org_snapshot、created_at、created_by、expires_at、last_used_at、revoked_at、revoked_by。`owner_ref` 记录签发时的账户身份：同一 user_id 可对应学号和邮箱两条账户，不能在每次请求时任意选择一条。
 - 明文格式 `cpat_` 前缀加随机串，只存 SHA-256 摘要，明文只在铸造时返回一次。
 - 有效期必填，范围 1 到 90 天，默认 30 天，不提供永久选项。
 - 每个用户的 PAT 数量有上限，铸造带幂等。
@@ -27,12 +27,13 @@
 
 - PAT 为全权一档：等于该用户当前角色在 authz.py 权限矩阵里真实拥有的全部权限，不额外加权，也不缩减。
 - 据现有矩阵：组织成员可提交/撤回作品、轮换自己的钥、消费、做引导；组织管理员在此之上可审核、精选、下架本组织作品、看本组织账户；平台管理员才有吊销他人密钥、名单导入、全局下架。PAT 让 agent 能做的，就是持有人本人角色能做的那些，一件不多。
-- 因此 PAT 不构成提权通道：组织管理员的 PAT 不能吊销密钥或导入名单，因为他本人就没有这两项权限。
+- 因此 PAT 不构成提权通道：组织管理员和运营的 PAT 可导入本组织学生；创建或导入非学生角色仍要求平台的角色管理权限，吊销他人密钥、全局下架等仍只属平台。
 - CLI 和 skill 对写操作，尤其对他人生效的下架等，建议 agent 二次确认。这是客户端操作约定，可被直接 HTTP 调用绕过，不是服务端强制的安全保证；真正的权限边界由服务端 authz 实时判定。所有写操作全部写入审计。
 
 ### 鉴权接入
 
-- `principal_from_token` 按 `cpat_` 前缀分支到 PAT 校验：查摘要、校验未撤销且未过期、取当前 user_id、实时取当前角色与准入。其余 session 逻辑不变。
+- `principal_from_token` 按 `cpat_` 前缀分支到 PAT 校验：查摘要、校验未撤销且未过期，校验持久化的 `owner_ref` 仍属于该 user_id，再按 `org_snapshot` 读取实时角色与准入；绑定账户缺失时返回 401，不回退其他身份。其余 session 逻辑不变。
+- 历史令牌迁移：版本 12 仅为 `org_snapshot` 非 NULL 的历史 PAT 按 user_id 和组织等值匹配唯一账户回填 `owner_ref`。NULL 快照、无候选、组织不匹配或同组织多身份都保留 `owner_ref=NULL`，历史令牌行不丢失，使用时返回 401 并要求重新签发。平台管理员的历史 NULL 快照 PAT 同样处理，不设例外。已有平台会话和持久记录明确 `owner_ref` 的新签 PAT 保持可用。
 - PAT 与 session 并存，互不影响。`/api/logout` 只结束当前 session，不动 PAT。撤销 PAT 走专用接口，立即生效。
 - 审计记录认证方式（session 或 PAT）、PAT 时记 pat_id、动作、对象和结果，用于区分同一用户交给不同 agent 的凭据。
 - 铸造幂等与一次性返回：明文只在铸造响应里出现一次。铸造请求重放或响应丢失时，不再次返回原明文；按幂等键返回已存在记录的元数据（不含明文），由用户重新铸造一把新的。
