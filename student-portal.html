@@ -280,7 +280,7 @@
 
               <div class="flex items-center gap-3">
                 <button id="heroCopyBtn" onclick="copyCurrentKey()" class="cpa-pill-btn px-5 py-2 text-xs font-medium">复制我的 API Key</button>
-                <button onclick="studioView='learn'; switchTab('studio')" class="cpa-ghost-pill px-4 py-2 text-xs font-medium">用 Token 去学习创作 →</button>
+                <button onclick="studioView='connect'; switchTab('studio')" class="cpa-ghost-pill px-4 py-2 text-xs font-medium">去接入工具并创作 →</button>
               </div>
             </div>
 
@@ -465,7 +465,7 @@
                 </div>
 
                 <div class="pt-3 border-t border-slate-100 flex items-center justify-end text-xs">
-                  <button onclick="studioView='learn'; switchTab('studio')" class="font-medium hover:underline" style="color:var(--primary);">不会接入工具？看官方工具接入教程 →</button>
+                  <button onclick="studioView='connect'; switchTab('studio')" class="font-medium hover:underline" style="color:var(--primary);">不会接入工具？去「1. Token 接入」看视频与提示词 →</button>
                 </div>
               </div>
             </div>
@@ -514,116 +514,128 @@
         </div>
       </section>
 
-      <!-- ==================== TAB 2: 创作中心 (TWO-TRACK LEARNING + CHALLENGE FOR TOKEN + MY WORKS) ==================== -->
+      <!-- ==================== TAB 2: 创作中心 (3-STEP FUNNEL: TOKEN 接入 → 实战创作 → 参赛赢 TOKEN | 我的作品) ==================== -->
       <section id="tab-studio" class="hidden space-y-6 pt-5">
-        <!-- Student Experience Chain Bar + Clean 3 Sub-Tabs -->
+        <!-- Clear 3-Step Creation Funnel + Separated My Works Pill -->
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="inline-flex p-1 rounded-full border border-slate-200 bg-white text-xs">
-            <button onclick="setStudioView('learn')" data-studio-view="learn" class="studio-view-btn px-4 py-1.5 rounded-full font-medium transition">学习与创作</button>
-            <button onclick="setStudioView('challenges')" data-studio-view="challenges" class="studio-view-btn px-4 py-1.5 rounded-full font-medium transition flex items-center gap-1.5">
-              <span>挑战赢 Token</span>
+          <div class="inline-flex flex-wrap items-center gap-1 p-1 rounded-full border border-slate-200 bg-white text-xs">
+            <button onclick="setStudioView('connect')" data-studio-view="connect" class="studio-view-btn px-4 py-1.5 rounded-full font-medium transition">1. Token 接入</button>
+            <span class="text-slate-300 px-0.5 select-none hidden sm:inline">→</span>
+            <button onclick="setStudioView('create')" data-studio-view="create" class="studio-view-btn px-4 py-1.5 rounded-full font-medium transition">2. 实战创作</button>
+            <span class="text-slate-300 px-0.5 select-none hidden sm:inline">→</span>
+            <button onclick="setStudioView('challenge')" data-studio-view="challenge" class="studio-view-btn px-4 py-1.5 rounded-full font-medium transition flex items-center gap-1.5">
+              <span>3. 参赛赢 Token</span>
               <span class="px-1.5 rounded-full text-[11px] mono bg-emerald-50 text-teal-700">2</span>
             </button>
-            <button onclick="setStudioView('works')" data-studio-view="works" class="studio-view-btn px-4 py-1.5 rounded-full font-medium transition flex items-center gap-1.5">
-              <span>我的作品</span>
-              <span id="myWorksCountBadge" class="px-1.5 rounded-full text-[11px] mono bg-slate-100 text-slate-600">3</span>
-            </button>
+          </div>
+          <button onclick="setStudioView('works')" data-studio-view="works" class="studio-view-btn px-4 py-1.5 rounded-full border border-slate-200 bg-white text-xs font-medium transition flex items-center gap-1.5">
+            <span>我的作品</span>
+            <span id="myWorksCountBadge" class="px-1.5 rounded-full text-[11px] mono bg-slate-100 text-slate-600">3</span>
+          </button>
+        </div>
+
+        <!-- ===== STEP 1: 1. Token 接入（官方教程 · 视频 + 提示词 + 3 步说明） ===== -->
+        <div id="studioConnectView" class="space-y-5">
+          <div class="flex flex-wrap items-end justify-between gap-3">
+            <div class="section-eyebrow">
+              <div class="section-bar" style="background:var(--primary);"></div>
+              <div>
+                <div class="text-[11px] font-medium" style="color:var(--muted);">官方教程 · 选择你常用的开发工具</div>
+                <h2 class="text-base font-bold leading-tight">把浣溪 Token 接入工具，2 分钟开始创作</h2>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <div id="officialToolTabs" class="inline-flex p-1 rounded-full border border-slate-200 bg-white text-xs flex-wrap"></div>
+              <button onclick="copyCurrentKey()" class="cpa-ghost-pill px-3.5 py-1.5 text-xs font-medium">复制我的 Key</button>
+            </div>
+          </div>
+
+          <!-- Interactive Official Video + Prompt Workbench -->
+          <div class="cpa-card overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+            <div class="lg:col-span-7 bg-[#0A2540] relative aspect-video lg:aspect-auto lg:min-h-[340px]">
+              <iframe
+                id="officialBiliFrame"
+                class="w-full h-full min-h-[240px] lg:min-h-[340px] border-0 block"
+                scrolling="no"
+                allowfullscreen="true"
+                referrerpolicy="no-referrer"
+                title="官方工具接入与创作视频教程"></iframe>
+            </div>
+            <div class="lg:col-span-5 p-5 sm:p-6 flex flex-col justify-between gap-4 bg-white">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between gap-2 text-xs">
+                  <div class="flex items-center gap-2">
+                    <span id="ogBadge" class="px-2.5 py-0.5 rounded-full font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">推荐首选</span>
+                    <span id="ogDuration" class="mono" style="color:var(--muted);">07:00 · 视频演示</span>
+                  </div>
+                  <a id="ogBiliLink" href="https://www.bilibili.com/video/BV1XtoKB2Ewr/" target="_blank" rel="noopener noreferrer" class="font-medium hover:underline shrink-0" style="color:var(--primary);">B 站原视频 ↗</a>
+                </div>
+                <div>
+                  <h3 id="ogTitle" class="text-base font-bold leading-snug">在 Claude Code 中使用浣溪 Token</h3>
+                  <p id="ogSummary" class="text-xs leading-relaxed mt-1" style="color:var(--muted);"></p>
+                </div>
+                <div class="space-y-1.5">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-semibold" style="color:var(--ink);">官方接入与首作提示词</span>
+                    <button onclick="copyActiveOfficialPrompt()" class="font-medium hover:underline" style="color:var(--primary);">一键复制</button>
+                  </div>
+                  <pre id="ogPromptBox" class="p-3.5 rounded-xl mono text-[11px] leading-relaxed whitespace-pre-wrap overflow-y-auto max-h-40 m-0" style="background:#0A2540; color:#E2E8F0;"></pre>
+                </div>
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                <button onclick="copyActiveOfficialPrompt()" class="cpa-pill-btn px-4 py-2 text-xs font-medium">复制接入提示词</button>
+                <button onclick="setStudioView('create')" class="cpa-ghost-pill px-3.5 py-2 text-xs font-medium">已接通 · 去实战创作 →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Inline 3-Step Visual Checklist for Selected Tool -->
+          <div id="ogInlineSteps" class="grid grid-cols-1 md:grid-cols-3 gap-3.5"></div>
+
+          <!-- Clean Step 1 → Step 2 Handoff Bar -->
+          <div class="cpa-card p-4 px-5 flex flex-wrap items-center justify-between gap-3 bg-white">
+            <div class="text-xs">
+              <span class="font-semibold" style="color:var(--ink);">工具已配好？</span>
+              <span class="ml-1" style="color:var(--muted);">进入下一步，跟着精选实战视频做出你的第一个校园 AI 项目</span>
+            </div>
+            <button onclick="setStudioView('create')" class="cpa-pill-btn px-4 py-1.5 text-xs font-medium shrink-0">进入「2. 实战创作」→</button>
           </div>
         </div>
 
-        <!-- ===== SUB-VIEW 1: 学习与创作（官方接入教程 + 精选创作教程） ===== -->
-        <div id="studioLearnView" class="space-y-8">
-          <!-- BLOCK 1: 官方教程 · 视频 + 提示词（如何使用浣溪 Token 在各工具中创作） -->
-          <div class="space-y-4">
-            <div class="flex flex-wrap items-end justify-between gap-3">
-              <div class="section-eyebrow">
-                <div class="section-bar" style="background:var(--primary);"></div>
-                <div>
-                  <div class="text-[11px] font-medium" style="color:var(--muted);">01 · 官方教程</div>
-                  <h2 class="text-base font-bold leading-tight">用浣溪 Token 在各开发工具中创作</h2>
-                </div>
-              </div>
-              <div class="flex items-center gap-2 flex-wrap">
-                <div id="officialToolTabs" class="inline-flex p-1 rounded-full border border-slate-200 bg-white text-xs flex-wrap"></div>
-                <button onclick="copyCurrentKey()" class="cpa-ghost-pill px-3.5 py-1.5 text-xs font-medium">复制我的 Key</button>
+        <!-- ===== STEP 2: 2. 实战创作（精选实战视频与项目教程） ===== -->
+        <div id="studioCreateView" class="hidden space-y-5">
+          <div class="flex flex-wrap items-end justify-between gap-3">
+            <div class="section-eyebrow">
+              <div class="section-bar"></div>
+              <div>
+                <div class="text-[11px] font-medium" style="color:var(--muted);">精选实战视频与 Starter Prompt</div>
+                <h2 class="text-base font-bold leading-tight">跟着做出你的第一个校园 AI 作品</h2>
               </div>
             </div>
-
-            <!-- Interactive Official Video + Prompt Workbench -->
-            <div class="cpa-card overflow-hidden grid grid-cols-1 lg:grid-cols-12">
-              <div class="lg:col-span-7 bg-[#0A2540] relative aspect-video lg:aspect-auto lg:min-h-[340px]">
-                <iframe
-                  id="officialBiliFrame"
-                  class="w-full h-full min-h-[240px] lg:min-h-[340px] border-0 block"
-                  scrolling="no"
-                  allowfullscreen="true"
-                  referrerpolicy="no-referrer"
-                  title="官方工具接入与创作视频教程"></iframe>
-              </div>
-              <div class="lg:col-span-5 p-5 sm:p-6 flex flex-col justify-between gap-4 bg-white">
-                <div class="space-y-3">
-                  <div class="flex items-center justify-between gap-2 text-xs">
-                    <div class="flex items-center gap-2">
-                      <span id="ogBadge" class="px-2.5 py-0.5 rounded-full font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">推荐首选</span>
-                      <span id="ogDuration" class="mono" style="color:var(--muted);">07:00 · 视频演示</span>
-                    </div>
-                    <a id="ogBiliLink" href="https://www.bilibili.com/video/BV1XtoKB2Ewr/" target="_blank" rel="noopener noreferrer" class="font-medium hover:underline shrink-0" style="color:var(--primary);">B 站原视频 ↗</a>
-                  </div>
-                  <div>
-                    <h3 id="ogTitle" class="text-base font-bold leading-snug">在 Claude Code 中使用浣溪 Token</h3>
-                    <p id="ogSummary" class="text-xs leading-relaxed mt-1" style="color:var(--muted);"></p>
-                  </div>
-                  <div class="space-y-1.5">
-                    <div class="flex items-center justify-between text-xs">
-                      <span class="font-semibold" style="color:var(--ink);">官方接入与创作提示词</span>
-                      <button onclick="copyActiveOfficialPrompt()" class="font-medium hover:underline" style="color:var(--primary);">一键复制提示词</button>
-                    </div>
-                    <pre id="ogPromptBox" class="p-3.5 rounded-xl mono text-[11px] leading-relaxed whitespace-pre-wrap overflow-y-auto max-h-40 m-0" style="background:#0A2540; color:#E2E8F0;"></pre>
-                  </div>
-                </div>
-                <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
-                  <button onclick="copyActiveOfficialPrompt()" class="cpa-pill-btn px-4 py-2 text-xs font-medium">复制接入提示词</button>
-                  <button onclick="openOfficialGuideModal(activeOfficialTool)" class="cpa-ghost-pill px-3.5 py-2 text-xs font-medium">查看完整步骤 →</button>
-                </div>
-              </div>
-            </div>
+            <input id="cmsSearch" oninput="renderCmsGrid()" type="text" placeholder="搜索实战教程..." class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0F4C81] w-44 sm:w-52" />
           </div>
 
-          <!-- BLOCK 2: 精选创作教程（真实视频与项目实战） -->
-          <div class="space-y-4">
-            <div class="flex flex-wrap items-end justify-between gap-3">
-              <div class="section-eyebrow">
-                <div class="section-bar"></div>
-                <div>
-                  <div class="text-[11px] font-medium" style="color:var(--muted);">02 · 创作教程</div>
-                  <h2 class="text-base font-bold leading-tight">精选实战视频与项目教程</h2>
-                </div>
-              </div>
-              <input id="cmsSearch" oninput="renderCmsGrid()" type="text" placeholder="搜索实战教程..." class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0F4C81] w-44 sm:w-52" />
-            </div>
+          <!-- Category Filter Row -->
+          <div id="cmsCatBar" class="flex items-center gap-2 flex-wrap"></div>
 
-            <!-- Category Filter Row -->
-            <div id="cmsCatBar" class="flex items-center gap-2 flex-wrap"></div>
+          <!-- Clean 3-Column Visual Gallery Cards (Image + 1-Line Title + 1-Line Meta) -->
+          <div id="cmsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
 
-            <!-- Clean 3-Column Visual Gallery Cards (Image + 1-Line Title + 1-Line Meta) -->
-            <div id="cmsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
-          </div>
-
-          <!-- Journey Bridge CTA to Step 3: Challenge for Token -->
+          <!-- Clean Step 2 → Step 3 Handoff Banner -->
           <div class="rounded-2xl p-5 px-6 text-white flex flex-wrap items-center justify-between gap-4" style="background:#0A2540;">
             <div class="space-y-1">
-              <div class="text-[11px] font-medium text-teal-300">下一步 · 参加挑战赢取额外 Token</div>
-              <div class="text-sm sm:text-base font-semibold">完成你的 AI 小作品并带标签参赛，双周榜单与黑客松最高奖励 500,000 Token</div>
+              <div class="text-[11px] font-medium text-teal-300">下一步 · 3. 参赛赢 Token</div>
+              <div class="text-sm sm:text-base font-semibold">作品做好了？带专题标签参加校园挑战赛，赢取最高 500,000 Token 奖励</div>
             </div>
             <div class="flex items-center gap-2.5 shrink-0">
-              <button onclick="setStudioView('challenges')" class="px-4 py-2 rounded-full text-xs font-semibold bg-white text-[#0A2540] hover:bg-slate-100 transition">去看挑战与激励 →</button>
+              <button onclick="setStudioView('challenge')" class="px-4 py-2 rounded-full text-xs font-semibold bg-white text-[#0A2540] hover:bg-slate-100 transition">进入「3. 参赛赢 Token」→</button>
               <button onclick="openPublishModal('#第1期校园黑客松')" class="px-4 py-2 rounded-full text-xs font-medium border border-white/25 text-white hover:bg-white/10 transition">+ 发布作品</button>
             </div>
           </div>
         </div>
 
-        <!-- ===== SUB-VIEW 2: 挑战赢 Token ===== -->
-        <div id="studioChallengesView" class="hidden space-y-5">
+        <!-- ===== STEP 3: 3. 参赛赢 Token ===== -->
+        <div id="studioChallengeView" class="hidden space-y-5">
           <!-- Token Reward Mechanics Summary -->
           <div class="cpa-card p-5 flex flex-wrap items-center justify-between gap-4" style="background:linear-gradient(135deg, #F0FDFA 0%, #FFFFFF 60%); border-color:#99F6E4;">
             <div class="space-y-1">
@@ -684,7 +696,7 @@
           </div>
         </div>
 
-        <!-- ===== SUB-VIEW 3: 我的作品 ===== -->
+        <!-- ===== PORTFOLIO: 我的作品 ===== -->
         <div id="studioWorksView" class="hidden space-y-4">
           <div class="cpa-card p-4 px-5 flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -857,7 +869,7 @@
   <script>
     let appState = 'normal';
     let activeTab = 'token';
-    let studioView = 'learn'; // learn | challenges | works
+    let studioView = 'connect'; // connect | create | challenge | works
     let activeOfficialTool = 'og-claude';
     let chartMetric = 'requests'; // requests | tokens
     let chartRange = 'hourly'; // hourly | daily
@@ -1446,18 +1458,21 @@ Model   ：claude-sonnet-4
     }
 
     function setStudioView(v) {
-      studioView = ['learn', 'challenges', 'works'].includes(v) ? v : 'learn';
+      studioView = ['connect', 'create', 'challenge', 'works'].includes(v) ? v : 'connect';
       document.querySelectorAll('.studio-view-btn').forEach(b => {
         const a = b.dataset.studioView === studioView;
-        b.style.background = a ? '#0A2540' : 'transparent';
+        b.style.background = a ? '#0A2540' : (b.dataset.studioView === 'works' ? '#FFFFFF' : 'transparent');
         b.style.color = a ? '#FFFFFF' : '#64748B';
+        if (b.dataset.studioView === 'works') b.style.borderColor = a ? '#0A2540' : '#E5E9F0';
       });
-      document.getElementById('studioLearnView').classList.toggle('hidden', studioView !== 'learn');
-      document.getElementById('studioChallengesView').classList.toggle('hidden', studioView !== 'challenges');
+      document.getElementById('studioConnectView').classList.toggle('hidden', studioView !== 'connect');
+      document.getElementById('studioCreateView').classList.toggle('hidden', studioView !== 'create');
+      document.getElementById('studioChallengeView').classList.toggle('hidden', studioView !== 'challenge');
       document.getElementById('studioWorksView').classList.toggle('hidden', studioView !== 'works');
       document.getElementById('myWorksCountBadge').textContent = myWorks.length;
-      if (studioView === 'learn') { renderOfficialGuides(); renderCmsGrid(); }
+      if (studioView === 'connect') renderOfficialGuides();
       else ensureFeaturedVideo(false);
+      if (studioView === 'create') renderCmsGrid();
       if (studioView === 'works') renderMyWorks();
     }
 
@@ -1475,7 +1490,17 @@ Model   ：claude-sonnet-4
       document.getElementById('ogBiliLink').href = `https://www.bilibili.com/video/${g.bvid}/`;
       document.getElementById('ogPromptBox').textContent = g.code.replace(/sk-hx-live-98f2c71a0e4b3d9f4a/g, currentKeyPlain);
 
-      ensureFeaturedVideo(activeTab === 'studio' && studioView === 'learn');
+      const inlineStepsEl = document.getElementById('ogInlineSteps');
+      if (inlineStepsEl) {
+        inlineStepsEl.innerHTML = g.steps.map((st, idx) => `
+          <div class="cpa-card p-4 flex items-start gap-3 bg-white">
+            <span class="w-6 h-6 rounded-full text-[11px] font-bold mono inline-flex items-center justify-center shrink-0 text-white" style="background:var(--primary);">0${idx + 1}</span>
+            <span class="text-xs leading-relaxed" style="color:var(--ink);">${st}</span>
+          </div>
+        `).join('');
+      }
+
+      ensureFeaturedVideo(activeTab === 'studio' && studioView === 'connect');
     }
 
     function openOfficialGuideModal(id) {
@@ -1555,7 +1580,7 @@ Model   ：claude-sonnet-4
 
       document.getElementById('lessonDrawerFooter').innerHTML = `
         <button onclick="closeLessonModal()" class="cpa-ghost-pill px-4 py-2 text-xs font-medium">关闭</button>
-        <button onclick="closeLessonModal(); setStudioView('challenges')" class="cpa-pill-btn px-5 py-2 text-xs font-semibold">配好了 · 去参加挑战赢 Token →</button>
+        <button onclick="closeLessonModal(); setStudioView('create')" class="cpa-pill-btn px-5 py-2 text-xs font-semibold">配好了 · 进入「2. 实战创作」→</button>
       `;
       document.getElementById('lessonDrawer').classList.remove('hidden');
     }
@@ -1663,7 +1688,7 @@ Model   ：claude-sonnet-4
     function closeLessonModal() {
       document.getElementById('lessonDrawer').classList.add('hidden');
       document.getElementById('lessonDrawerBody').innerHTML = '';
-      if (activeTab === 'studio' && studioView === 'learn') ensureFeaturedVideo(true);
+      if (activeTab === 'studio' && studioView === 'connect') ensureFeaturedVideo(true);
     }
     function copyLessonCode(id) {
       const l = CMS_LESSONS.find(x => x.id === id);
@@ -1901,7 +1926,9 @@ Model   ：claude-sonnet-4
     const qs = new URLSearchParams(window.location.search);
     const urlView = qs.get('view');
     const urlTab = qs.get('tab');
+    const urlStep = qs.get('step');
     if (['token', 'studio', 'square'].includes(urlTab)) activeTab = urlTab;
+    if (['connect', 'create', 'challenge', 'works'].includes(urlStep)) studioView = urlStep;
     setAppState(['auth', 'pending', 'frozen', 'normal'].includes(urlView) ? urlView : 'normal');
   </script>
 </body>
