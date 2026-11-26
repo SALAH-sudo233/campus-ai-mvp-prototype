@@ -448,7 +448,18 @@
               </span>
               <span class="min-w-0 leading-tight">
                 <span class="block text-[13.5px] truncate">学习与挑战</span>
-                <span class="nav-sub hidden md:block mt-0.5 truncate">实战课堂 · 赢取算力</span>
+                <span class="nav-sub hidden md:block mt-0.5 truncate">三段引导 · 平铺全览</span>
+              </span>
+              <span class="nav-dot hidden md:inline-block"></span>
+            </button>
+
+            <button onclick="switchTab('studio2')" data-tab="studio2" class="nav-tab">
+              <span class="nav-icon-box">
+                <svg class="w-[17px] h-[17px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.5"/><rect x="3" y="13" width="11" height="7" rx="1.5"/><rect x="17" y="13" width="4" height="7" rx="1"/></svg>
+              </span>
+              <span class="min-w-0 leading-tight">
+                <span class="block text-[13.5px] truncate">学习与挑战-样式2</span>
+                <span class="nav-sub hidden md:block mt-0.5 truncate">魔搭聚合 · 筛选联动</span>
               </span>
               <span class="nav-dot hidden md:inline-block"></span>
             </button>
@@ -816,8 +827,110 @@
         </div>
       </section>
 
-      <!-- ==================== TAB 2: 学习与挑战 (MODELSCOPE SPOTLIGHT DUAL-MODE FEED) ==================== -->
+      <!-- ==================== TAB 2A: 学习与挑战（上一版：三段式直铺全览 + 新标签页独立详情跳转） ==================== -->
       <section id="tab-studio" class="hidden">
+        <div class="space-y-12">
+
+          <!-- 01 · TOKEN 接入（官方教程 · 单视频覆盖全工具 + 按工具复制提示词） -->
+          <div id="v1ConnectSection" class="space-y-4">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-xl mono text-xs font-bold inline-flex items-center justify-center text-white shrink-0" style="background:linear-gradient(135deg,#27254C,#624AFF);">01</span>
+                <div>
+                  <h2 class="text-base font-bold leading-tight">Token 接入 · 官方教程</h2>
+                  <div class="text-xs mt-0.5" style="color:var(--muted);">一个视频讲清全工具接入流程，右侧按所用工具一键复制提示词</div>
+                </div>
+              </div>
+              <button onclick="copyCurrentKey()" class="cpa-ghost-pill px-3.5 py-1.5 text-xs font-medium bg-white shrink-0">复制我的 Key</button>
+            </div>
+
+            <div class="cpa-card overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+              <div class="lg:col-span-7 bg-[#27254C] relative aspect-video lg:aspect-auto lg:min-h-[340px]">
+                <iframe
+                  id="v1OfficialBiliFrame"
+                  class="w-full h-full min-h-[240px] lg:min-h-[340px] border-0 block"
+                  scrolling="no"
+                  allowfullscreen="true"
+                  referrerpolicy="no-referrer"
+                  title="浣溪 Token 全工具接入官方教程"></iframe>
+              </div>
+              <div class="lg:col-span-5 p-5 sm:p-6 flex flex-col justify-between gap-4 bg-white">
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-2">
+                      <span class="px-2.5 py-0.5 rounded-full font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">官方合集视频</span>
+                      <span class="mono" style="color:var(--muted);">07:00 · 含全工具演示</span>
+                    </div>
+                    <a href="https://www.bilibili.com/video/BV1XtoKB2Ewr/" target="_blank" rel="noopener noreferrer" class="font-medium hover:underline shrink-0" style="color:var(--primary);">B 站原视频 ↗</a>
+                  </div>
+                  <div>
+                    <h3 class="text-base font-bold leading-snug">3 分钟把浣溪 Token 接入你的开发工具</h3>
+                    <p id="v1OgSummary" class="text-xs leading-relaxed mt-1" style="color:var(--muted);"></p>
+                  </div>
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between gap-2 text-xs">
+                      <span class="font-semibold" style="color:var(--ink);">按工具复制接入提示词</span>
+                      <button onclick="copyActiveOfficialPrompt()" class="font-medium hover:underline" style="color:var(--primary);">一键复制</button>
+                    </div>
+                    <div id="v1OfficialToolTabs" class="flex items-center gap-1.5 flex-wrap text-[11px]"></div>
+                    <pre id="v1OgPromptBox" class="p-3.5 rounded-xl mono text-[11px] leading-relaxed whitespace-pre-wrap overflow-y-auto max-h-40 m-0" style="background:#27254C; color:#E8EAF6;"></pre>
+                  </div>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                  <button onclick="copyActiveOfficialPrompt()" class="cpa-pill-btn px-4 py-2 text-xs font-medium">复制接入提示词</button>
+                  <button onclick="scrollToStudioSection('v1CreateSection')" class="cpa-ghost-pill px-3.5 py-2 text-xs font-medium">配好了 · 看实战创作 ↓</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 02 · 实战创作（精选视频教程，新标签页打开独立详情页） -->
+          <div id="v1CreateSection" class="pt-10 border-t border-slate-200/80 space-y-5">
+            <div class="flex flex-wrap items-end justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-xl mono text-xs font-bold inline-flex items-center justify-center text-white shrink-0" style="background:var(--primary);">02</span>
+                <div>
+                  <h2 class="text-base font-bold leading-tight">实战创作 · 精选教程</h2>
+                  <div class="text-xs mt-0.5" style="color:var(--muted);">点击任意教程将在新标签页打开全宽独立详情页，观看视频并参与互动评论</div>
+                </div>
+              </div>
+              <input id="v1CmsSearch" oninput="onV1CmsSearchInput()" type="text" placeholder="搜索实战教程..." class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#624AFF] w-44 sm:w-52" />
+            </div>
+
+            <div id="v1CmsCatBar" class="flex items-center gap-2 flex-wrap"></div>
+            <div id="v1CmsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+          </div>
+
+          <!-- 03 · 参赛赢 TOKEN（主题挑战赛，新标签页打开独立详情页） -->
+          <div id="v1ChallengeSection" class="pt-10 border-t border-slate-200/80 space-y-5">
+            <div class="flex flex-wrap items-end justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 rounded-xl mono text-xs font-bold inline-flex items-center justify-center text-white shrink-0" style="background:var(--accent);">03</span>
+                <div>
+                  <h2 class="text-base font-bold leading-tight">参赛赢 Token · 主题挑战赛</h2>
+                  <div class="text-xs mt-0.5" style="color:var(--muted);">校内运营自主发起与定奖结算，点击将在新标签页打开挑战赛独立详情页查看奖项档位、实时榜与获奖公示</div>
+                </div>
+              </div>
+              <button onclick="activeSquareTag='awarded'; squareMode='all'; switchTab('square')" class="cpa-ghost-pill px-4 py-1.5 text-xs font-medium bg-white shrink-0">查看挑战获奖作品 →</button>
+            </div>
+
+            <div id="v1ChallengeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+            <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-4 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div class="flex flex-wrap items-center gap-2.5">
+                <span class="px-2.5 py-0.5 rounded-full font-medium bg-slate-100 text-slate-600">生态预告</span>
+                <strong style="color:var(--ink);">浣溪 Teams 对话式创作工作台</strong>
+                <span style="color:var(--muted);">免配本地环境，后续支持从教程页一键跳转对话生成并预览作品。</span>
+              </div>
+              <button onclick="showToast('已记录关注，浣溪 Teams 开放后将第一时间通知你')" class="cpa-ghost-pill px-4 py-1.5 text-xs font-medium shrink-0">上线提醒我</button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ==================== TAB 2B: 学习与挑战-样式2 (MODELSCOPE SPOTLIGHT DUAL-MODE FEED) ==================== -->
+      <section id="tab-studio2" class="hidden">
         <div id="studioHomeView" class="space-y-6">
 
           <!-- Filtered / View-All Mode Subheader (Hidden in Default Grouped Mode) -->
@@ -1109,7 +1222,10 @@
     let chartMetric = 'requests'; // requests | tokens
     let chartRange = 'hourly'; // hourly | daily
     let tableOpen = false;
-    // ModelScope /spotlight dual-mode filter states (empty = grouped discovery mode)
+    // Classic Studio (Tab 2A) filter state
+    let v1ActiveCmsCat = '全部';
+    let v1CmsQuery = '';
+    // ModelScope /spotlight dual-mode filter states (Tab 2B: empty = grouped discovery mode)
     let activeCmsCat = '';
     let activeCmsTopic = '';
     let cmsQuery = '';
@@ -1624,10 +1740,14 @@ Model   ：claude-sonnet-4
         if (standaloneRoute) {
           usp.set(standaloneRoute.kind, standaloneRoute.id);
           if (standaloneRoute.fromChallenge) usp.set('fromChallenge', standaloneRoute.fromChallenge);
+          if (standaloneRoute.fromStudio) usp.set('fromStudio', standaloneRoute.fromStudio);
           if (standaloneRoute.kind === 'work' && standaloneRoute.workTab === 'preview') usp.set('mode', 'preview');
         } else {
           if (activeTab !== 'token') usp.set('tab', activeTab);
           if (activeTab === 'studio') {
+            if (v1ActiveCmsCat && v1ActiveCmsCat !== '全部') usp.set('v1cat', v1ActiveCmsCat);
+            if (v1CmsQuery.trim()) usp.set('v1q', v1CmsQuery.trim());
+          } else if (activeTab === 'studio2') {
             if (activeCmsCat) usp.set('cat', activeCmsCat);
             if (activeCmsTopic) usp.set('topic', activeCmsTopic);
             if (cmsQuery.trim()) usp.set('q', cmsQuery.trim());
@@ -1857,18 +1977,19 @@ Model   ：claude-sonnet-4
       if (appState !== 'auth') {
         document.getElementById('portalShell').classList.remove('hidden');
       }
-      ['token', 'studio', 'square'].forEach(t => {
+      ['token', 'studio', 'studio2', 'square'].forEach(t => {
         document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
       });
       syncNavHighlight();
-      if (tab !== 'studio') {
-        ensureFeaturedVideo(false);
-      }
-      if (tab === 'token') { renderStackedBar(); renderHealthStrip(); }
+      if (tab === 'token') { ensureFeaturedVideo(); renderStackedBar(); renderHealthStrip(); }
       if (tab === 'studio') {
+        renderStudioClassic();
+      }
+      if (tab === 'studio2') {
         renderStudio();
       }
       if (tab === 'square') {
+        ensureFeaturedVideo();
         setSquareMode(squareMode, true);
       }
       syncMyWorksBadges();
@@ -1988,13 +2109,18 @@ Model   ：claude-sonnet-4
     // ===== STUDIO (SINGLE OFFICIAL VIDEO + PER-TOOL PROMPTS + STANDALONE DETAIL PAGES) =====
     const OFFICIAL_VIDEO_SRC = 'https://player.bilibili.com/player.html?isOutside=true&bvid=BV1XtoKB2Ewr&p=1&danmaku=0&autoplay=0';
 
-    function ensureFeaturedVideo(active) {
-      const frame = document.getElementById('officialBiliFrame');
-      if (!frame) return;
-      if (active) {
-        if (frame.getAttribute('src') !== OFFICIAL_VIDEO_SRC) frame.setAttribute('src', OFFICIAL_VIDEO_SRC);
-      } else {
-        if (frame.getAttribute('src')) frame.removeAttribute('src');
+    function ensureFeaturedVideo() {
+      const f1 = document.getElementById('v1OfficialBiliFrame');
+      const f2 = document.getElementById('officialBiliFrame');
+      const showV1 = !standaloneRoute && appState !== 'auth' && activeTab === 'studio';
+      const showV2 = !standaloneRoute && appState !== 'auth' && activeTab === 'studio2' && !isStudioFiltered();
+      if (f1) {
+        if (showV1) { if (f1.getAttribute('src') !== OFFICIAL_VIDEO_SRC) f1.setAttribute('src', OFFICIAL_VIDEO_SRC); }
+        else if (f1.getAttribute('src')) f1.removeAttribute('src');
+      }
+      if (f2) {
+        if (showV2) { if (f2.getAttribute('src') !== OFFICIAL_VIDEO_SRC) f2.setAttribute('src', OFFICIAL_VIDEO_SRC); }
+        else if (f2.getAttribute('src')) f2.removeAttribute('src');
       }
     }
 
@@ -2058,7 +2184,114 @@ Model   ：claude-sonnet-4
       setVis('menuRejectedTag', hasAlert);
     }
 
-    // ===== MODELSCOPE SPOTLIGHT DUAL-MODE STUDIO FEED (GROUPED + RIGHT RAIL <-> 3-COL FILTERED GRID) =====
+    // ===== TAB 2A: CLASSIC THREE-SECTION STUDIO (PREVIOUS VERSION + NEW-TAB DETAIL JUMPS) =====
+    function selectV1CmsCat(cat) {
+      v1ActiveCmsCat = cat;
+      renderV1CmsGrid();
+      syncUrlFromState(false);
+    }
+
+    function onV1CmsSearchInput() {
+      const inp = document.getElementById('v1CmsSearch');
+      v1CmsQuery = inp ? inp.value : '';
+      renderV1CmsGrid();
+      syncUrlFromState(true);
+    }
+
+    function renderStudioClassic() {
+      renderOfficialGuides();
+      renderV1CmsGrid();
+      renderV1ChallengeGrid();
+    }
+
+    function renderV1CmsGrid() {
+      const cats = ['全部', 'Web 实战', 'AI 小应用', '效率技巧', '培训回放'];
+      const bar = document.getElementById('v1CmsCatBar');
+      if (bar) {
+        bar.innerHTML = cats.map(c => {
+          const a = v1ActiveCmsCat === c;
+          return `<button onclick="selectV1CmsCat('${c}')" class="px-3.5 py-1.5 rounded-full text-xs font-medium border transition" style="${a ? 'background:#27254C; color:#FFFFFF; box-shadow:0 8px 24px rgba(39,37,76,0.20); border-color:#0A2540;' : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);'}">${c}</button>`;
+        }).join('');
+      }
+
+      const q = v1CmsQuery.trim().toLowerCase();
+      const filtered = CMS_LESSONS.filter(l => {
+        if (v1ActiveCmsCat !== '全部' && l.cat !== v1ActiveCmsCat) return false;
+        if (q && !(l.title.toLowerCase().includes(q) || l.author.toLowerCase().includes(q) || l.cat.toLowerCase().includes(q))) return false;
+        return true;
+      });
+
+      const grid = document.getElementById('v1CmsGrid');
+      if (!grid) return;
+      grid.innerHTML = filtered.length ? filtered.map(l => {
+        const cmtCount = (DISCUSSIONS['lesson:' + l.id] || []).length;
+        const href = buildHref({ lesson: l.id });
+        return `
+          <a href="${href}" target="_blank" rel="noopener" class="cpa-card lesson-card group overflow-hidden cursor-pointer block no-underline text-inherit">
+            <div class="aspect-video cover-box w-full overflow-hidden relative bg-slate-100">
+              <img src="${l.cover}" alt="${l.title}" class="cover-img group-hover:scale-[1.03] transition duration-300" onerror="handleCoverError(this)" />
+              <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent"></div>
+              <span class="absolute bottom-3 left-3 w-8 h-8 rounded-full bg-white/95 text-[#27254C] inline-flex items-center justify-center text-xs font-bold shadow-sm group-hover:scale-105 transition z-10">▶</span>
+              <span class="absolute bottom-3 right-3 px-2 py-0.5 rounded-md bg-black/65 text-white mono text-[11px] backdrop-blur-sm z-10">${l.duration}</span>
+            </div>
+            <div class="p-4 space-y-1.5">
+              <h3 class="text-sm font-semibold truncate group-hover:text-[#624AFF] transition" style="color:var(--ink);">${l.title}</h3>
+              <div class="flex items-center justify-between text-xs" style="color:var(--muted);">
+                <span class="truncate">${l.author} · ${l.cat}</span>
+                <span class="shrink-0 mono text-[11px]">💬 ${cmtCount}</span>
+              </div>
+            </div>
+          </a>
+        `;
+      }).join('') : `<div class="col-span-full cpa-card p-8 text-center text-xs" style="color:var(--muted);">没有找到匹配的教程，换个关键词试试。</div>`;
+    }
+
+    function renderV1ChallengeGrid() {
+      const grid = document.getElementById('v1ChallengeGrid');
+      if (!grid) return;
+      grid.innerHTML = CHALLENGES.map(ch => {
+        const cmtCount = (DISCUSSIONS['challenge:' + ch.id] || []).length;
+        const entryCount = getChallengeWorks(ch.tag).length;
+        const href = buildHref({ challenge: ch.id });
+        const actionRow = ch.status === 'ongoing'
+          ? `
+            <a href="${href}" target="_blank" rel="noopener" class="cpa-ghost-pill flex-1 py-2 text-xs font-medium text-center no-underline">详情与实时榜</a>
+            <button onclick="openPublishModal('${ch.tag}')" class="cpa-pill-btn flex-1 py-2 text-xs font-medium">带标签参赛 →</button>
+          `
+          : ch.status === 'judging'
+            ? `
+              <a href="${href}" target="_blank" rel="noopener" class="cpa-ghost-pill flex-1 py-2 text-xs font-medium text-center no-underline">查看结算进度与作品榜 →</a>
+            `
+            : `
+              <a href="${href}" target="_blank" rel="noopener" class="cpa-ghost-pill flex-1 py-2 text-xs font-semibold text-center no-underline" style="background:#F1F1FD; color:#624AFF; border-color:#D2C4FF;">🏆 查看获奖名单公示 →</a>
+            `;
+        return `
+          <div class="cpa-card lesson-card group overflow-hidden flex flex-col justify-between">
+            <a href="${href}" target="_blank" rel="noopener" class="w-full block no-underline text-inherit">
+              <div class="aspect-video cover-box w-full overflow-hidden relative bg-slate-100">
+                <img src="${ch.cover}" alt="${ch.title}" class="cover-img group-hover:scale-[1.03] transition duration-300" onerror="handleCoverError(this)" />
+                <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[11px] font-semibold shadow-sm z-10" style="${ch.statusStyle}">${ch.statusBadge}</span>
+                <span class="absolute bottom-3 right-3 px-2.5 py-0.5 rounded-full text-[11px] mono bg-black/65 text-white backdrop-blur-sm z-10">${ch.deadline}</span>
+              </div>
+              <div class="p-5 space-y-2.5">
+                <h3 class="text-sm sm:text-base font-bold leading-snug group-hover:text-[#624AFF] transition">${ch.title}</h3>
+                <p class="text-xs leading-relaxed line-clamp-2" style="color:var(--muted);">${ch.subtitle}</p>
+                <div class="px-3 py-2 rounded-xl bg-white border border-slate-200/80 text-[11px] truncate" style="color:var(--ink);">${ch.tierSummary}</div>
+                <div class="flex items-center justify-between pt-0.5 text-[11px]">
+                  <span class="mono font-medium" style="color:${ch.tagColor};">${ch.tag}</span>
+                  <span class="mono" style="color:var(--muted);">参赛作品 ${entryCount} · 💬 ${cmtCount}</span>
+                </div>
+              </div>
+            </a>
+            <div class="px-5 pb-5 flex items-center gap-2">
+              ${actionRow}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ===== TAB 2B: MODELSCOPE SPOTLIGHT DUAL-MODE STUDIO FEED (GROUPED + RIGHT RAIL <-> 3-COL FILTERED GRID) =====
     function isStudioFiltered() {
       return Boolean(activeCmsCat || activeCmsTopic || cmsQuery.trim() || studioShowAll);
     }
@@ -2119,7 +2352,7 @@ Model   ：claude-sonnet-4
 
     function renderLessonCardHtml(l) {
       const cmtCount = (DISCUSSIONS['lesson:' + l.id] || []).length;
-      const href = buildHref({ lesson: l.id });
+      const href = buildHref({ lesson: l.id, fromStudio: 'studio2' });
       return `
         <a href="${href}" target="_blank" rel="noopener" class="cpa-card lesson-card group overflow-hidden cursor-pointer block no-underline text-inherit">
           <div class="aspect-video cover-box w-full overflow-hidden relative bg-slate-100">
@@ -2170,15 +2403,23 @@ Model   ：claude-sonnet-4
 
     function renderOfficialGuides() {
       const g = OFFICIAL_GUIDES.find(x => x.id === activeOfficialTool) || OFFICIAL_GUIDES[0];
-      document.getElementById('officialToolTabs').innerHTML = OFFICIAL_GUIDES.map(item => {
+      const tabsHtml = OFFICIAL_GUIDES.map(item => {
         const a = item.id === g.id;
         return `<button onclick="selectOfficialTool('${item.id}')" class="px-2.5 py-1 rounded-full font-medium border transition" style="${a ? 'background:#27254C; color:#FFFFFF; box-shadow:0 8px 24px rgba(39,37,76,0.20); border-color:#0A2540;' : 'background:#FFFFFF; color:#64748B; border-color:var(--border);'}">${item.name}</button>`;
       }).join('');
+      const promptTxt = g.code.replace(/sk-hx-live-98f2c71a0e4b3d9f4a/g, currentKeyPlain);
 
-      document.getElementById('ogSummary').textContent = g.summary;
-      document.getElementById('ogPromptBox').textContent = g.code.replace(/sk-hx-live-98f2c71a0e4b3d9f4a/g, currentKeyPlain);
+      ['officialToolTabs', 'v1OfficialToolTabs'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.innerHTML = tabsHtml;
+      });
+      ['ogSummary', 'v1OgSummary'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.textContent = g.summary;
+      });
+      ['ogPromptBox', 'v1OgPromptBox'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.textContent = promptTxt;
+      });
 
-      ensureFeaturedVideo(!standaloneRoute && activeTab === 'studio' && !isStudioFiltered());
+      ensureFeaturedVideo();
     }
 
     function renderStudioFilterBars() {
@@ -2229,7 +2470,7 @@ Model   ：claude-sonnet-4
         ? CHALLENGES.map(ch => {
             const entryCount = getChallengeWorks(ch.tag).length;
             return `
-              <a href="${buildHref({ challenge: ch.id })}" target="_blank" rel="noopener" class="p-3.5 rounded-2xl border border-slate-200/85 hover:border-[#624AFF]/55 hover:bg-[#F7F9FD] transition block space-y-2 no-underline text-inherit group">
+              <a href="${buildHref({ challenge: ch.id, fromStudio: 'studio2' })}" target="_blank" rel="noopener" class="p-3.5 rounded-2xl border border-slate-200/85 hover:border-[#624AFF]/55 hover:bg-[#F7F9FD] transition block space-y-2 no-underline text-inherit group">
                 <div class="flex items-center justify-between gap-2 text-[11px]">
                   <span class="px-2 py-0.5 rounded-full font-semibold" style="${ch.statusStyle}">${ch.status === 'ongoing' ? '进行中' : ch.status === 'judging' ? '结算中' : '已公示'}</span>
                   <span class="mono" style="color:var(--muted);">${ch.deadline}</span>
@@ -2442,6 +2683,11 @@ Model   ：claude-sonnet-4
       if (e) e.preventDefault();
       standaloneRoute = null;
       if (tab === 'studio') {
+        v1ActiveCmsCat = extra.cat || '全部';
+        v1CmsQuery = '';
+        const inp = document.getElementById('v1CmsSearch');
+        if (inp) inp.value = '';
+      } else if (tab === 'studio2') {
         activeCmsCat = extra.cat || '';
         activeCmsTopic = extra.topic || '';
         cmsQuery = '';
@@ -2503,6 +2749,9 @@ Model   ：claude-sonnet-4
       const others = CMS_LESSONS.filter(x => x.id !== l.id);
       const relCh = CHALLENGES.find(c => c.tag === l.tag) || CHALLENGES[0];
 
+      const fromStudioTab = (standaloneRoute && standaloneRoute.fromStudio === 'studio2') ? 'studio2' : 'studio';
+      const fromStudioLabel = fromStudioTab === 'studio2' ? '学习与挑战-样式2' : '学习与挑战';
+
       topBar.innerHTML = `
         <div class="max-w-6xl mx-auto px-4 sm:px-6 h-[60px] flex items-center justify-between gap-3">
           <div class="flex items-center gap-2 text-xs min-w-0">
@@ -2511,9 +2760,9 @@ Model   ：claude-sonnet-4
               <span class="hidden sm:inline">浣溪AI Lab</span>
             </a>
             <span class="text-slate-300">/</span>
-            <a href="${buildHref({ tab: 'studio' })}" onclick="return navPortalFromDetail(event, 'studio')" class="hover:text-[#624AFF] font-medium shrink-0 no-underline" style="color:var(--muted);">学习与挑战</a>
+            <a href="${buildHref({ tab: fromStudioTab })}" onclick="return navPortalFromDetail(event, '${fromStudioTab}')" class="hover:text-[#624AFF] font-medium shrink-0 no-underline" style="color:var(--muted);">${fromStudioLabel}</a>
             <span class="text-slate-300">/</span>
-            <a href="${buildHref({ tab: 'studio', cat: l.cat })}" onclick="return navPortalFromDetail(event, 'studio', { cat: '${l.cat}' })" class="px-2.5 py-0.5 rounded-full font-medium shrink-0 no-underline" style="background:#F1F1FD; color:#624AFF;">${l.cat}</a>
+            <a href="${buildHref({ tab: fromStudioTab, [fromStudioTab === 'studio2' ? 'cat' : 'v1cat']: l.cat })}" onclick="return navPortalFromDetail(event, '${fromStudioTab}', { cat: '${l.cat}' })" class="px-2.5 py-0.5 rounded-full font-medium shrink-0 no-underline" style="background:#F1F1FD; color:#624AFF;">${l.cat}</a>
             <span class="text-slate-300 hidden md:inline">/</span>
             <span class="font-semibold truncate hidden md:inline max-w-[260px]" style="color:var(--ink);">${l.title}</span>
           </div>
@@ -2582,11 +2831,11 @@ Model   ：claude-sonnet-4
             <div class="cpa-card p-5 space-y-3.5 bg-white">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-bold">其他精选教程</span>
-                <a href="${buildHref({ tab: 'studio', all: '1' })}" onclick="return navPortalFromDetail(event, 'studio', { all: true })" class="text-[11px] font-medium hover:underline no-underline" style="color:var(--primary);">全部教程 &gt;</a>
+                <a href="${buildHref({ tab: fromStudioTab, ...(fromStudioTab === 'studio2' ? { all: '1' } : {}) })}" onclick="return navPortalFromDetail(event, '${fromStudioTab}', { all: true })" class="text-[11px] font-medium hover:underline no-underline" style="color:var(--primary);">全部教程 &gt;</a>
               </div>
               <div class="space-y-3">
                 ${others.map(o => `
-                  <a href="${buildHref({ lesson: o.id })}" onclick="return navDetailInPlace(event, { kind: 'lesson', id: '${o.id}' })" class="flex items-center gap-3 group no-underline text-inherit">
+                  <a href="${buildHref({ lesson: o.id, ...(fromStudioTab === 'studio2' ? { fromStudio: 'studio2' } : {}) })}" onclick="return navDetailInPlace(event, { kind: 'lesson', id: '${o.id}', fromStudio: '${fromStudioTab}' })" class="flex items-center gap-3 group no-underline text-inherit">
                     <img src="${o.cover}" alt="${o.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 bg-slate-100 shrink-0" onerror="handleCoverError(this)" />
                     <div class="min-w-0">
                       <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#624AFF] transition">${o.title}</div>
@@ -2670,6 +2919,9 @@ Model   ：claude-sonnet-4
           ? `<span class="px-3.5 py-1.5 rounded-full text-xs font-semibold" style="background:var(--warn-soft); color:var(--warn); border:1px solid #FDE68A;">⏳ 评奖结算中</span>`
           : `<span class="px-3.5 py-1.5 rounded-full text-xs font-semibold" style="background:#F1F1FD; color:var(--primary); border:1px solid #D2C4FF;">🏆 已开奖公示</span>`;
 
+      const fromStudioTab = (standaloneRoute && standaloneRoute.fromStudio === 'studio2') ? 'studio2' : 'studio';
+      const fromStudioLabel = fromStudioTab === 'studio2' ? '学习与挑战-样式2' : '学习与挑战';
+
       topBar.innerHTML = `
         <div class="max-w-6xl mx-auto px-4 sm:px-6 h-[60px] flex items-center justify-between gap-3">
           <div class="flex items-center gap-2 text-xs min-w-0">
@@ -2678,7 +2930,7 @@ Model   ：claude-sonnet-4
               <span class="hidden sm:inline">浣溪AI Lab</span>
             </a>
             <span class="text-slate-300">/</span>
-            <a href="${buildHref({ tab: 'studio' })}" onclick="return navPortalFromDetail(event, 'studio')" class="hover:text-[#624AFF] font-medium shrink-0 no-underline" style="color:var(--muted);">学习与挑战</a>
+            <a href="${buildHref({ tab: fromStudioTab })}" onclick="return navPortalFromDetail(event, '${fromStudioTab}')" class="hover:text-[#624AFF] font-medium shrink-0 no-underline" style="color:var(--muted);">${fromStudioLabel}</a>
             <span class="text-slate-300">/</span>
             <span class="font-semibold truncate max-w-[260px]" style="color:var(--ink);">${ch.title}</span>
           </div>
@@ -2835,7 +3087,7 @@ Model   ：claude-sonnet-4
               <div class="text-xs font-bold">其他主题挑战赛</div>
               <div class="space-y-3">
                 ${otherChallenges.map(oc => `
-                  <a href="${buildHref({ challenge: oc.id })}" onclick="return navDetailInPlace(event, { kind: 'challenge', id: '${oc.id}' })" class="flex items-center gap-3 group no-underline text-inherit">
+                  <a href="${buildHref({ challenge: oc.id, ...(fromStudioTab === 'studio2' ? { fromStudio: 'studio2' } : {}) })}" onclick="return navDetailInPlace(event, { kind: 'challenge', id: '${oc.id}', fromStudio: '${fromStudioTab}' })" class="flex items-center gap-3 group no-underline text-inherit">
                     <img src="${oc.cover}" alt="${oc.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 bg-slate-100 shrink-0" onerror="handleCoverError(this)" />
                     <div class="min-w-0">
                       <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#624AFF] transition">${oc.title}</div>
@@ -3180,7 +3432,8 @@ Model   ：claude-sonnet-4
         renderStandaloneDetail(false);
         return;
       }
-      if (activeTab === 'studio') renderStudio();
+      if (activeTab === 'studio') renderStudioClassic();
+      else if (activeTab === 'studio2') renderStudio();
       else if (activeTab === 'square') {
         if (squareMode === 'all') renderSquare();
         else renderMyWorks();
@@ -3294,25 +3547,28 @@ Model   ：claude-sonnet-4
 
       // Reset filter defaults before applying query string
       standaloneRoute = null;
-      activeTab = ['token', 'studio', 'square'].includes(urlTab) ? urlTab : 'token';
+      activeTab = ['token', 'studio', 'studio2', 'square'].includes(urlTab) ? urlTab : 'token';
       squareMode = urlSub === 'mine' ? 'mine' : 'all';
+      v1ActiveCmsCat = qs.get('v1cat') || '全部';
+      v1CmsQuery = activeTab === 'studio' ? (qs.get('v1q') || '') : '';
       activeCmsCat = qs.get('cat') || '';
       activeCmsTopic = qs.get('topic') || '';
-      cmsQuery = activeTab === 'studio' ? (qs.get('q') || '') : '';
-      studioShowAll = activeTab === 'studio' && qs.get('all') === '1';
+      cmsQuery = activeTab === 'studio2' ? (qs.get('q') || '') : '';
+      studioShowAll = activeTab === 'studio2' && qs.get('all') === '1';
 
       activeSquareTag = qs.get('tag') || 'all';
       squareTypeFilter = ['all', 'Web', 'APP', 'PC'].includes(qs.get('type')) ? qs.get('type') : 'all';
       squareSortFilter = ['hot', 'new'].includes(qs.get('sort')) ? qs.get('sort') : 'hot';
 
+      const v1Inp = document.getElementById('v1CmsSearch'); if (v1Inp) v1Inp.value = v1CmsQuery;
       const cmsInp = document.getElementById('cmsSearch'); if (cmsInp) cmsInp.value = cmsQuery;
       const tSel = document.getElementById('typeFilter'); if (tSel) tSel.value = squareTypeFilter;
       const sSel = document.getElementById('sortFilter'); if (sSel) sSel.value = squareSortFilter;
 
       if (urlLesson && CMS_LESSONS.some(x => x.id === urlLesson)) {
-        standaloneRoute = { kind: 'lesson', id: urlLesson };
+        standaloneRoute = { kind: 'lesson', id: urlLesson, fromStudio: qs.get('fromStudio') || '' };
       } else if (urlChallenge && CHALLENGES.some(x => x.id === urlChallenge)) {
-        standaloneRoute = { kind: 'challenge', id: urlChallenge };
+        standaloneRoute = { kind: 'challenge', id: urlChallenge, fromStudio: qs.get('fromStudio') || '' };
       } else if (urlWork && squareWorks.some(x => x.id === urlWork)) {
         standaloneRoute = {
           kind: 'work',
