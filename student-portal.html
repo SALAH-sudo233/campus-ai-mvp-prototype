@@ -255,37 +255,32 @@
         </div>
 
         <div id="tokenMainContent" class="space-y-8">
-          <!-- 1. CPAMC-Style Status Hero + Floating Live Telemetry Wave Card -->
-          <div class="hero-grid-glow rounded-3xl px-6 sm:px-8 pt-7 pb-6 border border-slate-200/70 space-y-6">
+          <!-- 1. Token Hero + Floating Live Telemetry Wave Card -->
+          <div class="hero-grid-glow rounded-3xl px-6 sm:px-8 pt-6 pb-6 border border-slate-200/70 space-y-6">
             <div class="flex flex-wrap items-end justify-between gap-4">
               <div class="space-y-2">
-                <div class="flex items-center gap-2.5">
-                  <h1 id="heroHeadline" class="text-3xl sm:text-4xl font-bold tracking-tight">算力运行平稳</h1>
-                  <span id="heroRing" class="w-3.5 h-3.5 rounded-full border-[3px] inline-block mt-1" style="border-color:var(--accent);"></span>
+                <div class="text-xs font-medium" style="color:var(--muted);">当前可用 Token 余额</div>
+                <div class="flex flex-wrap items-baseline gap-3">
+                  <div class="text-3xl sm:text-4xl font-bold mono tracking-tight" style="color:var(--ink);">1,482,500</div>
+                  <div class="text-xs flex items-center gap-1.5" style="color:var(--muted);">
+                    <span>初始 1.0M</span>
+                    <span>+</span>
+                    <span style="color:var(--accent-ink);" class="font-medium">激励奖励 1.0M</span>
+                    <span>· 余量 74.1%</span>
+                  </div>
                 </div>
-                <div class="mono text-xs flex flex-wrap items-center gap-2" style="color:var(--muted);">
+                <div class="mono text-xs flex flex-wrap items-center gap-2 pt-0.5" style="color:var(--muted);">
                   <span>华科软件学院 · linzhixing@hust.edu.cn</span>
                   <span>·</span>
                   <span id="heroConnStatus" style="color:var(--accent-ink);">已连接中转网关</span>
                   <span>·</span>
                   <span>Base URL: https://api.huanxi-lab.cn/v1</span>
                 </div>
-                <div class="flex items-center gap-4 pt-2">
-                  <button id="heroCopyBtn" onclick="copyCurrentKey()" class="cpa-pill-btn px-5 py-2 text-xs font-medium">复制我的 API Key</button>
-                  <button onclick="switchTab('studio')" class="text-xs font-medium hover:underline flex items-center gap-1" style="color:var(--ink);">去创作中心上手 →</button>
-                </div>
               </div>
 
-              <!-- Quick Quota Pill Summary on Right -->
-              <div class="text-left sm:text-right">
-                <div class="text-xs" style="color:var(--muted);">当前可用 Token 余额</div>
-                <div class="text-3xl font-bold mono tracking-tight mt-0.5" style="color:var(--ink);">1,482,500</div>
-                <div class="text-xs mt-1 flex items-center sm:justify-end gap-2" style="color:var(--muted);">
-                  <span>初始 1.0M</span>
-                  <span>+</span>
-                  <span style="color:var(--accent-ink);" class="font-medium">激励奖励 1.0M</span>
-                  <span>· 余量 74.1%</span>
-                </div>
+              <div class="flex items-center gap-3">
+                <button id="heroCopyBtn" onclick="copyCurrentKey()" class="cpa-pill-btn px-5 py-2 text-xs font-medium">复制我的 API Key</button>
+                <button onclick="switchTab('studio')" class="cpa-ghost-pill px-4 py-2 text-xs font-medium">去创作中心上手 →</button>
               </div>
             </div>
 
@@ -315,7 +310,7 @@
                     <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-[3px]" style="background:var(--accent);"></span> 成功 <strong class="mono">310</strong></span>
                     <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-[3px]" style="background:var(--coral);"></span> 失败 <strong class="mono">2</strong></span>
                   </div>
-                  <span class="text-[11px]" style="color:var(--muted);">配额消耗：已用 25.9% · 距单日防刷上限余量充足</span>
+                  <span class="text-[11px]" style="color:var(--muted);">配额已用 25.9% · 余量充足</span>
                 </div>
               </div>
 
@@ -469,11 +464,7 @@
                   <div id="healthStrip" class="grid grid-cols-[repeat(20,minmax(0,1fr))] gap-1"></div>
                 </div>
 
-                <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <span class="px-2.5 py-0.5 rounded-full text-[11px]" style="background:var(--bg-subtle); color:var(--muted);">限流：安全保护开启</span>
-                    <span class="px-2.5 py-0.5 rounded-full text-[11px]" style="background:var(--bg-subtle); color:var(--muted);">防倒卖审计：已启用</span>
-                  </div>
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-end text-xs">
                   <button onclick="switchTab('studio')" class="font-medium hover:underline" style="color:var(--primary);">不会接入工具？去创作中心看教程 →</button>
                 </div>
               </div>
@@ -515,22 +506,6 @@
                   </div>
                   <div class="h-2 rounded-full overflow-hidden" style="background:var(--bg-subtle);">
                     <div class="h-full rounded-full" style="width:10.7%; background:#64748B;"></div>
-                  </div>
-                </div>
-
-                <div class="pt-3 border-t border-slate-100 space-y-2 text-xs">
-                  <div class="font-semibold">近期激励到账记录</div>
-                  <div class="flex justify-between">
-                    <span style="color:var(--muted);">双周作品榜 Top 1 奖励（学院激励池）</span>
-                    <span class="mono font-semibold" style="color:var(--accent-ink);">+500,000</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span style="color:var(--muted);">早期体验激励（学院激励池）</span>
-                    <span class="mono font-semibold" style="color:var(--accent-ink);">+500,000</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span style="color:var(--muted);">华科软件学院认证初始额度</span>
-                    <span class="mono font-semibold" style="color:var(--accent-ink);">+1,000,000</span>
                   </div>
                 </div>
               </div>
@@ -1107,8 +1082,6 @@
       pendingMask.classList.add('hidden');
       tokenMain.classList.remove('hidden');
 
-      const heroHeadline = document.getElementById('heroHeadline');
-      const heroRing = document.getElementById('heroRing');
       const heroConn = document.getElementById('heroConnStatus');
       const liveBadge = document.getElementById('liveBadge');
       const keyBadge = document.getElementById('keyStateBadge');
@@ -1121,8 +1094,6 @@
       document.getElementById('headerAuthBtn').textContent = state === 'pending' ? '切换登录' : '退出登录';
 
       // defaults
-      heroHeadline.textContent = '算力运行平稳';
-      heroRing.style.borderColor = 'var(--accent)';
       heroConn.textContent = '已连接中转网关';
       heroConn.style.color = 'var(--accent-ink)';
       liveBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full" style="background:var(--accent);"></span> 实时`;
@@ -1154,8 +1125,6 @@
             <button onclick="openAppealModal()" class="px-3.5 py-1 rounded-full font-semibold text-white shrink-0" style="background:var(--coral);">提交解冻申诉</button>
           </div>
         `;
-        heroHeadline.textContent = '密钥已冻结';
-        heroRing.style.borderColor = 'var(--coral)';
         heroConn.textContent = '风控已阻断调用';
         heroConn.style.color = 'var(--coral)';
         liveBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full" style="background:var(--coral);"></span> 已暂停`;
