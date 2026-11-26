@@ -54,11 +54,11 @@ def create(conn, principal, data):
         plaintext = "cpat_" + secrets.token_urlsafe(32)
         token_id = "pat_" + secrets.token_hex(16)
         conn.execute("INSERT INTO pat_tokens (id, user_id, token_hash, token_hint, label, role_snapshot, "
-                     "org_snapshot, created_at, created_by, expires_at, request_id) "
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                     "org_snapshot, created_at, created_by, expires_at, request_id, owner_ref) "
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                      (token_id, principal["user_id"], hashlib.sha256(plaintext.encode()).hexdigest(),
                       "cpat_…" + plaintext[-4:], label.strip(), principal["role"], principal.get("org_id"),
-                      now, principal["user_id"], now + days * 86400, request_id))
+                      now, principal["user_id"], now + days * 86400, request_id, principal["owner_ref"]))
         row = conn.execute("SELECT * FROM pat_tokens WHERE id = ?", (token_id,)).fetchone()
         conn.execute("COMMIT")
         return 201, {"token": plaintext, "item": metadata(row), "replayed": False}

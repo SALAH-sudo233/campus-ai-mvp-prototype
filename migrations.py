@@ -398,6 +398,9 @@ def _migration_11(conn):
 
 
 def _migration_12(conn):
+    conn.execute("ALTER TABLE pat_tokens ADD COLUMN owner_ref TEXT")
+    conn.execute("UPDATE pat_tokens SET owner_ref = (SELECT s.owner_ref FROM students s "
+                 "WHERE s.user_id = pat_tokens.user_id ORDER BY s.created_at, s.owner_ref LIMIT 1)")
     org_id = ensure_org(conn, "four-end-demo", "四端演示学院", "校内运营", "学生",
                         quota_limit=config.DEFAULT_MEMBER_QUOTA * 3)
     _seed_works(conn, org_id, work_id_prefix=org_id + ":")

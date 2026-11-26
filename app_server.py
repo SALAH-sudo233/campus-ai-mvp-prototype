@@ -223,8 +223,8 @@ def _principal_from_pat(token, conn):
     principal = _principal_for(conn, row["user_id"], row["org_snapshot"])
     if not principal or pat_service.permissions_shrank(row["role_snapshot"], principal["role"]):
         raise authz.AuthzError(401, pat_service.REISSUE_MESSAGE)
-    student = conn.execute("SELECT owner_ref FROM students WHERE user_id = ? "
-                           "ORDER BY created_at LIMIT 1", (row["user_id"],)).fetchone()
+    student = conn.execute("SELECT owner_ref FROM students WHERE owner_ref = ? AND user_id = ?",
+                           (row["owner_ref"], row["user_id"])).fetchone()
     if student is None:
         raise authz.AuthzError(401, pat_service.REISSUE_MESSAGE)
     principal.update({"owner_ref": student["owner_ref"],
@@ -368,8 +368,9 @@ def issue_key_for_member(owner_ref, request_id, mode=None, identity=None, user_i
             principal = _principal_for(conn, member_id, member_org)
             if principal and authz.scope_for(principal["role"], "keys", "rotate_self") is None:
                 return {"status": "read_only", "plaintext": None, "hint": None}, False
-            active = membership is not None and membership["admission_status"] == "active" and authz.allowed(
-                principal, "keys", "rotate_self", owner_user_id=member_id)
+            active = (row is not None and row["user_id"] == member_id
+                      and membership is not None and membership["admission_status"] == "active"
+                      and authz.allowed(principal, "keys", "rotate_self", owner_user_id=member_id))
             admitted_org = membership["org_id"] if membership else member_org
             _, quota = _org_quota(conn, admitted_org)
         finally:
@@ -399,8 +400,11 @@ def issue_key_for_member(owner_ref, request_id, mode=None, identity=None, user_i
         conn = db()
         try:
             principal = _principal_for(conn, member_id, admitted_org)
-            still_active = owner_ref in set(_active_owner_refs(conn, org_id=admitted_org, owner_ref=owner_ref)) and authz.allowed(
-                principal, "keys", "rotate_self", owner_user_id=member_id)
+            account = _student_row(conn, owner_ref)
+            membership = _membership(conn, member_id, admitted_org)
+            still_active = (account is not None and account["user_id"] == member_id
+                            and membership is not None and membership["admission_status"] == "active"
+                            and authz.allowed(principal, "keys", "rotate_self", owner_user_id=member_id))
         finally:
             conn.close()
         if not still_active:
@@ -416,16 +420,18 @@ def _student_row(conn, owner_ref):
     return conn.execute("SELECT * FROM students WHERE owner_ref = ?", (owner_ref,)).fetchone()
 
 
-def profile(conn, owner_ref):
+def profile(conn, owner_ref, principal=None):
     row = _student_row(conn, owner_ref)
-    principal = _principal_for(conn, row["user_id"] if row and row["user_id"] else None,
-                               row["org_id"] if row else None)
+    if principal is None:
+        principal = _principal_for(conn, row["user_id"] if row and row["user_id"] else None,
+                                   row["org_id"] if row else None)
+    org_id = principal["org_id"] if principal else row["org_id"]
     view = {"mode": row["mode"], "identity": row["identity"], "balance": row["balance"],
             "spent": row["spent"], "ledger": ledger_rows(conn, owner_ref)}
-    total_quota, member_quota = _org_quota(conn, row["org_id"] if row else None)
+    total_quota, member_quota = _org_quota(conn, org_id)
     key_state = relay.key_view(RELAY_DB, owner_ref)
     reward_summary = rewards_service.user_reward_summary(
-        conn, row["user_id"] if row else None, row["org_id"] if row else None
+        conn, row["user_id"] if row else None, org_id
     )
     view["quota"] = {
         "totalQuota": total_quota,
@@ -597,7 +603,8 @@ def do_login(mode, identity, password, request_id, org_id=None):
                                    membership["org_id"] if membership else row["org_id"])
     conn = db()
     try:
-        view = profile(conn, owner_ref)
+        principal = _principal_for(conn, row["user_id"], membership["org_id"] if membership else row["org_id"])
+        view = profile(conn, owner_ref, principal)
     finally:
         conn.close()
     view.update({"token": token, "firstLogin": False, "relayKey": keys})
@@ -610,7 +617,11 @@ def do_me(owner_ref, demo=False, principal=None):
     if not demo and can_read_key:
         conn = db()
         try:
-            active = bool(_active_owner_refs(conn, owner_ref=owner_ref))
+            if principal:
+                active = principal.get("admission_status") == "active" and authz.allowed(
+                    principal, "keys", "rotate_self", owner_user_id=principal["user_id"])
+            else:
+                active = bool(_active_owner_refs(conn, owner_ref=owner_ref))
         finally:
             conn.close()
         delivered = relay.retry_due(
@@ -620,7 +631,7 @@ def do_me(owner_ref, demo=False, principal=None):
         relay.sync_provider_quotas(RELAY_DB)
     conn = db()
     try:
-        view = profile(conn, owner_ref)
+        view = profile(conn, owner_ref, principal)
     finally:
         conn.close()
     if demo:
@@ -638,15 +649,17 @@ def do_me(owner_ref, demo=False, principal=None):
     return 200, view
 
 
-def do_rotate(owner_ref, request_id):
-    block, admitted = issue_key_for_member(owner_ref, request_id, rotate=True)
+def do_rotate(owner_ref, request_id, principal=None):
+    principal = principal or {}
+    block, admitted = issue_key_for_member(owner_ref, request_id, user_id=principal.get("user_id"),
+                                          org_id=principal.get("org_id"), rotate=True)
     if not admitted:
         # 与 authz 的待复核口径一致：轮换被拒绝，已吊销的旧密钥不会因此复活。
         return 403, {"error": authz.PENDING_REVIEW_MESSAGE}
     return 200, block
 
 
-def do_consume(owner_ref, amount, request_id):
+def do_consume(owner_ref, amount, request_id, principal=None):
     """仅演示：只改平台分摊账面；New-API token 不设硬限额，不做同步扣减。"""
     if not isinstance(amount, int) or isinstance(amount, bool) or amount <= 0 or amount > 10 ** 7:
         return 400, {"error": "消耗数量必须是正整数"}
@@ -678,7 +691,7 @@ def do_consume(owner_ref, amount, request_id):
             conn.close()
     conn = db()
     try:
-        view = profile(conn, owner_ref)
+        view = profile(conn, owner_ref, principal)
         view["demoOnly"] = True
         view["notice"] = "平台消费仅用于演示账面，不代表 New-API 实际扣减"
         return 200, view
@@ -2123,10 +2136,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     if principal.get("demo"):
                         return self._send(403, {"error": "演示账号不发放真实成员 token"})
                     authz.require(principal, "keys", "rotate_self", owner_user_id=principal["user_id"])
-                    return self._send(*do_rotate(principal["owner_ref"], rid))
+                    return self._send(*do_rotate(principal["owner_ref"], rid, principal))
                 if path == "/api/consume":
                     authz.require(principal, "usage", "consume_self", owner_user_id=principal["user_id"])
-                    return self._send(*do_consume(principal["owner_ref"], data.get("amount"), rid))
+                    return self._send(*do_consume(principal["owner_ref"], data.get("amount"), rid, principal))
                 authz.require(principal, "sessions", "revoke_self", owner_user_id=principal["user_id"])
                 conn = db()
                 try:
