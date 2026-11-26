@@ -10,6 +10,12 @@ PILOT = config.PILOT_ORG["id"]
 
 
 class DemoBoundaryHttpTests(unittest.TestCase):
+    def test_invalid_demo_roles_return_400_without_crashing(self):
+        with DemoServer(env_overrides={"DEMO_ALLOW_LOGIN": "1"}) as server:
+            for role in (None, False, 1, [], {}, ["student"]):
+                with self.subTest(role=role):
+                    self.assertEqual(server.post("/api/demo/login", {"role": role})[0], 400)
+
     def test_demo_pat_preserves_key_delivery_restrictions(self):
         with DemoServer(env_overrides={"DEMO_ALLOW_LOGIN": "1"}) as server:
             code, demo = server.post("/api/demo/login", {"role": "student"})

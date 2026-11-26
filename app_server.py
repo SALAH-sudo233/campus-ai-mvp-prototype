@@ -729,7 +729,7 @@ def do_demo_login(role):
         return 200, {"token": token, "role": authz.PLATFORM_ADMIN, "demo": True}
     target_role = {"student": authz.ORG_MEMBER, "teacher": authz.ORG_OPERATOR,
                    authz.ORG_MEMBER: authz.ORG_MEMBER, authz.ORG_OPERATOR: authz.ORG_OPERATOR,
-                   authz.COLLEGE_VIEWER: authz.COLLEGE_VIEWER}.get(role)
+                   authz.COLLEGE_VIEWER: authz.COLLEGE_VIEWER}.get(str(role))
     if target_role is None:
         return 400, {"error": "不支持的演示身份"}
     if not ADMIN_USERNAME or not ADMIN_PASSWORD:
