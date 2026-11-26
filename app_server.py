@@ -42,7 +42,10 @@ SCRYPT = {"n": 2 ** 14, "r": 8, "p": 1, "dklen": 32}
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME")
 ADMIN_SESSION_SECONDS = 2 * 3600
-STATIC_FILES = {"/", "/index.html", "/admin", "/admin.html", "/teacher", "/teacher.html",
+STATIC_FILES = {"/", "/index.html", "/overview.html", "/student-portal.html",
+                "/college-dashboard.html", "/school-ops.html", "/platform-admin.html",
+                "/tailwindcss.min.js",
+                "/admin", "/admin.html", "/teacher", "/teacher.html",
                 "/import", "/import.html", "/gallery", "/gallery.html", "/app.js", "/admin.js",
                 "/teacher.js", "/import.js", "/gallery.js", "/components.js", "/styles.css",
                 "/agent-tools.js", "/cli/campus-cli", "/skills/campus-platform/SKILL.md"}

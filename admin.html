@@ -1,239 +1,690 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>平台管理</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>浣溪AI Lab · 平台管理端（浣溪内部 · V1 原型）</title>
+  <script src="./tailwindcss.min.js"></script>
+  <style>
+    :root {
+      --bg-page: #F7F9FC;
+      --bg-surface: #FFFFFF;
+      --bg-subtle: #F1F5F9;
+      --border: #E5E9F0;
+      --ink: #0A2540;
+      --muted: #64748B;
+      --primary: #0F4C81;
+      --accent: #0D9488;
+      --accent-soft: #ECFDF5;
+      --accent-ink: #0F766E;
+      --coral: #C85A4A;
+      --coral-soft: #FEF2F2;
+      --warn: #D97706;
+      --warn-soft: #FFFBEB;
+    }
+    body {
+      background: var(--bg-page);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+    }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-variant-numeric: tabular-nums; }
+    .cpa-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 1px 2px rgba(10, 37, 64, 0.03);
+    }
+    .cpa-pill-btn { background: #0A2540; color: #FFFFFF; border-radius: 9999px; transition: background 140ms ease; }
+    .cpa-pill-btn:hover { background: #0F4C81; }
+    .cpa-ghost-pill { background: #FFFFFF; color: var(--ink); border: 1px solid var(--border); border-radius: 9999px; transition: all 140ms ease; }
+    .cpa-ghost-pill:hover { background: var(--bg-subtle); }
+    .side-btn { transition: all 140ms ease; border-radius: 10px; }
+    .side-btn.active { background: #0A2540; color: #FFFFFF; font-weight: 600; }
+    .side-btn:not(.active) { color: var(--muted); }
+    .side-btn:not(.active):hover { background: var(--bg-subtle); color: var(--ink); }
+    .hero-grid-glow {
+      background-image:
+        radial-gradient(ellipse 65% 75% at 45% 35%, rgba(15, 76, 129, 0.07), transparent 72%),
+        linear-gradient(to right, rgba(15, 76, 129, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(15, 76, 129, 0.03) 1px, transparent 1px);
+      background-size: 100% 100%, 44px 44px, 44px 44px;
+    }
+    .section-eyebrow { display: flex; align-items: center; gap: 10px; }
+    .section-bar { width: 3px; height: 26px; border-radius: 999px; background: var(--primary); flex-shrink: 0; }
+    .drawer-backdrop { background: rgba(10, 37, 64, 0.34); backdrop-filter: blur(2px); }
+    #toast { transition: opacity 200ms ease, transform 200ms ease; }
+  </style>
 </head>
-<body>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <main class="shell">
-    <section id="adminLogin" class="login-wrap">
-      <div class="brand-mark">AD</div>
-      <p class="eyebrow">PLATFORM ADMIN</p>
-      <h1>平台管理入口</h1>
-      <p class="muted intro">平台管理员凭环境变量配置的账号登录。老师请从登录页切换“老师登录”进入教师端。</p>
-      <div class="login-card">
-        <label for="adminUsername">管理员账号</label>
-        <input id="adminUsername" autocomplete="username" placeholder="管理员账号" />
-        <label for="adminPassword">管理员口令</label>
-        <input id="adminPassword" type="password" autocomplete="current-password" placeholder="管理员密码" />
-        <p class="hint">账号与密码只从环境变量读取，不落库、不进仓库。</p>
-        <button id="adminLoginBtn" class="primary full">登录</button>
-        <button id="adminQuickLoginBtn" class="outline full hidden">管理员快捷登录管理端</button>
-        <a class="text-btn center-link" href="index.html">返回产品</a>
-      </div>
-    </section>
+<body class="antialiased min-h-screen flex flex-col">
 
-    <section id="adminView" class="hidden">
-      <header class="topbar">
-        <div class="wordmark"><span class="brand-mark small">AD</span><span>平台管理</span></div>
-        <nav class="topnav">
-          <button class="navbtn active" data-admin-tab="tokens">Token 管理</button>
-          <button class="navbtn" data-admin-tab="members">成员管理</button>
-          <button class="navbtn" data-admin-tab="works">作品管理</button>
-        </nav>
-        <div class="user-menu">
-          <select id="orgSwitcher" class="compact-select org-switcher" aria-label="切换当前组织"></select>
-          <button class="primary compact-primary" id="openCreateOrgBtn">＋ 创建组织</button>
-          <a class="ghost link-btn" href="index.html">返回产品</a>
-          <button id="adminLogoutBtn" class="ghost">退出</button>
+  <!-- Unified 4-Portal Prototype Switcher Bar -->
+  <div style="background:#0A2540; color:#E2E8F0;" class="px-4 py-2 text-xs border-b border-white/10">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
+        <a href="./overview.html" class="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium">✦ 浣溪AI Lab · V1 原型总览</a>
+        <span class="text-slate-500 hidden sm:inline">|</span>
+        <a href="./index.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">① 学生端</a>
+        <a href="./college-dashboard.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">② 学院端（纯只读）</a>
+        <a href="./school-ops.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">③ 运营管理端（学校用）</a>
+        <a href="./platform-admin.html" class="px-2.5 py-1 rounded-full bg-teal-600 text-white font-semibold">④ 平台管理端（浣溪内部）</a>
+      </div>
+      <span class="text-[11px] text-rose-200 hidden md:inline">浣溪公司内部专用 · 学院治理 / 资金审批 / 安全审计</span>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed top-14 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full text-xs font-medium shadow-lg pointer-events-none opacity-0 -translate-y-2" style="background:#0A2540; color:#FFFFFF;"></div>
+
+  <div class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+    <!-- Left Sidebar (Strict 4 Menus) -->
+    <aside class="lg:col-span-3 cpa-card p-4 space-y-5 lg:sticky lg:top-6">
+      <div class="px-2 space-y-1.5">
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg inline-flex items-center justify-center font-bold text-xs text-white" style="background:#0A2540;">✦</span>
+          <span class="text-sm font-bold tracking-tight">浣溪AI Lab</span>
         </div>
-      </header>
-      <div class="content admin-content">
-        <section id="tab-tokens" class="admin-tab active">
-          <div class="page-head">
-            <div>
-              <p class="eyebrow">TOKEN MANAGEMENT</p>
-              <h2>Token 管理</h2>
-              <p class="muted" id="selectedOrgLabel">请选择组织</p>
+        <div class="text-xs font-semibold pt-1">内部平台管理与风控中枢</div>
+        <div class="text-[11px] px-2.5 py-0.5 rounded-full inline-block font-medium" style="background:var(--coral-soft); color:var(--coral);">浣溪公司内部专用 · 物理隔离</div>
+      </div>
+
+      <nav class="space-y-1 text-xs">
+        <button onclick="switchMenu('overview')" data-menu="overview" class="side-btn w-full px-3 py-2.5 flex items-center justify-between text-left">
+          <span>① 全局总览与人才</span>
+        </button>
+        <button onclick="switchMenu('colleges')" data-menu="colleges" class="side-btn w-full px-3 py-2.5 flex items-center justify-between text-left">
+          <span>② 学院与账号管理</span>
+          <span id="badgeColleges" class="mono text-[11px] opacity-75">2</span>
+        </button>
+        <button onclick="switchMenu('quota')" data-menu="quota" class="side-btn w-full px-3 py-2.5 flex items-center justify-between text-left">
+          <span>③ 额度策略与审批中心</span>
+          <span id="badgeApprovals" class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:var(--warn-soft); color:var(--warn);">2</span>
+        </button>
+        <button onclick="switchMenu('audit')" data-menu="audit" class="side-btn w-full px-3 py-2.5 flex items-center justify-between text-left">
+          <span>④ 安全审计与防倒卖</span>
+          <span id="badgeAlerts" class="mono text-[11px] px-2 py-0.5 rounded-full font-semibold" style="background:var(--coral-soft); color:var(--coral);">2</span>
+        </button>
+      </nav>
+
+      <div class="p-3.5 rounded-xl text-[11px] leading-relaxed border border-slate-200 space-y-1" style="background:var(--bg-page); color:var(--muted);">
+        <div class="font-semibold" style="color:var(--ink);">内部治理红线</div>
+        <div>• 统一配置合作学院规则、默认初始额度与单日防刷限流。</div>
+        <div>• 严审各校追加激励池申请；全程审计校内发奖与倒卖异常，秒级冻结止损。</div>
+      </div>
+    </aside>
+
+    <!-- Main Right Workspace -->
+    <main class="lg:col-span-9 space-y-6">
+
+      <!-- ==================== MENU 1: 全局总览与高潜人才 ==================== -->
+      <section id="menu-overview" class="space-y-6">
+        <!-- CPAMC-Style Calm Global Status Hero -->
+        <div class="hero-grid-glow rounded-3xl p-6 border border-slate-200/80 flex flex-wrap items-center justify-between gap-4">
+          <div class="space-y-1.5">
+            <div class="flex items-center gap-2.5">
+              <h1 class="text-2xl font-bold tracking-tight">全平台治理运行平稳</h1>
+              <span class="w-3 h-3 rounded-full border-[3px] inline-block" style="border-color:var(--accent);"></span>
             </div>
-            <button class="outline" id="refreshRewardPreview">刷新数据</button>
+            <div class="mono text-xs" style="color:var(--muted);">合作学院 2 所 · 总预算消耗水位 61.5% · 当前有 <strong style="color:var(--warn);">2 笔待审批增额</strong> 与 <strong style="color:var(--coral);">2 条高危防倒卖告警</strong></div>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <button onclick="switchMenu('quota')" class="cpa-ghost-pill px-4 py-2 font-medium">去审批激励池</button>
+            <button onclick="switchMenu('audit')" class="px-4 py-2 rounded-full text-xs font-semibold text-white" style="background:var(--coral);">处置高危风控 →</button>
+          </div>
+        </div>
+
+        <!-- 4 Micro KPI Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="cpa-card p-5 space-y-2.5">
+            <div class="w-6 h-[3px] rounded-full" style="background:var(--primary);"></div>
+            <div class="text-xs" style="color:var(--muted);">合作试点学院</div>
+            <div class="text-2xl font-bold mono">2 <span class="text-xs font-normal" style="color:var(--muted);">所</span></div>
+            <div class="text-[11px]" style="color:var(--muted);">华科软件（运行）/ 武大计院（预置）</div>
+          </div>
+          <div class="cpa-card p-5 space-y-2.5">
+            <div class="w-6 h-[3px] rounded-full" style="background:var(--accent);"></div>
+            <div class="text-xs" style="color:var(--muted);">全平台认证学生</div>
+            <div class="text-2xl font-bold mono">918</div>
+            <div class="text-[11px]" style="color:var(--accent-ink);">本周新增 +64 人</div>
+          </div>
+          <div class="cpa-card p-5 space-y-2.5">
+            <div class="w-6 h-[3px] rounded-full" style="background:var(--primary);"></div>
+            <div class="text-xs" style="color:var(--muted);">总预算消耗水位</div>
+            <div class="text-2xl font-bold mono">61.5%</div>
+            <div class="h-[3px] rounded-full overflow-hidden" style="background:var(--bg-subtle);"><div class="h-full" style="width:61.5%; background:var(--primary);"></div></div>
+          </div>
+          <div class="cpa-card p-5 space-y-2.5 cursor-pointer hover:border-rose-300 transition" onclick="switchMenu('audit')">
+            <div class="w-6 h-[3px] rounded-full" style="background:var(--coral);"></div>
+            <div class="text-xs" style="color:var(--muted);">待处置风控告警</div>
+            <div id="kpiAlertCnt" class="text-2xl font-bold mono" style="color:var(--coral);">2</div>
+            <div class="text-[11px]" style="color:var(--coral);">含 1 条跨多 IP 疑似倒卖 →</div>
+          </div>
+        </div>
+
+        <!-- Cross-College Budget Health + High-Potential Talent Pool -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 text-xs">
+          <div class="lg:col-span-6 cpa-card p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-bold">各学院预算与激励池水位</h2>
+              <button onclick="switchMenu('colleges')" class="font-medium hover:underline" style="color:var(--primary);">管理学院 →</button>
+            </div>
+            <div class="space-y-4">
+              <div class="space-y-1.5">
+                <div class="flex justify-between">
+                  <span class="font-semibold">华中科技大学软件学院</span>
+                  <span class="mono">总预算 214.8M / 300M (71.6%)</span>
+                </div>
+                <div class="h-2 rounded-full overflow-hidden" style="background:var(--bg-subtle);"><div class="h-full rounded-full" style="width:71.6%; background:var(--primary);"></div></div>
+                <div class="text-[11px] flex justify-between" style="color:var(--muted);">
+                  <span>认证 642 人 · 作品 96 件</span>
+                  <span style="color:var(--warn);">激励池已用 82.5%（已提追加申请）</span>
+                </div>
+              </div>
+              <div class="space-y-1.5">
+                <div class="flex justify-between">
+                  <span class="font-semibold">武汉大学计算机学院（预置试点）</span>
+                  <span class="mono">总预算 31.4M / 100M (31.4%)</span>
+                </div>
+                <div class="h-2 rounded-full overflow-hidden" style="background:var(--bg-subtle);"><div class="h-full rounded-full" style="width:31.4%; background:var(--accent);"></div></div>
+                <div class="text-[11px] flex justify-between" style="color:var(--muted);">
+                  <span>认证 276 人 · 作品 21 件</span>
+                  <span style="color:var(--accent-ink);">激励池余额充裕</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <section class="panel">
-            <div class="panel-head">
-              <div><h3>组织额度总览</h3><p class="muted">本组织基础额度消耗与剩余概览；如需给指定成员手动补发或吊销密钥，可前往「成员管理」。</p></div>
-            </div>
-            <div id="adminOrgStats" class="stats admin-overview-stats"></div>
-          </section>
-
-          <section class="panel">
-            <div class="panel-head">
+          <div class="lg:col-span-6 cpa-card p-5 space-y-3">
+            <div class="flex items-center justify-between">
               <div>
-                <h3>作品奖励统一结算</h3>
-                <p class="muted" id="rewardsOrgHint">每两周评审一次 · 平台额外激励（不扣减组织原定额度）· 纯按有效点赞排序（排除自赞、单件作品不重复获奖）。</p>
+                <h2 class="text-sm font-bold">跨院高潜拔尖学生池（浣溪内部视角）</h2>
+                <p class="text-[11px] mt-0.5" style="color:var(--muted);">自动汇总高有效消耗 + 精选/获奖学生，服务实习生与校招人才连接</p>
               </div>
-              <button class="primary" id="settleRewardsBtn">确认统一结算发奖</button>
             </div>
+            <div id="talentPoolList" class="divide-y divide-slate-100"></div>
+          </div>
+        </div>
+      </section>
 
-            <div id="rewardOverviewStats" class="stats admin-overview-stats"></div>
-
-            <p class="muted" id="rewardBaseHint" style="margin:0 0 12px;font-size:12px">按组织成员初始额度的 10× / 5× / 1× 三档发放，可按需微调各档名额或勾选排除异常作品。</p>
-
-            <div class="reward-config-bar">
-              <label class="reward-field period-field">
-                <span>结算期次</span>
-                <input id="rewardPeriodInput" maxlength="60" placeholder="例如 2026 第 1 期" />
-              </label>
-              <label class="reward-field tier-field">
-                <span>🥇 一等奖（10×）名额</span>
-                <input id="tierSlot10x" type="number" min="0" max="200" value="1" />
-                <small class="muted" id="tierAmount10x"></small>
-              </label>
-              <label class="reward-field tier-field">
-                <span>🥈 二等奖（5×）名额</span>
-                <input id="tierSlot5x" type="number" min="0" max="200" value="5" />
-                <small class="muted" id="tierAmount5x"></small>
-              </label>
-              <label class="reward-field tier-field">
-                <span>🥉 三等奖（1×）名额</span>
-                <input id="tierSlot1x" type="number" min="0" max="200" value="10" />
-                <small class="muted" id="tierAmount1x"></small>
-              </label>
-            </div>
-
-            <div class="reward-preview-summary" id="rewardPreviewSummary">正在加载候选榜……</div>
-            <div class="table-scroll"><table class="data-table" id="rewardCandidatesTable"></table></div>
-          </section>
-
-          <section class="panel">
-            <div class="panel-head">
-              <div><h3>历史结算与发奖记录</h3><p class="muted">每期结算批次与获奖作品明细，发奖后自动写入作者账本并公示于作品广场。</p></div>
-            </div>
-            <div id="rewardHistoryList" class="reward-history-list"></div>
-          </section>
-        </section>
-
-        <section id="tab-members" class="admin-tab">
-          <div class="page-head">
+      <!-- ==================== MENU 2: 学院与账号管理 ==================== -->
+      <section id="menu-colleges" class="hidden space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="section-eyebrow">
+            <div class="section-bar"></div>
             <div>
-              <p class="eyebrow">MEMBERS</p>
-              <h2>成员管理</h2>
-              <p class="muted" id="memberOrgHint">支持录入学生/老师、CSV 批量导入、批量赠送额度与吊销密钥。</p>
+              <div class="text-[11px]" style="color:var(--muted);">跨校配置底座</div>
+              <h1 class="text-lg font-bold">合作学院配置与校方账号分发</h1>
             </div>
-            <div class="inline-actions">
-              <button class="primary compact-primary" id="openAddMemberBtn">＋ 录入成员</button>
-              <button class="outline compact-btn" id="openImportModalBtn">CSV 批量导入</button>
+          </div>
+          <button onclick="openNewCollegeModal()" class="cpa-pill-btn px-4 py-2 text-xs font-medium">+ 开通新试点学院</button>
+        </div>
+
+        <div id="collegesList" class="space-y-4"></div>
+      </section>
+
+      <!-- ==================== MENU 3: 额度策略与审批中心 ==================== -->
+      <section id="menu-quota" class="hidden space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="section-eyebrow">
+            <div class="section-bar" style="background:var(--accent);"></div>
+            <div>
+              <div class="text-[11px]" style="color:var(--muted);">资金出口管控（适配机制 A）</div>
+              <h1 class="text-lg font-bold">激励池追加审批与额度防刷策略</h1>
+            </div>
+          </div>
+          <div class="inline-flex p-0.5 rounded-full border border-slate-200 bg-white text-xs">
+            <button onclick="setQuotaSub('approvals')" data-qsub="approvals" class="qsub-btn px-4 py-1.5 rounded-full font-medium">激励池追加审批</button>
+            <button onclick="setQuotaSub('policies')" data-qsub="policies" class="qsub-btn px-4 py-1.5 rounded-full font-medium">学院基础额度与防刷限流</button>
+          </div>
+        </div>
+
+        <!-- Sub 1: Incentive Pool Top-up Approval Queue -->
+        <div id="qsub-approvals" class="space-y-3.5"></div>
+
+        <!-- Sub 2: College Quota Policies -->
+        <div id="qsub-policies" class="hidden space-y-4 text-xs">
+          <div class="cpa-card p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-sm font-bold">华中科技大学软件学院 · 额度与防刷保险丝配置</h2>
+                <p class="mt-0.5" style="color:var(--muted);">修改后仅影响新发放与后续调用限流，所有变更自动记录安全审计日志</p>
+              </div>
+              <button onclick="showToast('学院额度与防刷策略已保存并写入审计日志')" class="cpa-pill-btn px-4 py-1.5 font-medium">保存策略</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-medium mb-1">学生认证默认初始免费额度（Token）</label>
+                <input type="number" value="1000000" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 mono text-xs" />
+              </div>
+              <div>
+                <label class="block font-medium mb-1">单学生单日防刷消费上限（第一道保险丝）</label>
+                <input type="number" value="200000" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 mono text-xs" />
+              </div>
+              <div>
+                <label class="block font-medium mb-1">学院学期总预算天花板（Token）</label>
+                <input type="number" value="300000000" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 mono text-xs" />
+              </div>
+              <div>
+                <label class="block font-medium mb-1">总预算 / 激励池水位预警线（%）</label>
+                <input type="number" value="80" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 mono text-xs" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== MENU 4: 安全审计与防倒卖 ==================== -->
+      <section id="menu-audit" class="hidden space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="section-eyebrow">
+            <div class="section-bar" style="background:var(--coral);"></div>
+            <div>
+              <div class="text-[11px]" style="color:var(--muted);">安全红线 · 防倒卖与全链路可追溯</div>
+              <h1 class="text-lg font-bold">反倒卖异常监控与全链路审计日志</h1>
+            </div>
+          </div>
+          <div class="inline-flex p-0.5 rounded-full border border-slate-200 bg-white text-xs">
+            <button onclick="setAuditSub('risks')" data-asub="risks" class="asub-btn px-4 py-1.5 rounded-full font-medium">反倒卖与发奖异常告警</button>
+            <button onclick="setAuditSub('logs')" data-asub="logs" class="asub-btn px-4 py-1.5 rounded-full font-medium">全链路操作日志</button>
+          </div>
+        </div>
+
+        <!-- Sub 1: Anti-Scalping & Abuse Alerts -->
+        <div id="asub-risks" class="space-y-3.5"></div>
+
+        <!-- Sub 2: Full-Chain Immutable Audit Logs -->
+        <div id="asub-logs" class="hidden cpa-card overflow-hidden text-xs">
+          <div class="px-5 py-3.5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <select id="logScopeFilter" onchange="renderAuditLogs()" class="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-xs">
+                <option value="all">全部来源端</option>
+                <option value="学生端">学生端</option>
+                <option value="校内运营端">校内运营端（含池内发奖）</option>
+                <option value="浣溪平台端">浣溪平台端</option>
+              </select>
+              <input id="logSearch" oninput="renderAuditLogs()" type="text" placeholder="搜索账号、动作或单号..." class="px-3.5 py-1.5 rounded-full border border-slate-200 text-xs w-52 focus:outline-none focus:border-[#0F4C81]" />
+            </div>
+            <span class="text-[11px]" style="color:var(--muted);">不可篡改日志 · 不记录任何密钥明文</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-100 text-[11px]" style="background:var(--bg-page); color:var(--muted);">
+                  <th class="px-5 py-2.5 font-medium">时间</th>
+                  <th class="px-4 py-2.5 font-medium">来源端</th>
+                  <th class="px-4 py-2.5 font-medium">操作人</th>
+                  <th class="px-4 py-2.5 font-medium">关键事件与对象</th>
+                  <th class="px-5 py-2.5 font-medium text-right">结果</th>
+                </tr>
+              </thead>
+              <tbody id="auditLogsBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Freeze Confirm Modal -->
+  <div id="freezeModal" class="hidden fixed inset-0 z-50 drawer-backdrop flex items-center justify-center p-4" onclick="if(event.target===this) closeFreezeModal()">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-4 text-xs">
+      <div>
+        <h3 class="text-sm font-bold" style="color:var(--coral);">确认立即冻结该学生 API Key？</h3>
+        <p id="freezeTargetDesc" class="mt-1 leading-relaxed" style="color:var(--muted);"></p>
+      </div>
+      <div>
+        <label class="block font-medium mb-1">冻结处置原因（将同步展示在学生端红条提示中）</label>
+        <input id="freezeReasonInput" type="text" value="检测到近 24h 内跨 19 个来源 IP 连续高频调用，疑似共享/倒卖密钥" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs" />
+      </div>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeFreezeModal()" class="cpa-ghost-pill px-4 py-1.5">取消</button>
+        <button onclick="confirmFreeze()" class="px-5 py-1.5 rounded-full text-white font-semibold" style="background:var(--coral);">确认秒级冻结</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approve Topup Double-Confirm Modal (Prevents #8 duplicate click!) -->
+  <div id="approveModal" class="hidden fixed inset-0 z-50 drawer-backdrop flex items-center justify-center p-4" onclick="if(event.target===this) closeApproveModal()">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-4 text-xs">
+      <h3 class="text-sm font-bold">二次确认 · 审批通过学院激励池追加</h3>
+      <div id="approveSummaryBox" class="p-3.5 rounded-xl border border-slate-200 leading-relaxed" style="background:var(--bg-page);"></div>
+      <div class="text-[11px]" style="color:var(--muted);">注：每笔审批绑定唯一幂等单号，防止重复点击多发预算；确认后立即注入该学院激励池并写入审计日志。</div>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeApproveModal()" class="cpa-ghost-pill px-4 py-1.5">取消</button>
+        <button onclick="confirmApproveTopup()" class="cpa-pill-btn px-5 py-1.5 font-semibold">确认批复到账</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New College Modal -->
+  <div id="newCollegeModal" class="hidden fixed inset-0 z-50 drawer-backdrop flex items-center justify-center p-4" onclick="if(event.target===this) closeNewCollegeModal()">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-4 text-xs">
+      <h3 class="text-sm font-bold">开通新试点学院（配置化扩展）</h3>
+      <div class="space-y-3">
+        <div><label class="block font-medium mb-1">学校与学院名称</label><input id="ncName" type="text" placeholder="例如：华中科技大学计算机学院" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs" /></div>
+        <div><label class="block font-medium mb-1">允许的教育邮箱后缀</label><input id="ncDomain" type="text" placeholder="例如：@hust.edu.cn" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono text-xs" /></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block font-medium mb-1">学院总预算 (M)</label><input id="ncBudget" type="number" value="150" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono text-xs" /></div>
+          <div><label class="block font-medium mb-1">初始激励池 (M)</label><input id="ncPool" type="number" value="15" class="w-full px-3 py-2 rounded-xl border border-slate-300 mono text-xs" /></div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeNewCollegeModal()" class="cpa-ghost-pill px-4 py-1.5">取消</button>
+        <button onclick="createNewCollege()" class="cpa-pill-btn px-5 py-1.5 font-semibold">开通并生成校方账号</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let activeMenu = 'overview';
+    let quotaSub = 'approvals';
+    let auditSub = 'risks';
+    let freezeTargetId = null;
+    let approveTargetId = null;
+
+    let talents = [
+      { name: '林知行', college: '华科软件 · 本科大三', email: 'linzhixing@hust.edu.cn', highlight: '4.82M 消耗 · 双周榜 #1 · 精选作品', tagged: true },
+      { name: '周予安', college: '华科软件 · 研一', email: 'zhouyuan@hust.edu.cn', highlight: '4.26M 消耗 · 论文精读卡片作者', tagged: false },
+      { name: '陈一鸣', college: '华科软件 · 本科大四', email: 'chenyiming@hust.edu.cn', highlight: '3.65M 消耗 · 社团志愿核心 · 精选作品', tagged: false }
+    ];
+
+    let colleges = [
+      { id: 'c-1', name: '华中科技大学 · 软件学院', domain: '@hust.edu.cn', status: '运行中', budgetUsed: 214.8, budgetTotal: 300, poolRemain: 3.5, poolTotal: 20, collegeAcct: 'dean_hust_se', opsAcct: 'ops_hust_se_club' },
+      { id: 'c-2', name: '武汉大学 · 计算机学院（预置试点）', domain: '@whu.edu.cn', status: '预置试跑', budgetUsed: 31.4, budgetTotal: 100, poolRemain: 8.0, poolTotal: 10, collegeAcct: 'dean_whu_cs', opsAcct: 'ops_whu_cs_club' }
+    ];
+
+    let approvals = [
+      { id: 'REQ-1126-01', college: '华中科技大学 · 软件学院', amount: 10000000, poolLeft: '3.5M / 20M', budgetLeft: '85.2M', works30d: 96, reason: '用于 12 月第 1 期黑客松优胜奖发放、第 3 期双周 Top 10 及 6 名社团志愿者激励', time: '今日 09:40', status: 'pending' },
+      { id: 'REQ-1125-04', college: '武汉大学 · 计算机学院', amount: 5000000, poolLeft: '8.0M / 10M', budgetLeft: '68.6M', works30d: 21, reason: '首场校内 Workshop 结课激励预算预备', time: '昨日 17:15', status: 'pending' }
+    ];
+
+    let risks = [
+      { id: 'r-1', level: 'high', type: '疑似 Key 倒卖 / 多人共享', target: 'zhangwei@hust.edu.cn', college: '华科软件学院', evidence: '24h 跨 19 个来源 IP · 连续调用 14 小时 · 消耗 890K / 0 作品', status: 'open' },
+      { id: 'r-2', level: 'high', type: '高频异常重置 Key', target: 'liyang@hust.edu.cn', college: '华科软件学院', evidence: '7 天内重置密钥 6 次 · 凌晨 2:00-5:00 突增调用 420K', status: 'open' },
+      { id: 'r-3', level: 'med', type: '校内发奖异常集中稽核（机制 A）', target: 'ops_hust_se_club → wangxx@hust.edu.cn', college: '华科软件学院', evidence: '7 天内向同一学生邮箱连续发放 3 笔激励（累计 1.5M）', status: 'review' }
+    ];
+
+    let auditLogs = [
+      { time: '11-26 10:18', scope: '学生端', actor: 'zhangwei@hust.edu.cn', detail: '触发反倒卖规则：24h 来源 IP 数达到 19（阈值 8）', res: '高危告警' },
+      { time: '11-26 09:40', scope: '校内运营端', actor: 'ops_hust_se_club', detail: '提交追加激励池申请 #REQ-1126-01（+10,000,000 Token）', res: '待审批' },
+      { time: '11-24 18:20', scope: '校内运营端', actor: 'ops_hust_se_club', detail: '从学院激励池向 linzhixing@hust.edu.cn 发放 +500,000（双周榜 #1）', res: '已到账' },
+      { time: '11-23 15:02', scope: '学生端', actor: 'linzhixing@hust.edu.cn', detail: '重置个人 API Key（旧密钥 sk-hx******2a10 立即失效）', res: '成功' },
+      { time: '11-16 11:00', scope: '浣溪平台端', actor: 'ouyangchao (超管)', detail: '批复华科软件学院首期激励池 20,000,000 Token（幂等号 #REQ-1116-01）', res: '已生效' }
+    ];
+
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.remove('opacity-0', '-translate-y-2');
+      el.classList.add('opacity-100', 'translate-y-0');
+      clearTimeout(window.__t);
+      window.__t = setTimeout(() => { el.classList.add('opacity-0', '-translate-y-2'); el.classList.remove('opacity-100', 'translate-y-0'); }, 2400);
+    }
+
+    function switchMenu(m) {
+      activeMenu = m;
+      ['overview', 'colleges', 'quota', 'audit'].forEach(k => document.getElementById('menu-' + k).classList.toggle('hidden', k !== m));
+      document.querySelectorAll('.side-btn').forEach(b => b.classList.toggle('active', b.dataset.menu === m));
+      renderBadges();
+      if (m === 'overview') renderTalents();
+      if (m === 'colleges') renderColleges();
+      if (m === 'quota') setQuotaSub(quotaSub);
+      if (m === 'audit') setAuditSub(auditSub);
+    }
+
+    function renderBadges() {
+      document.getElementById('badgeColleges').textContent = colleges.length;
+      const pendApp = approvals.filter(a => a.status === 'pending').length;
+      document.getElementById('badgeApprovals').textContent = pendApp;
+      const openRisks = risks.filter(r => r.status === 'open').length;
+      document.getElementById('badgeAlerts').textContent = openRisks;
+      document.getElementById('kpiAlertCnt').textContent = openRisks;
+    }
+
+    function renderTalents() {
+      document.getElementById('talentPoolList').innerHTML = talents.map((t, i) => `
+        <div class="py-3 flex items-center justify-between gap-3">
+          <div>
+            <div class="font-semibold">${t.name} <span class="font-normal" style="color:var(--muted);">· ${t.college}</span></div>
+            <div class="text-[11px] mt-0.5" style="color:var(--muted);">${t.highlight}</div>
+          </div>
+          <button onclick="talents[${i}].tagged=!talents[${i}].tagged; renderTalents(); showToast(talents[${i}].tagged?'已标为校招/实习重点跟进':'已取消跟进标记')" class="px-3 py-1 rounded-full text-[11px] font-medium border shrink-0" style="${t.tagged ? 'background:#EFF6FF; color:var(--primary); border-color:#BFDBFE;' : 'background:#FFFFFF; color:var(--muted); border-color:var(--border);'}">${t.tagged ? '★ 重点跟进' : '+ 标记人才'}</button>
+        </div>
+      `).join('');
+    }
+
+    function renderColleges() {
+      document.getElementById('collegesList').innerHTML = colleges.map(c => `
+        <div class="cpa-card p-5 space-y-4 text-xs">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold">${c.name}</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">${c.status}</span>
+              </div>
+              <div class="mono text-[11px] mt-1" style="color:var(--muted);">允许教育邮箱后缀：${c.domain} · 本/研映射：跟随学院导入名单</div>
+            </div>
+            <div class="mono text-right">
+              <div>总预算 <strong>${c.budgetUsed}M / ${c.budgetTotal}M</strong></div>
+              <div style="color:var(--accent-ink);">激励池余 <strong>${c.poolRemain}M / ${c.poolTotal}M</strong></div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+            <div class="p-3 rounded-xl border border-slate-200 flex items-center justify-between" style="background:var(--bg-page);">
+              <div>
+                <div class="font-semibold">② 学院端只读账号（给院长/领导）</div>
+                <div class="mono text-[11px] mt-0.5" style="color:var(--muted);">${c.collegeAcct} · 严格纯只读权限</div>
+              </div>
+              <button onclick="showToast('已重置 ${c.collegeAcct} 访问口令并写入审计日志')" class="cpa-ghost-pill px-3 py-1 text-[11px]">重置口令</button>
+            </div>
+            <div class="p-3 rounded-xl border border-slate-200 flex items-center justify-between" style="background:var(--bg-page);">
+              <div>
+                <div class="font-semibold">③ 校内运营端账号（给社团/志愿者）</div>
+                <div class="mono text-[11px] mt-0.5" style="color:var(--muted);">${c.opsAcct} · 限本院日常运营与池内发奖</div>
+              </div>
+              <button onclick="showToast('已重置 ${c.opsAcct} 访问口令并写入审计日志')" class="cpa-ghost-pill px-3 py-1 text-[11px]">重置口令</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openNewCollegeModal() { document.getElementById('newCollegeModal').classList.remove('hidden'); }
+    function closeNewCollegeModal() { document.getElementById('newCollegeModal').classList.add('hidden'); }
+    function createNewCollege() {
+      const name = document.getElementById('ncName').value.trim();
+      const domain = document.getElementById('ncDomain').value.trim() || '@edu.cn';
+      const bud = Number(document.getElementById('ncBudget').value) || 150;
+      const pool = Number(document.getElementById('ncPool').value) || 15;
+      if (!name) { showToast('请输入学院名称'); return; }
+      const slug = 'col_' + (colleges.length + 1);
+      colleges.push({ id: 'c-' + Date.now(), name, domain, status: '新开通', budgetUsed: 0, budgetTotal: bud, poolRemain: pool, poolTotal: pool, collegeAcct: 'dean_' + slug, opsAcct: 'ops_' + slug });
+      auditLogs.unshift({ time: '刚刚', scope: '浣溪平台端', actor: 'ouyangchao (超管)', detail: `开通新试点学院「${name}」（预算 ${bud}M / 初始激励池 ${pool}M）`, res: '成功' });
+      closeNewCollegeModal();
+      renderBadges();
+      renderColleges();
+      showToast(`已开通「${name}」并生成独立校方只读账号与运营账号`);
+    }
+
+    function setQuotaSub(s) {
+      quotaSub = s;
+      ['approvals', 'policies'].forEach(k => document.getElementById('qsub-' + k).classList.toggle('hidden', k !== s));
+      document.querySelectorAll('.qsub-btn').forEach(b => {
+        const a = b.dataset.qsub === s;
+        b.style.background = a ? '#0A2540' : 'transparent';
+        b.style.color = a ? '#FFFFFF' : '#64748B';
+      });
+      renderApprovals();
+    }
+
+    function renderApprovals() {
+      document.getElementById('qsub-approvals').innerHTML = approvals.map(a => `
+        <div class="cpa-card p-5 space-y-3 text-xs">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="mono font-bold text-sm">${a.id}</span>
+                <span class="font-bold text-sm">${a.college}</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="${a.status==='pending' ? 'background:var(--warn-soft); color:var(--warn);' : a.status==='approved' ? 'background:var(--accent-soft); color:var(--accent-ink);' : 'background:var(--coral-soft); color:var(--coral);'}">${a.status==='pending'?'待浣溪审批':a.status==='approved'?'已批复注入激励池':'已驳回'}</span>
+              </div>
+              <div style="color:var(--muted);">申请事由：${a.reason}</div>
+            </div>
+            <div class="text-right">
+              <div class="text-xl font-bold mono" style="color:var(--primary);">+${(a.amount/1000000).toFixed(0)}M</div>
+              <div class="text-[11px]" style="color:var(--muted);">申请追加激励池</div>
             </div>
           </div>
 
-          <section class="panel">
-            <div class="member-toolbar">
-              <div class="inline-actions">
-                <input id="adminMemberSearch" placeholder="搜索姓名 / 学号 / 邮箱" />
-                <button class="outline" id="adminMemberSearchBtn">搜索</button>
-              </div>
-              <div class="inline-actions">
-                <input id="bulkAmount" type="number" min="1" value="5000" aria-label="批量赠送额度" class="compact-num" />
-                <button class="outline" id="bulkGrantBtn">批量赠送</button>
-                <button class="danger" id="bulkRevokeBtn">批量吊销</button>
-              </div>
-            </div>
-            <div class="table-scroll"><table class="data-table" id="adminMemberTable"></table></div>
-          </section>
-        </section>
-
-        <section id="tab-works" class="admin-tab">
-          <div class="page-head">
-            <div>
-              <p class="eyebrow">WORKS</p>
-              <h2>作品管理</h2>
-              <p class="muted" id="worksOrgHint">平台管理员可按状态与软件类型筛选本组织作品，执行审核、精选与全局下架。</p>
-            </div>
-            <button class="outline" id="refreshOrgWorks">刷新</button>
+          <div class="grid grid-cols-3 gap-3 p-3 rounded-xl border border-slate-100 text-[11px]" style="background:var(--bg-page);">
+            <div><span style="color:var(--muted);">当前激励池余量：</span><strong class="mono">${a.poolLeft}</strong></div>
+            <div><span style="color:var(--muted);">学院剩余总预算：</span><strong class="mono">${a.budgetLeft}</strong></div>
+            <div><span style="color:var(--muted);">近 30 天产出作品：</span><strong class="mono" style="color:var(--accent-ink);">${a.works30d} 件</strong></div>
           </div>
 
-          <section class="panel">
-            <div class="teacher-works-toolbar">
-              <div class="ph-sorts" id="adminWorkTabs" role="tablist" aria-label="作品状态筛选"></div>
-              <div class="ph-cats" id="adminWorkTypes" role="tablist" aria-label="软件类型筛选"></div>
+          ${a.status === 'pending' ? `
+            <div class="flex justify-end gap-2 pt-1">
+              <button onclick="rejectTopup('${a.id}')" class="cpa-ghost-pill px-4 py-1.5 font-medium">驳回申请</button>
+              <button onclick="openApproveModal('${a.id}')" class="cpa-pill-btn px-5 py-1.5 font-semibold">审批通过（二次确认）</button>
             </div>
-            <div id="adminWorks" class="work-grid"></div>
-          </section>
-        </section>
-      </div>
-    </section>
-  </main>
+          ` : ''}
+        </div>
+      `).join('');
+    }
 
-  <div id="createOrgModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="createOrgModalTitle">
-    <div class="modal-box modal-form">
-      <button class="close" data-close-modal="createOrgModal" aria-label="关闭">×</button>
-      <h3 id="createOrgModalTitle">创建组织</h3>
-      <p class="muted modal-desc">创建后将自动切换到该组织，可继续录入老师与学生名单。</p>
-      <label for="newOrgName">组织名称</label>
-      <input id="newOrgName" maxlength="80" placeholder="例如 计算机学院" />
-      <label for="newOrgSlug" class="field-gap">组织标识（slug）</label>
-      <input id="newOrgSlug" maxlength="60" placeholder="例如 cs-school" />
-      <p class="hint">仅支持小写字母、数字和连字符（2–60 位）。</p>
-      <label for="newOrgQuotaLimit" class="field-gap">总额度上限（Token）</label>
-      <input id="newOrgQuotaLimit" type="number" min="1" step="10000" value="1000000" placeholder="例如 1000000（留空表示不限）" />
-      <p class="hint">设置本组织可使用的 Token 总额度上限，留空表示不限制。</p>
-      <div class="modal-actions">
-        <button class="ghost" data-close-modal="createOrgModal">取消</button>
-        <button class="primary" id="createOrgBtn">确认创建</button>
-      </div>
-    </div>
-  </div>
+    function openApproveModal(id) {
+      approveTargetId = id;
+      const a = approvals.find(x => x.id === id);
+      document.getElementById('approveSummaryBox').innerHTML = `
+        <div><strong>幂等审批单号：</strong><span class="mono">${a.id}</span></div>
+        <div class="mt-1"><strong>目标学院：</strong>${a.college}</div>
+        <div class="mt-1"><strong>批复追加额度：</strong><span class="mono font-bold" style="color:var(--primary);">+${a.amount.toLocaleString('zh-CN')} Token</span></div>
+      `;
+      document.getElementById('approveModal').classList.remove('hidden');
+    }
+    function closeApproveModal() { document.getElementById('approveModal').classList.add('hidden'); }
+    function confirmApproveTopup() {
+      const a = approvals.find(x => x.id === approveTargetId);
+      if (a) {
+        a.status = 'approved';
+        auditLogs.unshift({ time: '刚刚', scope: '浣溪平台端', actor: 'ouyangchao (超管)', detail: `审批通过 ${a.id}：向 ${a.college} 激励池注入 +${(a.amount/1000000).toFixed(0)}M Token`, res: '已到账' });
+      }
+      closeApproveModal();
+      renderBadges();
+      renderApprovals();
+      showToast(`审批单 ${a.id} 已批复注入该院激励池（幂等落盘审计日志）`);
+    }
+    function rejectTopup(id) {
+      const a = approvals.find(x => x.id === id);
+      if (a) {
+        a.status = 'rejected';
+        auditLogs.unshift({ time: '刚刚', scope: '浣溪平台端', actor: 'ouyangchao (超管)', detail: `驳回追加激励池申请 ${a.id}`, res: '已驳回' });
+      }
+      renderBadges();
+      renderApprovals();
+      showToast(`已驳回审批单 ${id}`);
+    }
 
-  <div id="addMemberModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="addMemberModalTitle">
-    <div class="modal-box modal-form">
-      <button class="close" data-close-modal="addMemberModal" aria-label="关闭">×</button>
-      <h3 id="addMemberModalTitle">录入成员</h3>
-      <p class="muted modal-desc" id="addMemberOrgLabel">所属组织：—</p>
-      <div class="form-grid">
-        <label>身份角色
-          <select id="memberRole" class="full-select">
-            <option value="org_member">学生</option>
-            <option value="org_admin">教师</option>
-          </select>
-        </label>
-        <label>准入状态
-          <select id="memberAdmission" class="full-select">
-            <option value="active">已准入</option>
-            <option value="pending_review">待复核</option>
-            <option value="disabled">已停用</option>
-          </select>
-        </label>
-      </div>
-      <label for="memberName" class="field-gap">姓名</label>
-      <input id="memberName" maxlength="80" placeholder="请输入姓名" />
-      <label for="memberStudentId" class="field-gap">学号 / 工号</label>
-      <input id="memberStudentId" maxlength="40" placeholder="例如 2024001201（学号与邮箱至少填一项）" />
-      <label for="memberEmail" class="field-gap">校园邮箱</label>
-      <input id="memberEmail" maxlength="80" placeholder="例如 2024001201@mail.hust.edu.cn" />
-      <div class="modal-actions">
-        <button class="ghost" data-close-modal="addMemberModal">取消</button>
-        <button class="primary" id="addMemberConfirmBtn">确认录入</button>
-      </div>
-    </div>
-  </div>
+    function setAuditSub(s) {
+      auditSub = s;
+      ['risks', 'logs'].forEach(k => document.getElementById('asub-' + k).classList.toggle('hidden', k !== s));
+      document.querySelectorAll('.asub-btn').forEach(b => {
+        const a = b.dataset.asub === s;
+        b.style.background = a ? '#0A2540' : 'transparent';
+        b.style.color = a ? '#FFFFFF' : '#64748B';
+      });
+      renderRisks();
+      renderAuditLogs();
+    }
 
-  <div id="importMembersModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="importMembersModalTitle">
-    <div class="modal-box modal-wide">
-      <button class="close" data-close-modal="importMembersModal" aria-label="关闭">×</button>
-      <div class="import-head modal-import-head">
-        <div class="import-title"><h3 id="importMembersModalTitle">CSV 批量导入名单</h3><span class="muted" id="importModalOrgLabel">所属组织：—</span></div>
-        <button class="outline compact-btn" id="adminDownloadTemplate">下载 CSV 模板</button>
-      </div>
-      <p class="hint">仅收 UTF-8 CSV，先预览再确认，预览不会写入成员表（上限 10 MB、10,000 行）。</p>
-      <div class="import-bar">
-        <label class="file-drop compact"><input id="adminCsvFile" type="file" accept=".csv,text/csv" /><span>选择 UTF-8 CSV 文件</span></label>
-        <button class="primary compact-primary" id="adminPreviewBtn">解析并预览</button>
-        <span id="adminImportStatus" class="import-status">未选择文件</span>
-      </div>
-      <details class="import-spec">
-        <summary>查看列定义与常见错误说明</summary>
-        <table class="data-table compact-table"><thead><tr><th>列</th><th>说明</th></tr></thead><tbody><tr><td>external_ref</td><td>组织内稳定的外部编号，必填</td></tr><tr><td>student_id</td><td>学号，学号与邮箱至少填一个</td></tr><tr><td>email</td><td>校园邮箱，统一转小写</td></tr><tr><td>name</td><td>姓名，必填</td></tr><tr><td>role</td><td>org_admin / org_member，也接受教师 / 学生</td></tr><tr><td>status</td><td>active / disabled</td></tr></tbody></table>
-        <p class="hint">常见错误：列数不对、身份重复、字段以公式前缀开头、文件不是 UTF-8、超出大小或行数上限。错误信息会脱敏邮箱和学号。</p>
-      </details>
-      <section id="adminPreviewArea" class="hidden"><h4 class="section-title">预览结果</h4><div id="adminPreviewContent"></div></section>
-      <section id="adminCommitArea" class="hidden notice success"><b>确认结果</b><div id="adminCommitContent"></div></section>
-    </div>
-  </div>
+    function renderRisks() {
+      document.getElementById('asub-risks').innerHTML = risks.map(r => {
+        const isFrozen = r.status === 'frozen';
+        const isCleared = r.status === 'cleared';
+        return `
+          <div class="cpa-card p-5 space-y-3 text-xs" style="${r.level==='high' && r.status==='open' ? 'border-color:#FCA5A5;' : ''}">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold" style="${r.level==='high' ? 'background:var(--coral-soft); color:var(--coral);' : 'background:var(--warn-soft); color:var(--warn);'}">${r.level==='high'?'高危风控':'中危稽核'}</span>
+                  <span class="text-sm font-bold">${r.type}</span>
+                  <span class="mono text-xs" style="color:var(--primary);">${r.target}</span>
+                </div>
+                <div style="color:var(--muted);">${r.college} · 命中特征：${r.evidence}</div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                ${isFrozen ? `
+                  <span class="px-2.5 py-1 rounded-full font-medium" style="background:var(--coral-soft); color:var(--coral);">● Key 已冻结</span>
+                  <button onclick="unfreezeRisk('${r.id}')" class="cpa-ghost-pill px-3 py-1.5">解冻 Key</button>
+                ` : isCleared ? `
+                  <span class="px-2.5 py-1 rounded-full font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">✓ 已核实无异常</span>
+                ` : r.level === 'high' ? `
+                  <button onclick="openFreezeModal('${r.id}')" class="px-4 py-1.5 rounded-full text-white font-semibold" style="background:var(--coral);">一键冻结 Key</button>
+                  <button onclick="clearRisk('${r.id}')" class="cpa-ghost-pill px-3 py-1.5">误报忽略</button>
+                ` : `
+                  <button onclick="clearRisk('${r.id}')" class="cpa-pill-btn px-4 py-1.5 font-medium">核实通过</button>
+                `}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
 
-  <script src="components.js"></script>
-  <script src="admin.js"></script>
+    function openFreezeModal(id) {
+      freezeTargetId = id;
+      const r = risks.find(x => x.id === id);
+      document.getElementById('freezeTargetDesc').textContent = `目标账号：${r.target}（${r.college}）。冻结后将秒级阻断其全部中转 API 请求，并在学生端顶部显示红色风控提示与申诉入口。`;
+      document.getElementById('freezeModal').classList.remove('hidden');
+    }
+    function closeFreezeModal() { document.getElementById('freezeModal').classList.add('hidden'); }
+    function confirmFreeze() {
+      const r = risks.find(x => x.id === freezeTargetId);
+      const reason = document.getElementById('freezeReasonInput').value.trim();
+      if (r) {
+        r.status = 'frozen';
+        auditLogs.unshift({ time: '刚刚', scope: '浣溪平台端', actor: 'ouyangchao (超管)', detail: `一键冻结 ${r.target} API Key（原因：${reason}）`, res: '已阻断' });
+      }
+      closeFreezeModal();
+      renderBadges();
+      renderRisks();
+      showToast(`已秒级冻结 ${r.target} 的 API Key，学生端已同步展示冻结提示`);
+    }
+    function unfreezeRisk(id) {
+      const r = risks.find(x => x.id === id);
+      if (r) {
+        r.status = 'cleared';
+        auditLogs.unshift({ time: '刚刚', scope: '浣溪平台端', actor: 'ouyangchao (超管)', detail: `复核解冻 ${r.target} API Key`, res: '已解冻' });
+      }
+      renderBadges();
+      renderRisks();
+      showToast(`已解冻 ${r.target}`);
+    }
+    function clearRisk(id) {
+      const r = risks.find(x => x.id === id);
+      if (r) r.status = 'cleared';
+      renderBadges();
+      renderRisks();
+      showToast('已标记为核实通过');
+    }
+
+    function renderAuditLogs() {
+      const sc = document.getElementById('logScopeFilter').value;
+      const q = (document.getElementById('logSearch').value || '').trim().toLowerCase();
+      const list = auditLogs.filter(l => (sc === 'all' || l.scope === sc) && (!q || l.actor.toLowerCase().includes(q) || l.detail.toLowerCase().includes(q)));
+      document.getElementById('auditLogsBody').innerHTML = list.map(l => `
+        <tr>
+          <td class="px-5 py-3 mono" style="color:var(--muted);">${l.time}</td>
+          <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full text-[11px]" style="background:var(--bg-subtle);">${l.scope}</span></td>
+          <td class="px-4 py-3 mono">${l.actor}</td>
+          <td class="px-4 py-3">${l.detail}</td>
+          <td class="px-5 py-3 text-right font-medium" style="color:${l.res.includes('高危')||l.res.includes('阻断')?'var(--coral)':l.res.includes('待')?'var(--warn)':'var(--accent-ink)'};">${l.res}</td>
+        </tr>
+      `).join('');
+    }
+
+    switchMenu('overview');
+  </script>
 </body>
 </html>

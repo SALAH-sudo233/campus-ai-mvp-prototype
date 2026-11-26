@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>浣溪AI Lab · 学生端 V1 高保真交互原型（v2 · CPA 门户 + CMS 创作中心）</title>
-  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <script src="./tailwindcss.min.js"></script>
   <style>
     :root {
       --bg-page: #F7F9FC;
@@ -103,8 +103,8 @@
   <div style="background:#0A2540; color:#E2E8F0;" class="px-4 py-2 text-xs border-b border-white/10">
     <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-1.5 flex-wrap">
-        <a href="./index.html" class="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium">✦ 浣溪AI Lab · 总览</a>
-        <a href="./student-portal.html" class="px-2.5 py-1 rounded-full bg-teal-600 text-white font-semibold">① 学生端</a>
+        <a href="./overview.html" class="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium">✦ 浣溪AI Lab · 总览</a>
+        <a href="./index.html" class="px-2.5 py-1 rounded-full bg-teal-600 text-white font-semibold">① 学生端</a>
         <a href="./college-dashboard.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">② 学院端</a>
         <a href="./school-ops.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">③ 运营端(校)</a>
         <a href="./platform-admin.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">④ 平台端(浣溪)</a>
@@ -1692,7 +1692,10 @@
     function submitAppeal() { closeAppealModal(); showToast('解冻申诉已提交至浣溪平台风控中心'); }
 
     initDotMatrix();
-    const urlView = new URLSearchParams(window.location.search).get('view');
+    const qs = new URLSearchParams(window.location.search);
+    const urlView = qs.get('view');
+    const urlTab = qs.get('tab');
+    if (['token', 'studio', 'square'].includes(urlTab)) activeTab = urlTab;
     setAppState(['auth', 'pending', 'frozen', 'normal'].includes(urlView) ? urlView : 'normal');
   </script>
 </body>
