@@ -187,7 +187,7 @@
 
   <!-- Header -->
   <header class="hero-banner text-white">
-    <div class="max-w-6xl mx-auto px-5 py-7">
+    <div class="max-w-7xl mx-auto px-5 py-7">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="space-y-1.5">
           <div class="text-xs text-indigo-200 font-medium">华中科技大学软件学院 · 2026 秋</div>
@@ -210,21 +210,37 @@
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto px-5 py-8 space-y-8">
+  <main class="max-w-7xl mx-auto px-5 py-8 space-y-8">
 
     <!-- ==================== 1. 顶部 4 个极简核心数字 ==================== -->
     <section id="kpiGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5"></section>
 
-    <!-- ==================== 2. 成长趋势：左「用 AI 人数曲线」 + 右「累计诞生作品柱图」 ==================== -->
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Left: Weekly Active AI Users Curve -->
-      <div class="exec-card p-6 sm:p-7 space-y-4">
+    <!-- ==================== 2. 三大成长趋势：Token 消耗 + 用 AI 人数 + 累计诞生作品 ==================== -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <!-- Card 1: Token Consumption Trend -->
+      <div class="exec-card p-6 space-y-4">
         <div class="flex items-baseline justify-between gap-2">
           <div>
-            <h2 class="text-base font-bold">每周在用 AI 的同学</h2>
+            <h2 class="text-base font-bold">Token 消耗趋势</h2>
+            <p class="text-xs mt-0.5" style="color:var(--muted);">同学们使用 AI 创作的算力投入持续走高</p>
+          </div>
+          <span id="tokenCurveStat" class="mono text-xs font-bold px-2.5 py-1 rounded-full shrink-0" style="background:var(--primary-soft); color:var(--primary);">48.2M/周</span>
+        </div>
+
+        <div class="relative pt-1" onmouseleave="hideTip('tokenCurveTip')">
+          <div id="tokenCurveSvg" class="w-full"></div>
+          <div id="tokenCurveTip" class="chart-tooltip hidden"></div>
+        </div>
+      </div>
+
+      <!-- Card 2: Weekly Active AI Users Curve -->
+      <div class="exec-card p-6 space-y-4">
+        <div class="flex items-baseline justify-between gap-2">
+          <div>
+            <h2 class="text-base font-bold">在用 AI 的同学</h2>
             <p class="text-xs mt-0.5" style="color:var(--muted);">越来越多同学把 AI 融入日常学习与开发</p>
           </div>
-          <span id="activeCurveStat" class="mono text-sm font-bold px-2.5 py-1 rounded-full" style="background:var(--primary-soft); color:var(--primary);">438 人/周</span>
+          <span id="activeCurveStat" class="mono text-xs font-bold px-2.5 py-1 rounded-full shrink-0" style="background:var(--cyan-soft); color:var(--cyan-ink);">438 人/周</span>
         </div>
 
         <div class="relative pt-1" onmouseleave="hideTip('userCurveTip')">
@@ -233,14 +249,14 @@
         </div>
       </div>
 
-      <!-- Right: Cumulative Student Works Bar Chart -->
-      <div class="exec-card p-6 sm:p-7 space-y-4">
+      <!-- Card 3: Cumulative Student Works Bar Chart -->
+      <div class="exec-card p-6 space-y-4">
         <div class="flex items-baseline justify-between gap-2">
           <div>
-            <h2 class="text-base font-bold">累计诞生的学生作品</h2>
-            <p class="text-xs mt-0.5" style="color:var(--muted);">同学们从会用工具走向独立做出完整软件</p>
+            <h2 class="text-base font-bold">累计诞生的作品</h2>
+            <p class="text-xs mt-0.5" style="color:var(--muted);">从会用工具走向独立做出完整软件</p>
           </div>
-          <span id="worksBarStat" class="mono text-sm font-bold px-2.5 py-1 rounded-full" style="background:var(--cyan-soft); color:var(--cyan-ink);">96 件</span>
+          <span id="worksBarStat" class="mono text-xs font-bold px-2.5 py-1 rounded-full shrink-0" style="background:var(--bg-chip); color:var(--ink);">96 件</span>
         </div>
 
         <div class="relative pt-1" onmouseleave="hideTip('worksBarTip')">
@@ -323,10 +339,15 @@
     const PERIOD_DATA = {
       '7d': {
         kpis: [
-          { icon: 'users', color: '#624AFF', label: '加入平台的同学', val: '642', unit: '人', sub: '本周新加入 +38 人' },
-          { icon: 'spark', color: '#13C2C2', label: '本周在用 AI', val: '438', unit: '人', sub: '本周消耗 48.2M Token' },
+          { icon: 'users', color: '#13C2C2', label: '加入平台的同学', val: '642', unit: '人', sub: '本周 438 人活跃在用' },
+          { icon: 'spark', color: '#624AFF', label: '近 7 天消耗 Token', val: '48.2M', unit: '', sub: '较上周增长 +25%' },
           { icon: 'cube', color: '#3B82F6', label: '本周新诞生作品', val: '22', unit: '件', sub: '累计已诞生 96 件' },
           { icon: 'heart', color: '#F59E0B', label: '本周被同学试玩', val: '3,860', unit: '次', sub: '累计试玩 12,400 次' }
+        ],
+        tokenBadge: '本周 48.2M',
+        tokenSeries: [
+          { x: '周二', v: 6.1 }, { x: '周三', v: 6.8 }, { x: '周四', v: 7.4 },
+          { x: '周五', v: 8.6 }, { x: '周六', v: 9.8 }, { x: '周日', v: 9.5 }
         ],
         curveBadge: '本周 438 人',
         usersSeries: [
@@ -342,10 +363,15 @@
       },
       '30d': {
         kpis: [
-          { icon: 'users', color: '#624AFF', label: '加入平台的同学', val: '642', unit: '人', sub: '覆盖学院 78% 在校同学' },
-          { icon: 'spark', color: '#13C2C2', label: '每周在用 AI', val: '438', unit: '人', sub: '近 30 天消耗 184.6M Token' },
+          { icon: 'users', color: '#13C2C2', label: '加入平台的同学', val: '642', unit: '人', sub: '每周 438 人活跃在用' },
+          { icon: 'spark', color: '#624AFF', label: '累计消耗 Token', val: '184.6M', unit: '', sub: '单周峰值 48.2M · 持续攀升' },
           { icon: 'cube', color: '#3B82F6', label: '学生原创作品', val: '96', unit: '件', sub: '74 位同学做出了自己的应用' },
           { icon: 'heart', color: '#F59E0B', label: '被同学试玩次数', val: '12,400', unit: '次', sub: '同学间真实使用与点赞' }
+        ],
+        tokenBadge: '48.2M/周',
+        tokenSeries: [
+          { x: '第1周', v: 14.2 }, { x: '第2周', v: 21.8 }, { x: '第3周', v: 29.4 },
+          { x: '第4周', v: 32.6 }, { x: '第5周', v: 38.4 }, { x: '第6周', v: 48.2 }
         ],
         curveBadge: '438 人/周',
         usersSeries: [
@@ -361,10 +387,15 @@
       },
       'term': {
         kpis: [
-          { icon: 'users', color: '#624AFF', label: '加入平台的同学', val: '642', unit: '人', sub: '覆盖学院 78% 在校同学' },
-          { icon: 'spark', color: '#13C2C2', label: '持续用 AI 创作', val: '512', unit: '人', sub: '学期累计消耗 214.8M Token' },
+          { icon: 'users', color: '#13C2C2', label: '加入平台的同学', val: '642', unit: '人', sub: '覆盖学院 78% 在校同学' },
+          { icon: 'spark', color: '#624AFF', label: '学期消耗 Token', val: '214.8M', unit: '', sub: '人均使用 334.6K Token' },
           { icon: 'cube', color: '#3B82F6', label: '学生原创作品', val: '96', unit: '件', sub: '74 位同学独立完成开发' },
           { icon: 'heart', color: '#F59E0B', label: '被同学试玩次数', val: '14,210', unit: '次', sub: '平均每件作品被体验 148 次' }
+        ],
+        tokenBadge: '累计 214.8M',
+        tokenSeries: [
+          { x: '9月下', v: 12.4 }, { x: '10月上', v: 24.6 }, { x: '10月下', v: 35.8 },
+          { x: '11月上', v: 42.6 }, { x: '11月中', v: 49.2 }, { x: '11月下', v: 50.2 }
         ],
         curveBadge: '峰值 512 人',
         usersSeries: [
@@ -558,12 +589,12 @@
       return d;
     }
 
-    function renderUserCurve() {
+    function renderTokenCurve() {
       const d = PERIOD_DATA[period];
-      document.getElementById('activeCurveStat').textContent = d.curveBadge;
-      const rows = d.usersSeries;
-      const maxV = Math.max(...rows.map(r => r.v)) * 1.16;
-      const w = 480, h = 200, padL = 38, padR = 18, padT = 20, padB = 30;
+      document.getElementById('tokenCurveStat').textContent = d.tokenBadge;
+      const rows = d.tokenSeries;
+      const maxV = Math.max(...rows.map(r => r.v)) * 1.18;
+      const w = 360, h = 188, padL = 36, padR = 16, padT = 22, padB = 28;
       const pw = w - padL - padR, ph = h - padT - padB;
       const step = pw / (rows.length - 1);
 
@@ -575,35 +606,80 @@
       const curve = smoothPath(pts);
       const area = `${curve} L ${pts[pts.length - 1].x.toFixed(1)} ${padT + ph} L ${pts[0].x.toFixed(1)} ${padT + ph} Z`;
 
-      let svg = `<svg viewBox="0 0 ${w} ${h}" class="w-full h-52 overflow-visible select-none">
+      let svg = `<svg viewBox="0 0 ${w} ${h}" class="w-full h-48 overflow-visible select-none">
         <defs>
-          <linearGradient id="userCurveFill" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="tokCurveFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="var(--primary)" stop-opacity="${darkMode ? '0.42' : '0.24'}"/>
             <stop offset="100%" stop-color="var(--primary)" stop-opacity="0.01"/>
-          </linearGradient>
-          <linearGradient id="userCurveStroke" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#624AFF"/>
-            <stop offset="100%" stop-color="#13C2C2"/>
           </linearGradient>
         </defs>`;
 
       [0, 0.5, 1].forEach(f => {
         const y = (padT + ph * (1 - f)).toFixed(1);
         svg += `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="var(--grid-line)" stroke-dasharray="3 3"/>`;
-        svg += `<text x="${padL - 8}" y="${+y + 3.5}" text-anchor="end" fill="var(--muted)" font-size="10.5" class="mono">${Math.round(maxV * f)}</text>`;
+        svg += `<text x="${padL - 6}" y="${+y + 3.5}" text-anchor="end" fill="var(--muted)" font-size="10" class="mono">${Math.round(maxV * f)}M</text>`;
+      });
+
+      svg += `<path d="${area}" fill="url(#tokCurveFill)"/>`;
+      svg += `<path d="${curve}" fill="none" stroke="var(--primary)" stroke-width="2.8" stroke-linecap="round"/>`;
+
+      pts.forEach((p) => {
+        const pctX = ((p.x / w) * 100).toFixed(1);
+        svg += `<g class="cursor-pointer group" onmouseenter="showTip('tokenCurveTip', '${p.r.x}：消耗 ${p.r.v}M Token', ${pctX})">
+          <rect x="${(p.x - step / 2).toFixed(1)}" y="${padT}" width="${step.toFixed(1)}" height="${ph}" fill="transparent"/>
+          <line x1="${p.x.toFixed(1)}" y1="${padT}" x2="${p.x.toFixed(1)}" y2="${padT + ph}" stroke="var(--primary)" stroke-opacity="0" class="group-hover:stroke-opacity-30 transition"/>
+          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4.5" fill="var(--bg-surface)" stroke="var(--primary)" stroke-width="2.6"/>
+          <text x="${p.x.toFixed(1)}" y="${(p.y - 9).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-size="10" font-weight="700" class="mono">${p.r.v}M</text>
+          <text x="${p.x.toFixed(1)}" y="${h - 7}" text-anchor="middle" fill="var(--muted)" font-size="10.5">${p.r.x}</text>
+        </g>`;
+      });
+
+      svg += `</svg>`;
+      document.getElementById('tokenCurveSvg').innerHTML = svg;
+    }
+
+    function renderUserCurve() {
+      const d = PERIOD_DATA[period];
+      document.getElementById('activeCurveStat').textContent = d.curveBadge;
+      const rows = d.usersSeries;
+      const maxV = Math.max(...rows.map(r => r.v)) * 1.18;
+      const w = 360, h = 188, padL = 34, padR = 16, padT = 22, padB = 28;
+      const pw = w - padL - padR, ph = h - padT - padB;
+      const step = pw / (rows.length - 1);
+
+      const pts = rows.map((r, i) => ({
+        x: padL + i * step,
+        y: padT + ph * (1 - r.v / maxV),
+        r
+      }));
+      const curve = smoothPath(pts);
+      const area = `${curve} L ${pts[pts.length - 1].x.toFixed(1)} ${padT + ph} L ${pts[0].x.toFixed(1)} ${padT + ph} Z`;
+
+      let svg = `<svg viewBox="0 0 ${w} ${h}" class="w-full h-48 overflow-visible select-none">
+        <defs>
+          <linearGradient id="userCurveFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--cyan)" stop-opacity="${darkMode ? '0.38' : '0.22'}"/>
+            <stop offset="100%" stop-color="var(--cyan)" stop-opacity="0.01"/>
+          </linearGradient>
+        </defs>`;
+
+      [0, 0.5, 1].forEach(f => {
+        const y = (padT + ph * (1 - f)).toFixed(1);
+        svg += `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="var(--grid-line)" stroke-dasharray="3 3"/>`;
+        svg += `<text x="${padL - 6}" y="${+y + 3.5}" text-anchor="end" fill="var(--muted)" font-size="10" class="mono">${Math.round(maxV * f)}</text>`;
       });
 
       svg += `<path d="${area}" fill="url(#userCurveFill)"/>`;
-      svg += `<path d="${curve}" fill="none" stroke="url(#userCurveStroke)" stroke-width="3" stroke-linecap="round"/>`;
+      svg += `<path d="${curve}" fill="none" stroke="var(--cyan)" stroke-width="2.8" stroke-linecap="round"/>`;
 
       pts.forEach((p) => {
         const pctX = ((p.x / w) * 100).toFixed(1);
         svg += `<g class="cursor-pointer group" onmouseenter="showTip('userCurveTip', '${p.r.x}：${p.r.v} 位同学活跃使用 AI', ${pctX})">
           <rect x="${(p.x - step / 2).toFixed(1)}" y="${padT}" width="${step.toFixed(1)}" height="${ph}" fill="transparent"/>
-          <line x1="${p.x.toFixed(1)}" y1="${padT}" x2="${p.x.toFixed(1)}" y2="${padT + ph}" stroke="var(--primary)" stroke-opacity="0" class="group-hover:stroke-opacity-30 transition"/>
-          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" fill="var(--bg-surface)" stroke="var(--primary)" stroke-width="2.8"/>
-          <text x="${p.x.toFixed(1)}" y="${(p.y - 10).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-size="10.5" font-weight="700" class="mono">${p.r.v}</text>
-          <text x="${p.x.toFixed(1)}" y="${h - 8}" text-anchor="middle" fill="var(--muted)" font-size="11">${p.r.x}</text>
+          <line x1="${p.x.toFixed(1)}" y1="${padT}" x2="${p.x.toFixed(1)}" y2="${padT + ph}" stroke="var(--cyan)" stroke-opacity="0" class="group-hover:stroke-opacity-35 transition"/>
+          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4.5" fill="var(--bg-surface)" stroke="var(--cyan)" stroke-width="2.6"/>
+          <text x="${p.x.toFixed(1)}" y="${(p.y - 9).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-size="10" font-weight="700" class="mono">${p.r.v}</text>
+          <text x="${p.x.toFixed(1)}" y="${h - 7}" text-anchor="middle" fill="var(--muted)" font-size="10.5">${p.r.x}</text>
         </g>`;
       });
 
@@ -616,12 +692,12 @@
       document.getElementById('worksBarStat').textContent = d.worksBadge;
       const rows = d.worksSeries;
       const maxV = Math.max(...rows.map(r => r.total)) * 1.18;
-      const w = 480, h = 200, padL = 36, padR = 16, padT = 22, padB = 30;
+      const w = 360, h = 188, padL = 32, padR = 12, padT = 22, padB = 28;
       const pw = w - padL - padR, ph = h - padT - padB;
       const slot = pw / rows.length;
-      const barW = 34;
+      const barW = 24;
 
-      let svg = `<svg viewBox="0 0 ${w} ${h}" class="w-full h-52 overflow-visible select-none">
+      let svg = `<svg viewBox="0 0 ${w} ${h}" class="w-full h-48 overflow-visible select-none">
         <defs>
           <linearGradient id="worksColGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="#36CFD1"/>
@@ -632,7 +708,7 @@
       [0, 0.5, 1].forEach(f => {
         const y = (padT + ph * (1 - f)).toFixed(1);
         svg += `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="var(--grid-line)" stroke-dasharray="3 3"/>`;
-        svg += `<text x="${padL - 8}" y="${+y + 3.5}" text-anchor="end" fill="var(--muted)" font-size="10.5" class="mono">${Math.round(maxV * f)}</text>`;
+        svg += `<text x="${padL - 6}" y="${+y + 3.5}" text-anchor="end" fill="var(--muted)" font-size="10" class="mono">${Math.round(maxV * f)}</text>`;
       });
 
       rows.forEach((r, i) => {
@@ -643,10 +719,10 @@
 
         svg += `<g class="cursor-pointer group" onmouseenter="showTip('worksBarTip', '${r.x}：累计 ${r.total} 件作品（新诞生 +${r.add} 件）', ${pctX})">
           <rect x="${(cx - slot / 2).toFixed(1)}" y="${padT}" width="${slot.toFixed(1)}" height="${ph}" fill="transparent"/>
-          <rect x="${(cx - barW / 2).toFixed(1)}" y="${by.toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" rx="9"
+          <rect x="${(cx - barW / 2).toFixed(1)}" y="${by.toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" rx="7"
             fill="url(#worksColGrad)" fill-opacity="${i === rows.length - 1 ? '1' : '0.78'}" class="group-hover:fill-opacity-100 transition"/>
-          <text x="${cx.toFixed(1)}" y="${(by - 7).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-size="10.5" font-weight="700" class="mono">${r.total}</text>
-          <text x="${cx.toFixed(1)}" y="${h - 8}" text-anchor="middle" fill="var(--muted)" font-size="11">${r.x}</text>
+          <text x="${cx.toFixed(1)}" y="${(by - 6).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-size="10" font-weight="700" class="mono">${r.total}</text>
+          <text x="${cx.toFixed(1)}" y="${h - 7}" text-anchor="middle" fill="var(--muted)" font-size="10.5">${r.x}</text>
         </g>`;
       });
 
@@ -860,6 +936,7 @@
         b.style.color = a ? '#1E1D3A' : 'rgba(224, 231, 255, 0.88)';
       });
       renderKpis();
+      renderTokenCurve();
       renderUserCurve();
       renderWorksBars();
       renderCategoryDonut();
