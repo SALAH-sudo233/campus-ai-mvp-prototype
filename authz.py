@@ -97,10 +97,6 @@ _RULES = {
         ("usage", "consume_self"): "self",
         ("sessions", "revoke_self"): "self",
         ("accounts", "list"): "org",
-        ("accounts", "revoke_key"): "org",
-        ("accounts", "reissue_key"): "org",
-        ("members", "revoke_key"): "org",
-        ("members", "reissue_key"): "org",
         ("rewards", "read"): "org",
     },
     ORG_MEMBER: {

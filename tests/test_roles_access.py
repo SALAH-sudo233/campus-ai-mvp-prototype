@@ -12,6 +12,15 @@ HEADER = "external_ref,student_id,email,name,role,status\n"
 
 
 class FourEndMatrixTests(unittest.TestCase):
+    def test_organization_roles_cannot_manage_other_accounts_keys(self):
+        for role in (authz.ORG_OPERATOR, authz.ORG_ADMIN, authz.COLLEGE_VIEWER, authz.ORG_MEMBER):
+            principal = {"role": role, "user_id": "operator", "org_id": PILOT}
+            for resource in ("accounts", "members"):
+                for action in ("revoke_key", "reissue_key"):
+                    with self.subTest(role=role, resource=resource, action=action):
+                        self.assertFalse(authz.allowed(principal, resource, action, org_id=PILOT))
+                        self.assertTrue(authz.allowed({"role": authz.PLATFORM_ADMIN}, resource, action, org_id=PILOT))
+
     def test_five_roles_and_viewer_has_only_read_actions(self):
         self.assertEqual(set(authz.ROLES), {
             "platform_admin", "org_admin", "org_operator", "college_viewer", "org_member"})
@@ -50,6 +59,29 @@ class FourEndHttpTests(unittest.TestCase):
         code, body = self.server.patch("/api/orgs/%s/members/%s" % (PILOT, self.user_id),
                                        {"role": role}, self.platform)
         self.assertEqual(code, 200, body)
+
+    def test_operator_and_compatible_admin_cannot_revoke_or_reissue_member_keys(self):
+        code, student = register(self.server, "2024001082")
+        self.assertEqual(code, 201, student)
+        with sqlite3.connect(self.server.db_path) as conn:
+            target = conn.execute("SELECT user_id, owner_ref FROM students WHERE identity = '2024001082'").fetchone()
+        routes = (("/api/orgs/%s/members/%s/revoke-key" % (PILOT, target[0]), {}),
+                  ("/api/orgs/%s/members/%s/reissue-key" % (PILOT, target[0]), {}),
+                  ("/api/admin/revoke", {"owner_ref": target[1]}))
+        before = self.server.get("/api/me", student["token"])[1]["relayKey"]
+        for role in ("org_operator", "org_admin"):
+            self.set_role(role)
+            code, pat = self.server.post("/api/me/tokens", {"requestId": "key-denial-" + role}, self.token)
+            self.assertEqual(code, 201, pat)
+            for token in (self.token, pat["token"]):
+                for path, body in routes:
+                    with self.subTest(role=role, path=path):
+                        code, denied = self.server.post(path, body, token)
+                        self.assertEqual(code, 403, denied)
+                        self.assertEqual(self.server.get("/api/me", student["token"])[1]["relayKey"], before)
+        for path, body in routes:
+            code, result = self.server.post(path, body, self.platform)
+            self.assertEqual(code, 200, result)
 
     def test_viewer_dashboard_reads_and_all_business_writes_are_denied(self):
         code, minted = self.server.post("/api/me/tokens", {"requestId": "before-viewer"}, self.token)
