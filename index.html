@@ -890,20 +890,8 @@
       <!-- ==================== TAB 3: 作品广场（广场作品 + 我的作品 + 作品独立详情页） ==================== -->
       <section id="tab-square" class="hidden">
 
-        <!-- ===== 作品广场主视图（广场作品 / 我的作品 轻切换） ===== -->
+        <!-- ===== 作品广场主视图（由左侧导航直接切换「作品广场」与「我的作品」） ===== -->
         <div id="squareHomeView" class="space-y-5">
-          <!-- Top Switcher: 广场作品 vs 我的作品 -->
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="inline-flex p-1 rounded-full border border-slate-200 bg-white text-xs">
-              <button onclick="setSquareMode('all')" data-sq-mode="all" class="sq-mode-btn px-4 py-1.5 rounded-full font-medium transition">广场作品</button>
-              <button onclick="setSquareMode('mine')" data-sq-mode="mine" class="sq-mode-btn px-4 py-1.5 rounded-full font-medium transition inline-flex items-center gap-1.5">
-                <span>我的作品</span>
-                <span id="squareMineCount" class="px-1.5 rounded-full text-[11px] mono bg-slate-100 text-slate-600">3</span>
-              </button>
-            </div>
-            <button onclick="openPublishModal()" class="cpa-pill-btn px-4 py-1.5 text-xs font-medium">+ 发布新作品</button>
-          </div>
-
           <!-- Sub-Mode A: 广场作品 -->
           <div id="squareAllPane" class="space-y-5">
             <div class="rounded-3xl p-5 px-6 text-white flex flex-wrap items-center justify-between gap-4" style="background:radial-gradient(ellipse 50% 90% at 92% 20%, rgba(54,207,209,0.28), transparent 70%), linear-gradient(135deg, #27254C 0%, #36298C 55%, #624AFF 100%); box-shadow:0 12px 28px rgba(98,74,255,0.18);">
@@ -1916,7 +1904,6 @@ Model   ：claude-sonnet-4
       const setVis = (id, show) => { const el = document.getElementById(id); if (el) el.classList.toggle('hidden', !show); };
 
       setTxt('menuMyWorksCount', total);
-      setTxt('squareMineCount', total);
       setTxt('menuRejectedTag', `${rejected} 待修改`);
       setVis('avatarAlertDot', hasAlert);
       setVis('menuRejectedTag', hasAlert);
@@ -2584,12 +2571,6 @@ Model   ：claude-sonnet-4
       document.getElementById('squareDetailView').classList.add('hidden');
       document.getElementById('squareDetailView').innerHTML = '';
       document.getElementById('squareHomeView').classList.remove('hidden');
-
-      document.querySelectorAll('.sq-mode-btn').forEach(b => {
-        const a = b.dataset.sqMode === squareMode;
-        b.style.background = a ? '#F1F1FD' : 'transparent';
-        b.style.color = a ? '#624AFF' : '#464D5B';
-      });
       document.getElementById('squareAllPane').classList.toggle('hidden', squareMode !== 'all');
       document.getElementById('squareMinePane').classList.toggle('hidden', squareMode !== 'mine');
       syncNavHighlight();
@@ -2713,7 +2694,7 @@ Model   ：claude-sonnet-4
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2 text-xs flex-wrap">
             ${returnChId ? `<button onclick="jumpToChallengeDetail('${returnChId}')" class="cpa-ghost-pill px-3.5 py-1.5 font-medium bg-white" style="color:var(--primary); border-color:#D2C4FF;">← 返回挑战赛详情</button>` : ''}
-            <button onclick="closeWorkDetail()" class="cpa-ghost-pill px-3.5 py-1.5 font-medium bg-white">${returnChId ? '作品广场' : '← 返回作品广场'}</button>
+            <button onclick="closeWorkDetail()" class="cpa-ghost-pill px-3.5 py-1.5 font-medium bg-white">${returnChId ? '作品广场' : (squareMode === 'mine' ? '← 返回我的作品' : '← 返回作品广场')}</button>
             <span style="color:var(--muted);">/</span>
             <span class="font-medium truncate max-w-[260px]">${w.title}</span>
           </div>
