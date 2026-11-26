@@ -199,7 +199,9 @@ class AuthzMatrixCoverageTests(unittest.TestCase):
                 else:
                     self.assertIsNotNone(authz.scope_for(role, resource, action), (role, resource, action))
         self.assertEqual(authz.scope_for(authz.PLATFORM_ADMIN, "accounts", "list"), "all")
-        self.assertEqual(authz.scope_for(authz.ORG_ADMIN, "accounts", "revoke_key"), "org")
+        self.assertIsNone(authz.scope_for(authz.ORG_ADMIN, "accounts", "revoke_key"))
+        self.assertIsNone(authz.scope_for(authz.ORG_OPERATOR, "accounts", "revoke_key"))
+        self.assertEqual(authz.scope_for(authz.PLATFORM_ADMIN, "accounts", "revoke_key"), "all")
         self.assertIsNone(authz.scope_for(authz.ORG_MEMBER, "accounts", "list"))
         self.assertIsNone(authz.scope_for(authz.ORG_MEMBER, "accounts", "revoke_key"))
         self.assertIsNone(authz.scope_for(authz.ORG_ADMIN, "works", "read_any"))
