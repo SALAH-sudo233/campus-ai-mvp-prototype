@@ -4,6 +4,7 @@ import hashlib
 import io
 import re
 
+import authz
 from identity import normalize_identity
 
 MAX_BYTES = 10 * 1024 * 1024
@@ -12,7 +13,9 @@ MAX_FIELD = 256
 MAX_LINE = 4096
 SCHEMA_VERSION = 1
 COLUMNS = ["external_ref", "student_id", "email", "name", "role", "status"]
-ROLE_ALIASES = {"org_admin": "org_admin", "org_member": "org_member", "教师": "org_admin", "学生": "org_member"}
+ROLE_ALIASES = {role: role for role in authz.ORG_ROLES}
+ROLE_ALIASES.update({"教师": authz.ORG_ADMIN, "学生": authz.ORG_MEMBER,
+                     "运营": authz.ORG_OPERATOR, "学院": authz.COLLEGE_VIEWER})
 STATUSES = {"active", "disabled"}
 FORMULA_PREFIXES = ("=", "+", "-", "@")
 CONTROL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
@@ -131,7 +134,7 @@ def parse(data):
         elif not fields["student_id"] and not fields["email"]:
             problem = ("missing_identity", "学号和邮箱至少填一个")
         elif role is None:
-            problem = ("invalid_role", "role 只能是 org_admin 或 org_member，也可填教师或学生")
+            problem = ("invalid_role", "role 必须是有效的组织角色，也可填教师、运营、学院或学生")
         elif status not in STATUSES:
             problem = ("invalid_status", "status 只能是 active 或 disabled")
         if problem:

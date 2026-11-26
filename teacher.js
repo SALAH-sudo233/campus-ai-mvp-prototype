@@ -43,7 +43,7 @@ async function boot() {
   try {
     me = await api('/api/me');
     if (me.role === 'org_member') { window.location.replace('index.html'); return; }
-    if (me.role !== 'org_admin' && me.role !== 'platform_admin') { denied(); return; }
+    if (!['org_admin', 'org_operator', 'platform_admin'].includes(me.role)) { denied(); return; }
     orgId = me.org && me.org.id;
     if (!orgId) { denied(); return; }
     $('teacherAgentTools').classList.remove('hidden');

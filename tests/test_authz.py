@@ -8,13 +8,13 @@ HEADER = "external_ref,student_id,email,name,role,status\n"
 
 
 class AuthzMatrixTests(unittest.TestCase):
-    def test_three_roles_matrix(self):
+    def test_legacy_roles_matrix(self):
         platform = {"role": authz.PLATFORM_ADMIN, "user_id": None, "org_id": None}
         admin = {"role": authz.ORG_ADMIN, "user_id": "u-admin", "org_id": "org-a"}
         member = {"role": authz.ORG_MEMBER, "user_id": "u-member", "org_id": "org-a"}
         self.assertTrue(authz.allowed(platform, "organizations", "create"))
         self.assertFalse(authz.allowed(admin, "organizations", "create"))
-        self.assertFalse(authz.allowed(admin, "members", "import", org_id="org-a"))
+        self.assertTrue(authz.allowed(admin, "members", "import", org_id="org-a"))
         self.assertFalse(authz.allowed(admin, "members", "import", org_id="org-b"))
         self.assertFalse(authz.allowed(member, "members", "list", org_id="org-a"))
         self.assertTrue(authz.allowed(member, "works", "submit", owner_user_id="u-member"))

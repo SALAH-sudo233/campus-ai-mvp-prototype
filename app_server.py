@@ -73,7 +73,10 @@ def setup():
         conn.execute("BEGIN IMMEDIATE")
         works_service.ensure_social_tables(conn, DATA_DIR)
         if _demo_login_enabled():
-            rewards_service.ensure_demo_candidates(conn, config.PILOT_ORG["id"])
+            demo = conn.execute("SELECT org_id FROM students WHERE mode = 'demo' AND identity = ?",
+                                (authz.ORG_MEMBER,)).fetchone()
+            if demo:
+                rewards_service.ensure_demo_candidates(conn, demo["org_id"])
         conn.execute("COMMIT")
     finally:
         conn.close()
@@ -362,7 +365,11 @@ def issue_key_for_member(owner_ref, request_id, mode=None, identity=None, user_i
             member_id = user_id or (row["user_id"] if row else None)
             member_org = org_id or (row["org_id"] if row else None)
             membership = _membership(conn, member_id, member_org)
-            active = membership is not None and membership["admission_status"] == "active"
+            principal = _principal_for(conn, member_id, member_org)
+            if principal and authz.scope_for(principal["role"], "keys", "rotate_self") is None:
+                return {"status": "read_only", "plaintext": None, "hint": None}, False
+            active = membership is not None and membership["admission_status"] == "active" and authz.allowed(
+                principal, "keys", "rotate_self", owner_user_id=member_id)
             admitted_org = membership["org_id"] if membership else member_org
             _, quota = _org_quota(conn, admitted_org)
         finally:
@@ -391,7 +398,9 @@ def issue_key_for_member(owner_ref, request_id, mode=None, identity=None, user_i
     with LOCK:
         conn = db()
         try:
-            still_active = owner_ref in set(_active_owner_refs(conn, org_id=admitted_org, owner_ref=owner_ref))
+            principal = _principal_for(conn, member_id, admitted_org)
+            still_active = owner_ref in set(_active_owner_refs(conn, org_id=admitted_org, owner_ref=owner_ref)) and authz.allowed(
+                principal, "keys", "rotate_self", owner_user_id=member_id)
         finally:
             conn.close()
         if not still_active:
@@ -595,9 +604,10 @@ def do_login(mode, identity, password, request_id, org_id=None):
     return 200, view
 
 
-def do_me(owner_ref, demo=False):
+def do_me(owner_ref, demo=False, principal=None):
     delivered = {"plaintext": None}
-    if not demo:
+    can_read_key = principal is None or authz.scope_for(principal["role"], "keys", "read_self") is not None
+    if not demo and can_read_key:
         conn = db()
         try:
             active = bool(_active_owner_refs(conn, owner_ref=owner_ref))
@@ -617,6 +627,9 @@ def do_me(owner_ref, demo=False):
         view["relayKey"] = {"status": "demo", "plaintext": None, "hint": None,
                             "note": "演示账号只用于界面演示，不发放真实成员 token"}
         view["demo"] = True
+        return 200, view
+    if not can_read_key:
+        view["relayKey"] = {"status": "read_only", "plaintext": None, "hint": None}
         return 200, view
     key_state = relay.key_view(RELAY_DB, owner_ref)
     view["relayKey"] = {"status": key_state["state"], "plaintext": delivered.get("plaintext"),
@@ -692,7 +705,7 @@ def do_demo_login(role):
     """演示快捷登录使用服务端配置的管理员凭据映射到目标端身份。"""
     if not _demo_login_enabled():
         return 404, {"error": "演示登录未启用"}
-    if role == "admin":
+    if role in ("admin", authz.PLATFORM_ADMIN):
         if not ADMIN_USERNAME or not ADMIN_PASSWORD:
             return 404, {"error": "管理功能未启用"}
         conn = db()
@@ -701,20 +714,20 @@ def do_demo_login(role):
         finally:
             conn.close()
         return 200, {"token": token, "role": authz.PLATFORM_ADMIN, "demo": True}
-    if role not in ("student", "teacher"):
+    target_role = {"student": authz.ORG_MEMBER, "teacher": authz.ORG_OPERATOR,
+                   authz.ORG_MEMBER: authz.ORG_MEMBER, authz.ORG_OPERATOR: authz.ORG_OPERATOR,
+                   authz.COLLEGE_VIEWER: authz.COLLEGE_VIEWER}.get(role)
+    if target_role is None:
         return 400, {"error": "不支持的演示身份"}
     if not ADMIN_USERNAME or not ADMIN_PASSWORD:
         return 404, {"error": "管理功能未启用"}
-    target_role = authz.ORG_ADMIN if role == "teacher" else authz.ORG_MEMBER
-    preferred_identity = "2024001040" if role == "teacher" else "2024001100"
     conn = db()
     try:
         row = conn.execute(
             "SELECT s.owner_ref, s.user_id, s.org_id FROM students s "
             "JOIN org_memberships m ON m.user_id = s.user_id AND m.org_id = s.org_id "
-            "WHERE m.role = ? AND m.admission_status = 'active' "
-            "ORDER BY CASE WHEN s.identity = ? THEN 0 ELSE 1 END, s.created_at LIMIT 1",
-            (target_role, preferred_identity),
+            "WHERE s.mode = 'demo' AND s.identity = ? AND m.role = ? AND m.admission_status = 'active'",
+            (target_role, target_role),
         ).fetchone()
         if not row:
             return 503, {"error": "暂无可用的演示身份"}
@@ -740,13 +753,13 @@ def _admin_principal(token):
         return {"kind": "platform", "user_id": None, "role": authz.PLATFORM_ADMIN, "org_id": None,
                 "org": None, "admission_status": None, "demo": info["demo"]}
     principal = principal_from_token(token)
-    if principal and principal["role"] in (authz.PLATFORM_ADMIN, authz.ORG_ADMIN):
+    if authz.allowed(principal, "console", "read", org_id=(principal or {}).get("org_id")):
         return principal
     return None
 
 
 def _scope_org(principal, requested=None):
-    if principal["role"] == authz.PLATFORM_ADMIN:
+    if authz.scope_for(principal["role"], "console", "read") == "all":
         return requested or config.PILOT_ORG["id"]
     return principal.get("org_id")
 
@@ -950,6 +963,9 @@ def _cleanup_expired_imports(conn, now):
 def import_preview(principal, org_id, data, schema_version=1):
     authz.require(principal, "members", "import", org_id=org_id)
     rows = importer.parse(data)
+    for row in rows:
+        if row["result"] == "accepted" and row["fields"]["role"] != authz.ORG_MEMBER:
+            authz.require(principal, "members", "update_role", org_id=org_id)
     conn = db()
     try:
         conn.execute("BEGIN IMMEDIATE")
@@ -1039,6 +1055,9 @@ def import_commit(principal, org_id, batch_id, request_id):
         failures = []
         now = time.time()
         rows = conn.execute("SELECT * FROM import_rows WHERE batch_id = ? ORDER BY row_no", (batch_id,)).fetchall()
+        for row in rows:
+            if row["result"] == "accepted" and json.loads(row["fields_json"])["role"] != authz.ORG_MEMBER:
+                authz.require(principal, "members", "update_role", org_id=org_id)
         for row in rows:
             if row["result"] != "accepted":
                 key = "conflicts" if row["result"] == "conflict" else row["result"]
@@ -1186,14 +1205,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return principal
         principal = self._principal()
         if principal:
-            if principal["role"] not in (authz.PLATFORM_ADMIN, authz.ORG_ADMIN):
-                raise authz.AuthzError(403, "无权访问该资源")
+            authz.require(principal, "console", "read", org_id=principal.get("org_id"))
             return principal
         raise authz.AuthzError(401, "请先登录管理后台")
 
     def _org_allowed(self, principal, org_id):
-        if principal["role"] != authz.PLATFORM_ADMIN and principal.get("org_id") != org_id:
-            raise authz.AuthzError(403, "无权访问该资源")
+        authz.require(principal, "console", "read", org_id=org_id)
         return org_id
 
     def _require_org(self, org_id):
@@ -1220,7 +1237,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if path == "/api/me":
                 principal = self._require_user()
                 authz.require(principal, "profile", "read_self", owner_user_id=principal["user_id"])
-                return self._send(*do_me(principal["owner_ref"], principal.get("demo", False)))
+                return self._send(*do_me(principal["owner_ref"], principal.get("demo", False), principal))
             if path == "/api/me/tokens":
                 principal = self._require_user()
                 authz.require(principal, "profile", "read_self", owner_user_id=principal["user_id"])
@@ -1372,7 +1389,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 principal = self._require_admin()
                 org_id = self._org_allowed(principal, match.group(1))
                 self._require_org(org_id)
-                authz.require(principal, "works", "review", org_id=org_id)
+                authz.require(principal, "works", "read_review", org_id=org_id)
                 status = query.get("status", [None])[0]
                 conn = db()
                 try:
@@ -1391,7 +1408,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if path == "/api/audit-events":
                 principal = self._require_admin()
                 org_id = query.get("orgId", [None])[0]
-                if principal["role"] != authz.PLATFORM_ADMIN:
+                if authz.scope_for(principal["role"], "audit", "read") != "all":
                     if org_id and org_id != principal.get("org_id"):
                         raise authz.AuthzError(403, "无权访问该资源")
                     org_id = principal.get("org_id")
@@ -1405,7 +1422,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 principal = self._require_admin()
                 authz.require(principal, "accounts", "list", org_id=principal.get("org_id"))
                 q = query.get("q", [None])[0]
-                org_filter = query.get("orgId", [None])[0] if principal["role"] == authz.PLATFORM_ADMIN else principal.get("org_id")
+                org_filter = query.get("orgId", [None])[0]
+                if authz.scope_for(principal["role"], "accounts", "list") != "all":
+                    if org_filter and org_filter != principal.get("org_id"):
+                        raise authz.AuthzError(403, "无权访问该资源")
+                    org_filter = principal.get("org_id")
                 conn = db()
                 try:
                     active_refs = _active_owner_refs(conn, org_id=org_filter)
@@ -1429,6 +1450,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 action = match.group(2)
                 if action == "tree":
                     authz.require(principal, "organizations", "read", org_id=org_id)
+                    authz.require(principal, "members", "list", org_id=org_id)
                     conn = db()
                     try:
                         active_refs = _active_owner_refs(conn, org_id=org_id)
@@ -1593,7 +1615,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if not match:
                 return self._send(404, {"error": "未知接口"})
             principal = self._require_user()
-            authz.require(principal, "profile", "read_self", owner_user_id=principal["user_id"])
+            authz.require(principal, "tokens", "revoke_self", owner_user_id=principal["user_id"])
             conn = db()
             try:
                 return self._send(200, pat_service.revoke(conn, principal, match.group(1)))
@@ -1675,7 +1697,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         try:
             if path == "/api/me/tokens":
                 principal = self._require_user()
-                authz.require(principal, "profile", "read_self", owner_user_id=principal["user_id"])
+                authz.require(principal, "tokens", "create_self", owner_user_id=principal["user_id"])
                 data = self._body()
                 conn = db()
                 try:
@@ -1763,8 +1785,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 email = normalize_identity("email", str(data.get("email") or "").strip())
                 if not name or len(name) > 80:
                     return self._send(400, {"error": "姓名必填且不超过 80 字符"})
-                if role not in (authz.ORG_MEMBER, authz.ORG_ADMIN):
-                    return self._send(400, {"error": "角色只能是学生或教师"})
+                if role not in authz.ORG_ROLES:
+                    return self._send(400, {"error": "组织内角色无效"})
+                if role != authz.ORG_MEMBER:
+                    authz.require(principal, "members", "update_role", org_id=org_id)
                 if status not in ("active", "disabled", "pending_review"):
                     return self._send(400, {"error": "准入状态无效"})
                 if not student_id and not email:
@@ -2012,12 +2036,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             match = re.match(r"^/api/works/([^/]+)/upvote$", path)
             if match:
                 principal = self._require_user()
+                authz.require(principal, "works", "upvote", org_id=principal.get("org_id"))
                 conn = db()
                 try:
                     row = works_service.get(conn, match.group(1))
                     if not row:
                         return self._send(404, {"error": "未找到作品"})
-                    authz.require(principal, "works", "read_gallery", org_id=row["org_id"])
+                    authz.require(principal, "works", "upvote", org_id=row["org_id"])
                     conn.execute("BEGIN IMMEDIATE")
                     result = works_service.toggle_upvote(conn, row["work_id"], row["org_id"], principal["user_id"])
                     conn.execute("COMMIT")
@@ -2031,13 +2056,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             match = re.match(r"^/api/works/([^/]+)/comments$", path)
             if match:
                 principal = self._require_user()
+                authz.require(principal, "works", "comment", org_id=principal.get("org_id"))
                 data = self._body()
                 conn = db()
                 try:
                     row = works_service.get(conn, match.group(1))
                     if not row:
                         return self._send(404, {"error": "未找到作品"})
-                    authz.require(principal, "works", "read_gallery", org_id=row["org_id"])
+                    authz.require(principal, "works", "comment", org_id=row["org_id"])
                     author_name = (principal.get("membership") or {}).get("name") if isinstance(principal.get("membership"), dict) else (principal["membership"]["name"] if principal.get("membership") else None)
                     author_name = author_name or principal.get("display_name") or "成员"
                     conn.execute("BEGIN IMMEDIATE")
@@ -2113,6 +2139,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return self._send(*do_admin_login(data.get("username"), data.get("password")))
             if path == "/api/admin/revoke":
                 principal = self._require_admin()
+                authz.require(principal, "accounts", "revoke_key", org_id=principal.get("org_id"))
                 if principal.get("demo"):
                     return self._send(403, {"error": "演示账号不能修改真实密钥"})
                 owner_ref = str(data.get("owner_ref") or "").strip()
@@ -2137,6 +2164,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 relay.finish_revocations(key_ids, RELAY_DB)
                 return self._send(200, {"ok": True})
             if path == "/api/reset" and os.environ.get("DEMO_ALLOW_RESET") == "1":
+                principal = self._require_admin()
+                authz.require(principal, "system", "reset")
                 return self._send(*do_reset())
             return self._send(404, {"error": "未知接口"})
         except (authz.AuthzError, importer.ImportError_, onboarding.OnboardingError, works_service.WorkError,

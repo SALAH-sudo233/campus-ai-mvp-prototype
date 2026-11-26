@@ -295,7 +295,7 @@ class PatHttpTests(unittest.TestCase):
         self.assertEqual(self.server.get("/api/orgs/%s/dashboard" % PILOT, pat)[0], 200)
         self.assertEqual(self.server.get("/api/admin/accounts", pat)[0], 200)
         self.assertEqual(self.server.post("/api/admin/revoke", {"owner_ref": "stu_2024001091"}, pat)[0], 403)
-        self.assertEqual(self.server.post("/api/orgs/%s/imports/preview" % PILOT, {}, pat)[0], 403)
+        self.assertEqual(self.server.post("/api/orgs/%s/imports/preview" % PILOT, {}, pat)[0], 400)
         self.update_membership(role=authz.ORG_MEMBER)
         for path in ("/api/me", "/api/orgs/%s/dashboard" % PILOT):
             code, body = self.server.get(path, pat)
@@ -399,4 +399,5 @@ class PermissionSnapshotTests(unittest.TestCase):
         self.assertFalse(pat_service.permissions_shrank(authz.ORG_MEMBER, authz.ORG_MEMBER))
 
     def test_migration_version_is_reserved_for_b_line(self):
-        self.assertEqual(migrations.MIGRATIONS[-1][:2], (10, "personal-access-tokens"))
+        self.assertEqual(next(item[:2] for item in migrations.MIGRATIONS if item[0] == 10),
+                         (10, "personal-access-tokens"))

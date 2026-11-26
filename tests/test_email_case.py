@@ -107,7 +107,7 @@ class EmailCaseMigrationTests(unittest.TestCase):
                 # login_failures 是易失数据：迁移只丢弃旧 ref 的行，不搬移到新 ref。
                 failures = conn.execute("SELECT owner_ref FROM login_failures").fetchall()
                 self.assertEqual([row[0] for row in failures], [])
-                self.assertEqual(conn.execute("SELECT COUNT(*) FROM students").fetchone()[0], 1)
+                self.assertEqual(conn.execute("SELECT COUNT(*) FROM students WHERE mode != 'demo'").fetchone()[0], 1)
             finally:
                 conn.close()
 
@@ -207,14 +207,14 @@ class EmailCaseMigrationTests(unittest.TestCase):
             finally:
                 conn.close()
 
-            self.assertEqual(migrations.migrate(db_path), [1, 2, 3, 4, 5, 6, 7, 8, 9])
+            self.assertEqual(migrations.migrate(db_path), list(range(1, 13)))
 
             conn = sqlite3.connect(db_path)
             conn.row_factory = sqlite3.Row
             try:
                 versions = [row[0] for row in conn.execute(
                     "SELECT version FROM schema_migrations ORDER BY version").fetchall()]
-                self.assertEqual(versions, [1, 2, 3, 4, 5, 6, 7, 8, 9])
+                self.assertEqual(versions, list(range(1, 13)))
                 failures = conn.execute("SELECT owner_ref, failures FROM login_failures").fetchall()
                 self.assertEqual([(row["owner_ref"], row["failures"]) for row in failures], [(new_ref, 3)])
                 student = conn.execute("SELECT owner_ref, identity FROM students").fetchone()

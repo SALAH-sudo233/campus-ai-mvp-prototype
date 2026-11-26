@@ -9,6 +9,34 @@ import relay
 
 
 class MigrationTests(unittest.TestCase):
+    def test_v11_upgrade_preserves_real_accounts_and_seeds_four_ends(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = os.path.join(tmp, "v11.sqlite")
+            original = migrations.MIGRATIONS
+            try:
+                migrations.MIGRATIONS = original[:-1]
+                migrations.migrate(db_path)
+            finally:
+                migrations.MIGRATIONS = original
+            with sqlite3.connect(db_path) as conn:
+                conn.execute("UPDATE org_memberships SET role = 'org_admin' WHERE student_id = '2024001001'")
+                before = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+                membership = conn.execute("SELECT * FROM org_memberships WHERE student_id = '2024001001'").fetchone()
+            self.assertEqual(migrations.migrate(db_path), [12])
+            self.assertEqual(migrations.migrate(db_path), [])
+            with sqlite3.connect(db_path) as conn:
+                self.assertEqual(conn.execute("SELECT COUNT(*) FROM users").fetchone()[0], before + 4)
+                self.assertEqual(conn.execute("SELECT * FROM org_memberships WHERE student_id = '2024001001'").fetchone(),
+                                 membership)
+                roles = {row[0] for row in conn.execute("SELECT role FROM org_memberships WHERE external_ref LIKE 'four-end-demo:%'")}
+                self.assertEqual(roles, {"org_member", "org_operator", "college_viewer"})
+                self.assertEqual(conn.execute("SELECT COUNT(*) FROM platform_admins").fetchone()[0], 1)
+                self.assertEqual(conn.execute("SELECT COUNT(*) FROM org_memberships WHERE org_id = ?",
+                                              (config.PILOT_ORG["id"],)).fetchone()[0], 200)
+                demo_org = conn.execute("SELECT id FROM organizations WHERE slug = 'four-end-demo'").fetchone()[0]
+                self.assertEqual(conn.execute("SELECT COUNT(*) FROM works WHERE org_id = ?", (demo_org,)).fetchone()[0],
+                                 len(config.SEED_WORKS))
+
     def test_rerun_is_idempotent_and_backfills_legacy_rows(self):
         with tempfile.TemporaryDirectory() as tmp:
             db_path = os.path.join(tmp, "legacy.sqlite")
@@ -26,7 +54,7 @@ class MigrationTests(unittest.TestCase):
             conn.close()
 
             applied = migrations.migrate(db_path)
-            self.assertEqual(applied, [1, 2, 3, 4, 5, 6, 7, 8, 9])
+            self.assertEqual(applied, list(range(1, 13)))
             self.assertEqual(migrations.migrate(db_path), [])
 
             conn = sqlite3.connect(db_path)
@@ -55,7 +83,7 @@ class MigrationTests(unittest.TestCase):
             demo_columns = {row[1] for row in conn.execute("PRAGMA table_info(sessions)").fetchall()}
             self.assertIn("demo", demo_columns)
             versions = conn.execute("SELECT COUNT(*) FROM schema_migrations").fetchone()[0]
-            self.assertEqual(versions, 9)
+            self.assertEqual(versions, 12)
             conn.close()
 
     def test_failed_version_rolls_back_without_half_write(self):
@@ -80,7 +108,7 @@ class MigrationTests(unittest.TestCase):
             conn.close()
             self.assertEqual(versions, [1, 2])
             self.assertNotIn("half_write", tables)
-            self.assertEqual(migrations.migrate(db_path), [3, 4, 5, 6, 7, 8, 9])
+            self.assertEqual(migrations.migrate(db_path), list(range(3, 13)))
 
     def test_relay_backfill_fills_user_and_org(self):
         with tempfile.TemporaryDirectory() as tmp:

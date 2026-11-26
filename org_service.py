@@ -3,6 +3,8 @@ import json
 import time
 from contextvars import ContextVar
 
+import authz
+
 AUTH_CONTEXT = ContextVar("campus_audit_auth", default=None)
 
 
@@ -127,8 +129,8 @@ def update_member(conn, org_id, user_id, changes, actor_id, actor_role):
     role = changes.get("role")
     if status is not None and status not in ("active", "disabled", "pending_review"):
         raise ValueError("准入状态只能是 active、disabled 或 pending_review")
-    if role is not None and role not in ("org_admin", "org_member"):
-        raise ValueError("组织内角色只能是 org_admin 或 org_member")
+    if role is not None and role not in authz.ORG_ROLES:
+        raise ValueError("组织内角色无效")
     if status == "disabled" and actor_id and actor_id == user_id:
         raise ValueError("不能停用自己的账号，请让其他管理员操作")
     revoke_keys = False

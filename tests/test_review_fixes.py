@@ -69,8 +69,7 @@ class DisabledMemberTests(unittest.TestCase):
 
             code, body = server.patch("/api/orgs/%s/members/%s" % (PILOT, user["userId"]),
                                       {"admissionStatus": "disabled"}, teacher["token"])
-            # 当前权限矩阵不授予组织管理员改成员状态；无论是否指向自己都统一 403。
-            self.assertEqual(code, 403, body)
+            self.assertEqual(code, 400, body)
             self.assertEqual(server.get("/api/me", teacher["token"])[0], 200)
             self.assertEqual(member_for(server, admin, "2024001023")["admissionStatus"], "active")
 
@@ -195,7 +194,10 @@ class AuthzMatrixCoverageTests(unittest.TestCase):
                         ("usage", "consume_self"), ("sessions", "revoke_self")]
         for role in authz.ROLES:
             for resource, action in self_service:
-                self.assertIsNotNone(authz.scope_for(role, resource, action), (role, resource, action))
+                if role == authz.COLLEGE_VIEWER and (resource, action) not in self_service[:2]:
+                    self.assertIsNone(authz.scope_for(role, resource, action), (role, resource, action))
+                else:
+                    self.assertIsNotNone(authz.scope_for(role, resource, action), (role, resource, action))
         self.assertEqual(authz.scope_for(authz.PLATFORM_ADMIN, "accounts", "list"), "all")
         self.assertEqual(authz.scope_for(authz.ORG_ADMIN, "accounts", "revoke_key"), "org")
         self.assertIsNone(authz.scope_for(authz.ORG_MEMBER, "accounts", "list"))
