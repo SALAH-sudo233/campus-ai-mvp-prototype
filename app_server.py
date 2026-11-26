@@ -223,12 +223,12 @@ def _principal_from_pat(token, conn):
     principal = _principal_for(conn, row["user_id"], row["org_snapshot"])
     if not principal or pat_service.permissions_shrank(row["role_snapshot"], principal["role"]):
         raise authz.AuthzError(401, pat_service.REISSUE_MESSAGE)
-    student = conn.execute("SELECT owner_ref FROM students WHERE owner_ref = ? AND user_id = ?",
+    student = conn.execute("SELECT owner_ref, mode FROM students WHERE owner_ref = ? AND user_id = ?",
                            (row["owner_ref"], row["user_id"])).fetchone()
     if student is None:
         raise authz.AuthzError(401, pat_service.REISSUE_MESSAGE)
     principal.update({"owner_ref": student["owner_ref"],
-                      "auth_method": "pat", "pat_id": row["id"]})
+                      "auth_method": "pat", "pat_id": row["id"], "demo": student["mode"] == "demo"})
     conn.execute("UPDATE pat_tokens SET last_used_at = ? WHERE id = ?", (time.time(), row["id"]))
     return principal
 
@@ -2179,6 +2179,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if path == "/api/reset" and os.environ.get("DEMO_ALLOW_RESET") == "1":
                 principal = self._require_admin()
                 authz.require(principal, "system", "reset")
+                if principal.get("demo"):
+                    conn = db()
+                    try:
+                        org_service.audit(conn, principal.get("user_id"), principal["role"], principal.get("org_id"),
+                                          "system.reset_denied", "endpoint", path,
+                                          metadata={"reason": "demo_account", "status": 403, "result": "error"})
+                    finally:
+                        conn.close()
+                    return self._send(403, {"error": "演示账号不能重置真实数据"})
                 return self._send(*do_reset())
             return self._send(404, {"error": "未知接口"})
         except (authz.AuthzError, importer.ImportError_, onboarding.OnboardingError, works_service.WorkError,
