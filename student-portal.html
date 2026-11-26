@@ -533,20 +533,7 @@
 
         <!-- ===== SUB-VIEW 1: 学习与创作（官方接入教程 + 精选创作教程） ===== -->
         <div id="studioLearnView" class="space-y-8">
-          <!-- Compact Dismissible 3-Step Journey Strip -->
-          <div id="quickstartBar" class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">体验路径</span>
-              <button onclick="switchTab('token')" class="hover:underline" style="color:var(--muted);">① 看 Token 取 Key</button>
-              <span class="text-slate-300">→</span>
-              <span class="font-semibold" style="color:var(--ink);">② 配工具 · 学创作</span>
-              <span class="text-slate-300">→</span>
-              <button onclick="setStudioView('challenges')" class="hover:underline font-medium" style="color:var(--primary);">③ 参加挑战赢 Token</button>
-            </div>
-            <button onclick="dismissQuickstart()" title="收起引导" class="text-slate-400 hover:text-slate-600 text-base leading-none px-1">×</button>
-          </div>
-
-          <!-- BLOCK 1: 官方教程 · 如何使用浣溪 Token 在各工具中创作 -->
+          <!-- BLOCK 1: 官方教程 · 视频 + 提示词（如何使用浣溪 Token 在各工具中创作） -->
           <div class="space-y-4">
             <div class="flex flex-wrap items-end justify-between gap-3">
               <div class="section-eyebrow">
@@ -556,17 +543,54 @@
                   <h2 class="text-base font-bold leading-tight">用浣溪 Token 在各开发工具中创作</h2>
                 </div>
               </div>
-              <div class="flex items-center gap-2 text-xs">
-                <span class="hidden sm:inline mono text-[11px] px-2.5 py-1 rounded-full bg-white border border-slate-200" style="color:var(--muted);">Base URL: https://api.huanxi-lab.cn/v1</span>
-                <button onclick="copyCurrentKey()" class="cpa-ghost-pill px-3.5 py-1 text-xs font-medium">复制我的 Key</button>
+              <div class="flex items-center gap-2 flex-wrap">
+                <div id="officialToolTabs" class="inline-flex p-1 rounded-full border border-slate-200 bg-white text-xs flex-wrap"></div>
+                <button onclick="copyCurrentKey()" class="cpa-ghost-pill px-3.5 py-1.5 text-xs font-medium">复制我的 Key</button>
               </div>
             </div>
 
-            <div id="officialGuideGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"></div>
+            <!-- Interactive Official Video + Prompt Workbench -->
+            <div class="cpa-card overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+              <div class="lg:col-span-7 bg-[#0A2540] relative aspect-video lg:aspect-auto lg:min-h-[340px]">
+                <iframe
+                  id="officialBiliFrame"
+                  class="w-full h-full min-h-[240px] lg:min-h-[340px] border-0 block"
+                  scrolling="no"
+                  allowfullscreen="true"
+                  referrerpolicy="no-referrer"
+                  title="官方工具接入与创作视频教程"></iframe>
+              </div>
+              <div class="lg:col-span-5 p-5 sm:p-6 flex flex-col justify-between gap-4 bg-white">
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-2">
+                      <span id="ogBadge" class="px-2.5 py-0.5 rounded-full font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">推荐首选</span>
+                      <span id="ogDuration" class="mono" style="color:var(--muted);">07:00 · 视频演示</span>
+                    </div>
+                    <a id="ogBiliLink" href="https://www.bilibili.com/video/BV1XtoKB2Ewr/" target="_blank" rel="noopener noreferrer" class="font-medium hover:underline shrink-0" style="color:var(--primary);">B 站原视频 ↗</a>
+                  </div>
+                  <div>
+                    <h3 id="ogTitle" class="text-base font-bold leading-snug">在 Claude Code 中使用浣溪 Token</h3>
+                    <p id="ogSummary" class="text-xs leading-relaxed mt-1" style="color:var(--muted);"></p>
+                  </div>
+                  <div class="space-y-1.5">
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="font-semibold" style="color:var(--ink);">官方接入与创作提示词</span>
+                      <button onclick="copyActiveOfficialPrompt()" class="font-medium hover:underline" style="color:var(--primary);">一键复制提示词</button>
+                    </div>
+                    <pre id="ogPromptBox" class="p-3.5 rounded-xl mono text-[11px] leading-relaxed whitespace-pre-wrap overflow-y-auto max-h-40 m-0" style="background:#0A2540; color:#E2E8F0;"></pre>
+                  </div>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                  <button onclick="copyActiveOfficialPrompt()" class="cpa-pill-btn px-4 py-2 text-xs font-medium">复制接入提示词</button>
+                  <button onclick="openOfficialGuideModal(activeOfficialTool)" class="cpa-ghost-pill px-3.5 py-2 text-xs font-medium">查看完整步骤 →</button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- BLOCK 2: 精选创作教程（真实视频与项目实战） -->
-          <div class="space-y-5">
+          <div class="space-y-4">
             <div class="flex flex-wrap items-end justify-between gap-3">
               <div class="section-eyebrow">
                 <div class="section-bar"></div>
@@ -576,34 +600,6 @@
                 </div>
               </div>
               <input id="cmsSearch" oninput="renderCmsGrid()" type="text" placeholder="搜索实战教程..." class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs focus:outline-none focus:border-[#0F4C81] w-44 sm:w-52" />
-            </div>
-
-            <!-- Featured Live Embedded Video Player -->
-            <div class="cpa-card overflow-hidden grid grid-cols-1 lg:grid-cols-12">
-              <div class="lg:col-span-7 bg-[#0A2540] relative aspect-video lg:aspect-auto lg:min-h-[300px]">
-                <iframe
-                  id="featuredBiliFrame"
-                  data-src="https://player.bilibili.com/player.html?isOutside=true&bvid=BV1aFoyBnE4D&p=1&danmaku=0&autoplay=0"
-                  class="w-full h-full min-h-[240px] lg:min-h-[310px] border-0 block"
-                  scrolling="no"
-                  allowfullscreen="true"
-                  referrerpolicy="no-referrer"
-                  title="用 AI 自动开发并上线 Web 项目实战演示"></iframe>
-              </div>
-              <div class="lg:col-span-5 p-6 flex flex-col justify-between gap-5 bg-white">
-                <div class="space-y-3">
-                  <div class="flex items-center gap-2 text-xs">
-                    <span class="px-2.5 py-0.5 rounded-full font-medium" style="background:#EFF6FF; color:var(--primary);">本周推荐实战课</span>
-                    <span class="mono" style="color:var(--muted);">12:02 · B站精选</span>
-                  </div>
-                  <h3 class="text-lg font-bold leading-snug tracking-tight">用 AI 自动开发并上线你的首个 Web 项目</h3>
-                  <p class="text-xs leading-relaxed" style="color:var(--muted);">配好上面的工具后，跟着 UP 主「程序员鱼皮」全流程实战：对话生成可用项目并一键上线。</p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2.5 pt-2 border-t border-slate-100">
-                  <button onclick="openLessonModal('l-2')" class="cpa-pill-btn px-4 py-2 text-xs font-medium">查看步骤与 Prompt</button>
-                  <a href="https://www.bilibili.com/video/BV1aFoyBnE4D/" target="_blank" rel="noopener noreferrer" class="cpa-ghost-pill px-4 py-2 text-xs font-medium">在 B 站打开 ↗</a>
-                </div>
-              </div>
             </div>
 
             <!-- Category Filter Row -->
@@ -862,6 +858,7 @@
     let appState = 'normal';
     let activeTab = 'token';
     let studioView = 'learn'; // learn | challenges | works
+    let activeOfficialTool = 'og-claude';
     let chartMetric = 'requests'; // requests | tokens
     let chartRange = 'hourly'; // hourly | daily
     let tableOpen = false;
@@ -901,22 +898,21 @@
         icon: '⌘',
         name: 'Claude Code',
         sub: '终端 Agent · 2 行环境变量',
-        time: '2 分钟',
+        time: '07:00',
         cover: './media/demo_cms_codex.jpg',
         bvid: 'BV1XtoKB2Ewr',
-        summary: '通过 Anthropic 兼容网关接入浣溪 Token，直接在项目目录对话完成建站、调试与打包。',
+        summary: '复制下方提示词/命令接入浣溪网关，直接在项目目录用自然语言完成建站、调试与发布。',
         steps: [
-          '确保本机已安装 Node.js 18+，运行 npm i -g @anthropic-ai/claude-code',
-          '在终端设置下方 ANTHROPIC_BASE_URL 与你的个人 API Key（可写入 ~/.zshrc 持久化）',
-          '进入任意空文件夹执行 claude，输入一句中文需求即可开始创作'
+          '安装官方 CLI：npm i -g @anthropic-ai/claude-code（需 Node.js 18+）',
+          '在终端运行下方环境变量配置，接入浣溪网关并绑定个人 API Key',
+          '输入下方首作提示词，2 分钟生成可预览的校园单页工具'
         ],
-        code: `# 浣溪AI Lab · Claude Code 官方接入配置
+        code: `# ① 接入浣溪 Token（终端执行）
 export ANTHROPIC_BASE_URL="https://api.huanxi-lab.cn/v1"
 export ANTHROPIC_AUTH_TOKEN="sk-hx-live-98f2c71a0e4b3d9f4a"
 
-# 启动并验证接入
-mkdir campus-demo && cd campus-demo
-claude "帮我创建一个清爽单页课程表 HTML 应用"`
+# ② 直接把下方提示词发给 Claude Code 开始创作：
+claude "请帮我做一个面向华科学生的「选课冲突检测与排课助手」单页 Web 应用，纯静态 HTML+JS 实现，清爽白底深海蓝风格，附 5 门示例课程数据。"`
       },
       {
         id: 'og-codex',
@@ -924,21 +920,21 @@ claude "帮我创建一个清爽单页课程表 HTML 应用"`
         icon: '>_',
         name: 'Codex CLI',
         sub: 'OpenAI 兼容 · 终端极速编码',
-        time: '2 分钟',
+        time: '12:02',
         cover: './media/demo_cms_web.jpg',
         bvid: 'BV1aFoyBnE4D',
-        summary: '使用 OpenAI 协议标准接入浣溪中转站，支持 gpt-5-codex 等全量代码模型。',
+        summary: '通过 OpenAI 兼容协议接入浣溪 Token，调用 gpt-5-codex 一句指令生成并上线校园项目。',
         steps: [
           '全局安装官方 CLI：npm i -g @openai/codex',
-          '配置 OPENAI_BASE_URL 指向浣溪网关并填入个人 API Key',
-          '在项目目录执行 codex，完成后可直接在「Token 门户」看到调用柱条刷新'
+          '将 OPENAI_BASE_URL 指向浣溪中转站并填入个人 API Key',
+          '运行下方创作提示词，在「Token 门户」可实时看到请求与额度消耗'
         ],
-        code: `# 浣溪AI Lab · Codex CLI 官方接入配置
+        code: `# ① 接入浣溪 Token（终端执行）
 export OPENAI_BASE_URL="https://api.huanxi-lab.cn/v1"
 export OPENAI_API_KEY="sk-hx-live-98f2c71a0e4b3d9f4a"
 
-# 一句指令启动创作
-codex "帮我做一个华科选课冲突检测单页 Web 工具"`
+# ② 直接把下方提示词发给 Codex 开始创作：
+codex "请帮我生成一个轻量化的「自习番茄钟 + 今日任务清单」单页网站，支持本地保存进度与专注统计，完成后输出单文件 index.html。"`
       },
       {
         id: 'og-ide',
@@ -946,50 +942,44 @@ codex "帮我做一个华科选课冲突检测单页 Web 工具"`
         icon: '{}',
         name: 'Cursor / Cline',
         sub: 'IDE 插件可视化填入 Base URL',
-        time: '3 分钟',
+        time: '28:06',
         cover: './media/demo_cms_agent.jpg',
         bvid: 'BV1iQQYB7EpN',
-        summary: '适合习惯图形界面编辑器的同学：在 Cursor 或 VS Code（Cline / Roo Code）填入网关地址即用。',
+        summary: '在 Cursor 或 VS Code（Cline / Roo Code）中填入浣溪网关地址与 Key，直接对话写项目。',
         steps: [
-          '打开 Cursor Settings → Models（或 VS Code 安装 Cline 插件 → API Provider 选 OpenAI Compatible）',
-          '将 Base URL 设为 https://api.huanxi-lab.cn/v1，API Key 粘贴个人密钥',
-          '模型名填入 claude-sonnet-4 或 gpt-5-codex，点击 Verify 测试连通'
+          '在 Cursor Settings → Models 或 Cline 设置中选择 OpenAI Compatible',
+          'Base URL 填 https://api.huanxi-lab.cn/v1，API Key 填个人密钥，模型选 claude-sonnet-4',
+          '在聊天框粘贴下方提示词，一键生成你的第一个校园 AI 小工具'
         ],
-        code: `{
-  "apiProvider": "openai-compatible",
-  "baseUrl": "https://api.huanxi-lab.cn/v1",
-  "apiKey": "sk-hx-live-98f2c71a0e4b3d9f4a",
-  "model": "claude-sonnet-4"
-}`
+        code: `【网关参数】
+Base URL：https://api.huanxi-lab.cn/v1
+API Key ：sk-hx-live-98f2c71a0e4b3d9f4a
+Model   ：claude-sonnet-4
+
+【可直接粘贴到对话框的首作提示词】
+请帮我在当前目录创建一个「论文精读卡片生成器」Web 页面：支持粘贴论文摘要，自动提炼核心痛点、方法创新与复现清单，并可一键导出 Markdown。`
       },
       {
         id: 'og-api',
         badge: '科研 / 应用',
         icon: 'Py',
-        name: 'Python / API 调用',
+        name: 'Python / API',
         sub: '在自研应用与脚本中调用模型',
-        time: '2 分钟',
+        time: '111:11',
         cover: './media/demo_cms_hackathon.jpg',
-        bvid: '',
-        summary: '做论文精读器、AI 问答小程序或科研实验脚本时，直接复用官方 OpenAI SDK 调用浣溪算力。',
+        bvid: 'BV1hKZGY6Emb',
+        summary: '直接把下方提示词发给任意 AI 编程工具，自动生成调用浣溪网关的 Python 科研或应用脚本。',
         steps: [
-          '安装标准 SDK：pip install openai',
-          '初始化客户端时指定 base_url 与个人 api_key（建议放环境变量，勿提交到公开仓库）',
-          '调用任意可用模型（claude-sonnet-4 / gpt-5-codex / gemini-2.5-pro）'
+          '安装官方 Python SDK：pip install openai',
+          '用环境变量管理你的个人 API Key，避免误提交到公开代码仓库',
+          '复制下方提示词让 AI 直接生成可运行脚本并接入 claude-sonnet-4 / gpt-5-codex'
         ],
-        code: `import os
-from openai import OpenAI
-
-client = OpenAI(
-    base_url="https://api.huanxi-lab.cn/v1",
-    api_key=os.getenv("HUANXI_API_KEY", "sk-hx-live-98f2c71a0e4b3d9f4a"),
-)
-
-resp = client.chat.completions.create(
-    model="claude-sonnet-4",
-    messages=[{"role": "user", "content": "用 3 条要点总结这篇论文的创新点"}]
-)
-print(resp.choices[0].message.content)`
+        code: `【直接复制给 AI 生成调用代码】
+请帮我写一个 Python 3 脚本，使用 openai SDK 接入浣溪AI Lab 网关：
+- base_url = "https://api.huanxi-lab.cn/v1"
+- api_key 从环境变量 HUANXI_API_KEY 读取（测试可用 sk-hx-live-98f2c71a0e4b3d9f4a）
+- model = "claude-sonnet-4"
+功能：读取本地 papers/ 目录下的文本摘要，批量输出结构化中文笔记 Markdown。`
       }
     ];
 
@@ -1431,20 +1421,28 @@ print(resp.choices[0].message.content)`
       showToast('API Key 已重置，旧密钥已立即失效');
     }
 
-    // ===== STUDIO (LESSONS + EVENTS + MY WORKS) =====
+    // ===== STUDIO (OFFICIAL VIDEO+PROMPT + CREATION LESSONS + CHALLENGES + MY WORKS) =====
     function ensureFeaturedVideo(active) {
-      const frame = document.getElementById('featuredBiliFrame');
+      const frame = document.getElementById('officialBiliFrame');
       if (!frame) return;
       if (active) {
-        if (!frame.getAttribute('src')) frame.setAttribute('src', frame.dataset.src);
+        const g = OFFICIAL_GUIDES.find(x => x.id === activeOfficialTool) || OFFICIAL_GUIDES[0];
+        const target = `https://player.bilibili.com/player.html?isOutside=true&bvid=${g.bvid}&p=1&danmaku=0&autoplay=0`;
+        if (frame.getAttribute('src') !== target) frame.setAttribute('src', target);
       } else {
         if (frame.getAttribute('src')) frame.removeAttribute('src');
       }
     }
 
-    function dismissQuickstart() {
-      const bar = document.getElementById('quickstartBar');
-      if (bar) bar.classList.add('hidden');
+    function selectOfficialTool(id) {
+      activeOfficialTool = id;
+      renderOfficialGuides();
+    }
+
+    function copyActiveOfficialPrompt() {
+      const g = OFFICIAL_GUIDES.find(x => x.id === activeOfficialTool) || OFFICIAL_GUIDES[0];
+      const txt = g.code.replace(/sk-hx-live-98f2c71a0e4b3d9f4a/g, currentKeyPlain);
+      copyText(txt, `${g.name} 官方接入与创作提示词已复制`);
     }
 
     function setStudioView(v) {
@@ -1458,27 +1456,26 @@ print(resp.choices[0].message.content)`
       document.getElementById('studioChallengesView').classList.toggle('hidden', studioView !== 'challenges');
       document.getElementById('studioWorksView').classList.toggle('hidden', studioView !== 'works');
       document.getElementById('myWorksCountBadge').textContent = myWorks.length;
-      ensureFeaturedVideo(activeTab === 'studio' && studioView === 'learn');
       if (studioView === 'learn') { renderOfficialGuides(); renderCmsGrid(); }
+      else ensureFeaturedVideo(false);
       if (studioView === 'works') renderMyWorks();
     }
 
     function renderOfficialGuides() {
-      document.getElementById('officialGuideGrid').innerHTML = OFFICIAL_GUIDES.map(g => `
-        <div onclick="openOfficialGuideModal('${g.id}')" class="cpa-card lesson-card group p-4 cursor-pointer flex flex-col justify-between gap-3.5 bg-white">
-          <div class="flex items-center justify-between gap-2">
-            <span class="w-9 h-9 rounded-xl mono text-xs font-bold inline-flex items-center justify-center" style="background:#EFF6FF; color:var(--primary);">${g.icon}</span>
-            <span class="px-2 py-0.5 rounded-full text-[11px] font-medium" style="${g.badge === '推荐首选' ? 'background:var(--accent-soft); color:var(--accent-ink);' : 'background:var(--bg-subtle); color:var(--muted);'}">${g.badge}</span>
-          </div>
-          <div class="space-y-1">
-            <div class="text-sm font-bold flex items-center justify-between">
-              <span>${g.name}</span>
-              <span class="text-xs opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition">→</span>
-            </div>
-            <div class="text-xs truncate" style="color:var(--muted);">${g.sub} · ${g.time}</div>
-          </div>
-        </div>
-      `).join('');
+      const g = OFFICIAL_GUIDES.find(x => x.id === activeOfficialTool) || OFFICIAL_GUIDES[0];
+      document.getElementById('officialToolTabs').innerHTML = OFFICIAL_GUIDES.map(item => {
+        const a = item.id === g.id;
+        return `<button onclick="selectOfficialTool('${item.id}')" class="px-3.5 py-1 rounded-full font-medium transition" style="${a ? 'background:#0A2540; color:#FFFFFF;' : 'background:transparent; color:#64748B;'}">${item.name}</button>`;
+      }).join('');
+
+      document.getElementById('ogBadge').textContent = g.badge;
+      document.getElementById('ogDuration').textContent = `${g.time} · 视频演示`;
+      document.getElementById('ogTitle').textContent = `在 ${g.name} 中使用浣溪 Token`;
+      document.getElementById('ogSummary').textContent = g.summary;
+      document.getElementById('ogBiliLink').href = `https://www.bilibili.com/video/${g.bvid}/`;
+      document.getElementById('ogPromptBox').textContent = g.code.replace(/sk-hx-live-98f2c71a0e4b3d9f4a/g, currentKeyPlain);
+
+      ensureFeaturedVideo(activeTab === 'studio' && studioView === 'learn');
     }
 
     function openOfficialGuideModal(id) {
@@ -1514,8 +1511,8 @@ print(resp.choices[0].message.content)`
         <div class="flex items-start justify-between gap-3">
           <div class="space-y-1">
             <div class="flex items-center gap-2 text-xs">
-              <span class="px-2.5 py-0.5 rounded-full font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">官方工具接入教程</span>
-              <span class="mono" style="color:var(--muted);">${g.time}上手</span>
+              <span class="px-2.5 py-0.5 rounded-full font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">官方教程</span>
+              <span class="mono" style="color:var(--muted);">${g.time} · 视频与提示词</span>
             </div>
             <h2 class="text-lg font-bold leading-snug">在 ${g.name} 中使用浣溪 Token</h2>
           </div>
@@ -1525,7 +1522,7 @@ print(resp.choices[0].message.content)`
         <!-- Ready-to-Use Gateway Credentials Strip -->
         <div class="p-3.5 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs" style="background:var(--bg-page);">
           <div class="space-y-0.5 min-w-0">
-            <div class="text-[11px]" style="color:var(--muted);">网关地址与你的个人 Key（已自动填入下方配置）</div>
+            <div class="text-[11px]" style="color:var(--muted);">网关地址与你的个人 Key（已自动填入下方提示词）</div>
             <div class="mono text-[11px] truncate" style="color:var(--ink);">https://api.huanxi-lab.cn/v1</div>
           </div>
           <button onclick="copyCurrentKey()" class="cpa-ghost-pill px-3 py-1 text-[11px] font-medium bg-white shrink-0">复制我的 Key</button>
@@ -1536,8 +1533,8 @@ print(resp.choices[0].message.content)`
         <!-- Copyable Configuration -->
         <div class="space-y-2">
           <div class="flex items-center justify-between text-xs">
-            <span class="font-bold">一键复制配置脚本（含你的 Key）</span>
-            <button onclick="copyText(window.__activeGuideCode, '${g.name} 接入配置已复制')" class="font-medium hover:underline" style="color:var(--primary);">一键复制</button>
+            <span class="font-bold">官方接入与创作提示词（已填个人 Key）</span>
+            <button onclick="copyText(window.__activeGuideCode, '${g.name} 官方接入与创作提示词已复制')" class="font-medium hover:underline" style="color:var(--primary);">一键复制</button>
           </div>
           <pre class="p-4 rounded-xl mono text-[11px] leading-relaxed whitespace-pre-wrap overflow-x-auto m-0" style="background:#0A2540; color:#E2E8F0;">${renderedCode}</pre>
         </div>
