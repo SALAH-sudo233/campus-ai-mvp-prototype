@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>浣溪AI Lab · 学生端 V1 高保真交互原型（v2 · CPA 门户 + CMS 创作中心）</title>
+  <title>浣溪AI Lab · 学生端 V1 高保真交互原型（Token 门户 · 学习与挑战 · 作品广场）</title>
   <script src="./tailwindcss.min.js"></script>
   <style>
     :root {
@@ -215,17 +215,47 @@
 
           <nav class="flex items-center gap-7 text-xs">
             <button onclick="switchTab('token')" data-tab="token" class="nav-tab py-1">Token 门户</button>
-            <button onclick="switchTab('studio')" data-tab="studio" class="nav-tab py-1">创作中心</button>
-            <button onclick="switchTab('square')" data-tab="square" class="nav-tab py-1">作品广场</button>
+            <button onclick="switchTab('studio')" data-tab="studio" class="nav-tab py-1">学习与挑战</button>
+            <button onclick="switchTab('square')" data-tab="square" class="nav-tab py-1 inline-flex items-center gap-1.5">
+              <span>作品广场</span>
+              <span id="squareTabAlertDot" class="hidden w-1.5 h-1.5 rounded-full" style="background:var(--coral);" title="有作品待修改"></span>
+            </button>
           </nav>
         </div>
 
         <div class="flex items-center gap-3">
-          <div class="hidden sm:flex items-center gap-2 text-xs">
-            <span class="w-7 h-7 rounded-full inline-flex items-center justify-center text-[11px] font-semibold text-white" style="background:#0A2540;">林</span>
-            <div class="leading-tight">
-              <div id="headerUserName" class="font-medium text-xs">林知行</div>
-              <div id="headerStudentId" class="mono text-[11px]" style="color:var(--muted);">linzhixing@hust.edu.cn</div>
+          <!-- Clickable Avatar Menu (Direct Access to My Works + Status Alert) -->
+          <div class="relative">
+            <button id="userMenuBtn" onclick="toggleUserMenu(event)" class="flex items-center gap-2 text-xs px-2 py-1 rounded-full hover:bg-slate-100 transition text-left" title="查看我的作品与个人入口">
+              <span class="relative w-7 h-7 rounded-full inline-flex items-center justify-center text-[11px] font-semibold text-white shrink-0" style="background:#0A2540;">
+                林
+                <span id="avatarAlertDot" class="hidden absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ring-2 ring-white" style="background:var(--coral);"></span>
+              </span>
+              <div class="hidden sm:block leading-tight">
+                <div id="headerUserName" class="font-medium text-xs">林知行</div>
+                <div id="headerStudentId" class="mono text-[11px]" style="color:var(--muted);">linzhixing@hust.edu.cn</div>
+              </div>
+              <span class="hidden sm:inline text-[10px] text-slate-400 pr-1">▾</span>
+            </button>
+
+            <div id="userMenuDropdown" class="hidden absolute right-0 mt-2 w-56 rounded-2xl bg-white border border-slate-200 shadow-lg py-1.5 z-50 text-xs">
+              <div class="px-3.5 py-2 border-b border-slate-100">
+                <div class="font-semibold" style="color:var(--ink);">林知行</div>
+                <div class="mono text-[11px] truncate" style="color:var(--muted);">linzhixing@hust.edu.cn</div>
+              </div>
+              <button onclick="openMyWorks()" class="w-full px-3.5 py-2.5 flex items-center justify-between hover:bg-slate-50 transition text-left">
+                <span class="font-medium" style="color:var(--ink);">我的作品</span>
+                <span class="flex items-center gap-1.5">
+                  <span id="menuRejectedTag" class="hidden px-1.5 py-0.5 rounded-full text-[10px] font-medium" style="background:var(--coral-soft); color:var(--coral);">1 待修改</span>
+                  <span id="menuMyWorksCount" class="mono text-[11px] px-1.5 py-0.5 rounded-full" style="background:var(--bg-subtle); color:var(--muted);">3</span>
+                </span>
+              </button>
+              <button onclick="closeUserMenu(); switchTab('token')" class="w-full px-3.5 py-2 flex items-center justify-between hover:bg-slate-50 transition text-left" style="color:var(--muted);">
+                <span>Token 门户与密钥</span>
+                <span>→</span>
+              </button>
+              <div class="my-1 border-t border-slate-100"></div>
+              <button onclick="closeUserMenu(); setAppState('auth')" class="w-full px-3.5 py-2 text-left hover:bg-slate-50 transition" style="color:var(--coral);">退出登录</button>
             </div>
           </div>
           <button id="headerAuthBtn" onclick="setAppState('auth')" title="退出登录 / 切换账号" class="cpa-ghost-pill px-3 py-1.5 text-xs font-medium">退出登录</button>
@@ -248,7 +278,7 @@
           <h2 class="text-lg font-bold">校园身份核验中。</h2>
           <p class="text-xs max-w-md mx-auto leading-relaxed" style="color:var(--muted);">你的教育邮箱 <span id="pendingEmailText" class="mono font-medium" style="color:var(--ink);">new@hust.edu.cn</span> 已验证通过，但暂未在学院首批导入的邮箱白名单内。校内运营志愿者核验通过后，将自动签发专属 API Key 并发放 1,000,000 初始免费 Token。</p>
           <div class="flex items-center justify-center gap-3 pt-3">
-            <button onclick="switchTab('studio')" class="cpa-ghost-pill px-4 py-2 text-xs font-medium">先去「创作中心」看教程</button>
+            <button onclick="switchTab('studio')" class="cpa-ghost-pill px-4 py-2 text-xs font-medium">先去「学习与挑战」看教程</button>
             <button onclick="switchTab('square')" class="cpa-pill-btn px-4 py-2 text-xs font-medium">先逛逛作品广场 →</button>
           </div>
         </div>
@@ -464,7 +494,7 @@
                 </div>
 
                 <div class="pt-3 border-t border-slate-100 flex items-center justify-end text-xs">
-                  <button onclick="switchTab('studio')" class="font-medium hover:underline" style="color:var(--primary);">不会接入工具？去「创作中心」看视频与提示词 →</button>
+                  <button onclick="switchTab('studio')" class="font-medium hover:underline" style="color:var(--primary);">不会接入工具？去「学习与挑战」看视频与提示词 →</button>
                 </div>
               </div>
             </div>
@@ -513,10 +543,10 @@
         </div>
       </section>
 
-      <!-- ==================== TAB 2: 创作中心 (VERTICAL LINEAR FLOW + STANDALONE LESSON/CHALLENGE DETAIL PAGES) ==================== -->
+      <!-- ==================== TAB 2: 学习与挑战 (VERTICAL LINEAR FLOW + STANDALONE LESSON/CHALLENGE DETAIL PAGES) ==================== -->
       <section id="tab-studio" class="hidden pt-6">
 
-        <!-- ===== 创作中心主页（竖向平铺） ===== -->
+        <!-- ===== 学习与挑战主页（01 Token 接入 → 02 实战创作 → 03 参赛赢 Token） ===== -->
         <div id="studioHomeView" class="space-y-12">
 
           <!-- ===== 01 · TOKEN 接入（官方教程 · 单视频覆盖全工具 + 按工具复制提示词） ===== -->
@@ -617,13 +647,68 @@
               <button onclick="showToast('已记录关注，浣溪 Teams 开放后将第一时间通知你')" class="cpa-ghost-pill px-4 py-1.5 text-xs font-medium shrink-0">上线提醒我</button>
             </div>
           </div>
+        </div>
 
-          <!-- ===== 我的作品 ===== -->
-          <div id="studioWorksSection" class="pt-10 border-t border-slate-200/80 space-y-4">
-            <div class="flex flex-wrap items-end justify-between gap-3">
+        <!-- ===== 独立详情页容器（实战教程独立页 / 挑战赛独立页，含互动评论） ===== -->
+        <div id="studioDetailView" class="hidden space-y-6"></div>
+      </section>
+
+      <!-- ==================== TAB 3: 作品广场（广场作品 + 我的作品 + 作品独立详情页） ==================== -->
+      <section id="tab-square" class="hidden pt-5">
+
+        <!-- ===== 作品广场主视图（广场作品 / 我的作品 轻切换） ===== -->
+        <div id="squareHomeView" class="space-y-5">
+          <!-- Top Switcher: 广场作品 vs 我的作品（含待修改红点提醒） -->
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="inline-flex p-1 rounded-full border border-slate-200 bg-white text-xs">
+              <button onclick="setSquareMode('all')" data-sq-mode="all" class="sq-mode-btn px-4 py-1.5 rounded-full font-medium transition">广场作品</button>
+              <button onclick="setSquareMode('mine')" data-sq-mode="mine" class="sq-mode-btn px-4 py-1.5 rounded-full font-medium transition inline-flex items-center gap-1.5">
+                <span>我的作品</span>
+                <span id="squareMineCount" class="px-1.5 rounded-full text-[11px] mono bg-slate-100 text-slate-600">3</span>
+                <span id="squareMineAlertDot" class="hidden inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[10px] font-semibold" style="background:var(--coral-soft); color:var(--coral);">● 待修改</span>
+              </button>
+            </div>
+            <button onclick="openPublishModal()" class="cpa-pill-btn px-4 py-1.5 text-xs font-medium">+ 发布新作品</button>
+          </div>
+
+          <!-- Sub-Mode A: 广场作品 -->
+          <div id="squareAllPane" class="space-y-5">
+            <div class="rounded-2xl p-5 px-6 text-white flex flex-wrap items-center justify-between gap-4" style="background:#0A2540;">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2 text-xs">
+                  <span class="px-2.5 py-0.5 rounded-full font-medium" style="background:var(--accent);">双周冲刺激励</span>
+                  <span class="text-slate-300">距本期截榜还剩 <strong class="text-white mono">5 天 14 小时</strong></span>
+                </div>
+                <div class="text-base font-semibold">每两周点赞量前 10 名的作品，作者可获 500,000 Token 奖励（每件作品不重复领奖）</div>
+              </div>
+              <button onclick="openPublishModal()" class="px-4 py-2 rounded-full text-xs font-semibold bg-white text-[#0A2540] hover:bg-slate-100 shrink-0">发布作品冲榜 →</button>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div id="tagFilters" class="flex items-center gap-2 flex-wrap"></div>
+              <div class="flex items-center gap-2 text-xs">
+                <select id="typeFilter" onchange="renderSquare()" class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs focus:outline-none">
+                  <option value="all">全部形态</option>
+                  <option value="Web">Web（在线体验）</option>
+                  <option value="APP">APP（安装包）</option>
+                  <option value="PC">PC（客户端）</option>
+                </select>
+                <select id="sortFilter" onchange="renderSquare()" class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs focus:outline-none">
+                  <option value="hot">按点赞最热</option>
+                  <option value="new">按最新发布</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="squareGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+          </div>
+
+          <!-- Sub-Mode B: 我的作品（含审核状态与驳回修改闭环） -->
+          <div id="squareMinePane" class="hidden space-y-4">
+            <div class="cpa-card p-4 px-5 flex flex-wrap items-center justify-between gap-3 bg-white">
               <div>
-                <h2 class="text-base font-bold leading-tight">我的作品</h2>
-                <p id="myWorksSummary" class="text-xs mt-1" style="color:var(--muted);"></p>
+                <h2 class="text-sm font-bold">我提交的校园作品</h2>
+                <p id="myWorksSummary" class="text-xs mt-0.5" style="color:var(--muted);"></p>
               </div>
               <button onclick="openPublishModal()" class="cpa-pill-btn px-4 py-1.5 text-xs font-medium">+ 发布新作品</button>
             </div>
@@ -631,51 +716,11 @@
           </div>
         </div>
 
-        <!-- ===== 独立详情页容器（实战教程独立页 / 挑战赛独立页，含互动评论） ===== -->
-        <div id="studioDetailView" class="hidden space-y-6"></div>
-      </section>
-
-      <!-- ==================== TAB 3: 作品广场 ==================== -->
-      <section id="tab-square" class="hidden space-y-5 pt-5">
-        <div class="rounded-2xl p-5 px-6 text-white flex flex-wrap items-center justify-between gap-4" style="background:#0A2540;">
-          <div class="space-y-1">
-            <div class="flex items-center gap-2 text-xs">
-              <span class="px-2.5 py-0.5 rounded-full font-medium" style="background:var(--accent);">双周冲刺激励</span>
-              <span class="text-slate-300">距本期截榜还剩 <strong class="text-white mono">5 天 14 小时</strong></span>
-            </div>
-            <div class="text-base font-semibold">每两周点赞量前 10 名的作品，作者可获 500,000 Token 奖励（每件作品不重复领奖）</div>
-          </div>
-          <button onclick="openPublishModal()" class="px-4 py-2 rounded-full text-xs font-semibold bg-white text-[#0A2540] hover:bg-slate-100 shrink-0">发布作品冲榜 →</button>
-        </div>
-
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div id="tagFilters" class="flex items-center gap-2 flex-wrap"></div>
-          <div class="flex items-center gap-2 text-xs">
-            <select id="typeFilter" onchange="renderSquare()" class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs focus:outline-none">
-              <option value="all">全部形态</option>
-              <option value="Web">Web（在线体验）</option>
-              <option value="APP">APP（安装包）</option>
-              <option value="PC">PC（客户端）</option>
-            </select>
-            <select id="sortFilter" onchange="renderSquare()" class="px-3.5 py-1.5 rounded-full border border-slate-200 bg-white text-xs focus:outline-none">
-              <option value="hot">按点赞最热</option>
-              <option value="new">按最新发布</option>
-            </select>
-          </div>
-        </div>
-
-        <div id="squareGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        <!-- ===== 作品独立详情页（封面 + 简介 + 实名点赞 + 互动评论 + 右侧其他热门作品） ===== -->
+        <div id="squareDetailView" class="hidden space-y-6"></div>
       </section>
 
     </main>
-  </div>
-
-  <!-- ==================== WORK DETAIL DRAWER ==================== -->
-  <div id="detailDrawer" class="hidden fixed inset-0 z-40 drawer-backdrop flex justify-end" onclick="if(event.target===this) closeDetailDrawer()">
-    <div class="w-full max-w-md bg-white h-full shadow-2xl border-l border-slate-200 flex flex-col justify-between overflow-y-auto">
-      <div id="drawerBody" class="p-6 space-y-5"></div>
-      <div id="drawerFooter" class="p-4 px-6 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3"></div>
-    </div>
   </div>
 
   <!-- ==================== PUBLISH WORK MODAL ==================== -->
@@ -697,7 +742,7 @@
       <div class="p-6 space-y-4 text-xs">
         <div id="pubPromptPane" class="space-y-3">
           <div class="p-3 rounded-xl text-[11px] leading-relaxed" style="background:var(--accent-soft); color:var(--accent-ink);">
-            复制下方发布指令到 Codex / Claude Code 中执行，AI 自动打包 Web 静态文件（或整理安装包信息）并一键提交至「创作中心 · 我的作品」。
+            复制下方发布指令到 Codex / Claude Code 中执行，AI 自动打包 Web 静态文件（或整理安装包信息）并一键提交至「作品广场 · 我的作品」。
           </div>
           <div class="relative rounded-xl p-3.5 mono text-[11px] leading-relaxed" style="background:#0A2540; color:#E2E8F0;">
             <button onclick="copyPublishPrompt()" class="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full text-[11px] font-sans bg-white/15 hover:bg-white/25 text-white">复制指令</button>
@@ -789,6 +834,9 @@
     let activeTab = 'token';
     let activeOfficialTool = 'og-claude';
     let activeStudioDetail = null; // null | { type: 'lesson'|'challenge', id: string }
+    let squareMode = 'all'; // all | mine
+    let activeWorkDetailId = null; // null | string
+    let editingWorkId = null;
     let chartMetric = 'requests'; // requests | tokens
     let chartRange = 'hourly'; // hourly | daily
     let tableOpen = false;
@@ -1101,6 +1149,25 @@ Model   ：claude-sonnet-4
       'challenge:ch-workshop': [
         { author: '陆星野', role: '本科 · 大二', time: '3 小时前', likes: 11, liked: false, body: '上周三跟着现场演示做出了算法可视化沙盒，这周想问下怎么在静态页面里做本地数据导出 JSON。' },
         { author: '陈一鸣', role: '校内运营', isStaff: true, time: '昨天 18:15', likes: 9, liked: false, body: '已记下问题！明晚 19:30 现场答疑环节会直接演示静态页导入导出和一键托管全流程。' }
+      ],
+      'work:w-1': [
+        { author: '周予安', role: '研究生 · 研一', time: '1 小时前', likes: 15, liked: false, body: '选课冲突高亮太实用了，如果能再支持导入教务处导出表格就封神了！' },
+        { author: '陆星野', role: '本科 · 大二', time: '昨天 22:05', likes: 9, liked: false, body: '实名点赞支持，这学期选公选课全靠这个排雷～' }
+      ],
+      'work:w-2': [
+        { author: '许嘉禾', role: '研究生 · 研二', time: '3 小时前', likes: 12, liked: false, body: '刚丢了两篇顶会摘要进去，提炼出来的复现清单非常干净，直接贴进飞书笔记了。' }
+      ],
+      'work:w-3': [
+        { author: '林知行', role: '本科 · 大三', time: '昨天 19:40', likes: 7, liked: false, body: '我们实验室也在用类似排班脚本，语音转飞书提醒这个切入点很赞！' }
+      ],
+      'work:w-4': [
+        { author: '苏明澈', role: '本科 · 大四', time: '5 小时前', likes: 8, liked: false, body: '中午 12 点东一食堂排队预测太真实了哈哈哈，已点支持！' }
+      ],
+      'work:w-5': [
+        { author: '林知行', role: '本科 · 大三', time: '昨天 15:10', likes: 10, liked: false, body: 'DP 状态转移一步步高亮特别直观，数据结构复习利器。' }
+      ],
+      'work:w-6': [
+        { author: '周予安', role: '研究生 · 研一', time: '2 天前', likes: 6, liked: false, body: '试了一下模拟三位严厉评委的追问，问题很犀利，开题前演练很有用。' }
       ]
     };
 
@@ -1227,7 +1294,7 @@ Model   ：claude-sonnet-4
         banner.classList.remove('hidden');
         banner.innerHTML = `
           <div class="p-3.5 px-4 rounded-2xl border flex flex-wrap items-center justify-between gap-3 text-xs" style="background:var(--warn-soft); border-color:#FCD34D; color:#92400E;">
-            <div><strong>待校内运营核验：</strong>你的教育邮箱已验证，暂未在首批白名单中。核验通过前可先在「创作中心」学习教程或在「作品广场」浏览，通过后自动解锁 API Key。</div>
+            <div><strong>待校内运营核验：</strong>你的教育邮箱已验证，暂未在首批白名单中。核验通过前可先在「学习与挑战」看教程或在「作品广场」浏览，通过后自动解锁 API Key。</div>
             <button onclick="setAppState('normal'); showToast('已模拟校内核验通过，1,000,000 初始额度已到账！')" class="px-3.5 py-1 rounded-full font-medium bg-white border border-amber-300 text-amber-900 shrink-0">模拟核验通过</button>
           </div>
         `;
@@ -1324,7 +1391,11 @@ Model   ：claude-sonnet-4
         if (activeStudioDetail) closeStudioDetail(false);
         renderStudio();
       }
-      if (tab === 'square') renderSquare();
+      if (tab === 'square') {
+        if (activeWorkDetailId) closeWorkDetail(false);
+        setSquareMode(squareMode);
+      }
+      syncMyWorksBadges();
     }
 
     function setChartMetric(m) { chartMetric = m; renderStackedBar(); }
@@ -1480,13 +1551,51 @@ Model   ：claude-sonnet-4
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
+    function toggleUserMenu(e) {
+      if (e) e.stopPropagation();
+      const dd = document.getElementById('userMenuDropdown');
+      if (dd) dd.classList.toggle('hidden');
+    }
+
+    function closeUserMenu() {
+      const dd = document.getElementById('userMenuDropdown');
+      if (dd) dd.classList.add('hidden');
+    }
+
+    document.addEventListener('click', () => closeUserMenu());
+
+    function openMyWorks() {
+      closeUserMenu();
+      squareMode = 'mine';
+      activeWorkDetailId = null;
+      switchTab('square');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function syncMyWorksBadges() {
+      const total = myWorks.length;
+      const rejected = myWorks.filter(w => w.status === 'rejected').length;
+      const hasAlert = rejected > 0 && appState !== 'pending';
+
+      const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      const setVis = (id, show) => { const el = document.getElementById(id); if (el) el.classList.toggle('hidden', !show); };
+
+      setTxt('menuMyWorksCount', total);
+      setTxt('squareMineCount', total);
+      setTxt('menuRejectedTag', `${rejected} 待修改`);
+      setTxt('squareMineAlertDot', `● ${rejected} 待修改`);
+      setVis('avatarAlertDot', hasAlert);
+      setVis('squareTabAlertDot', hasAlert);
+      setVis('menuRejectedTag', hasAlert);
+      setVis('squareMineAlertDot', hasAlert);
+    }
+
     function renderStudio() {
       document.getElementById('studioHomeView').classList.toggle('hidden', !!activeStudioDetail);
       document.getElementById('studioDetailView').classList.toggle('hidden', !activeStudioDetail);
       renderOfficialGuides();
       renderCmsGrid();
       renderChallengeGrid();
-      renderMyWorks();
     }
 
     function renderOfficialGuides() {
@@ -1569,16 +1678,17 @@ Model   ：claude-sonnet-4
 
     function renderDiscussionHtml(threadKey, placeholder) {
       const list = DISCUSSIONS[threadKey] || [];
+      const inputId = 'commentInput-' + threadKey.replace(/[^a-z0-9_-]/gi, '-');
       return `
         <div class="cpa-card p-5 sm:p-6 space-y-5 bg-white">
           <div class="flex items-center justify-between">
             <h3 class="text-sm font-bold">互动评论与讨论 <span class="mono text-xs font-normal ml-1" style="color:var(--muted);">(${list.length})</span></h3>
-            <span class="text-[11px]" style="color:var(--muted);">文明交流 · 分享你的实操思路或提问</span>
+            <span class="text-[11px]" style="color:var(--muted);">文明交流 · 分享你的想法或提问</span>
           </div>
 
           <!-- Comment Composer -->
           <div class="space-y-2.5">
-            <textarea id="detailCommentInput" rows="3" placeholder="${placeholder}" class="w-full p-3.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0F4C81] bg-slate-50/60 focus:bg-white transition"></textarea>
+            <textarea id="${inputId}" rows="3" placeholder="${placeholder}" class="w-full p-3.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#0F4C81] bg-slate-50/60 focus:bg-white transition"></textarea>
             <div class="flex items-center justify-between gap-2 text-xs">
               <span class="text-[11px]" style="color:var(--muted);">当前身份：<strong style="color:var(--ink);">林知行</strong> · 华科软件学院</span>
               <button onclick="submitDiscussionComment('${threadKey}')" class="cpa-pill-btn px-4 py-1.5 text-xs font-medium">发表评论</button>
@@ -1599,7 +1709,7 @@ Model   ：claude-sonnet-4
                   <p class="text-xs leading-relaxed" style="color:var(--ink);">${escapeHtml(c.body)}</p>
                   <div class="flex items-center gap-4 pt-0.5 text-[11px]" style="color:var(--muted);">
                     <button onclick="toggleCommentLike('${threadKey}', ${idx})" class="hover:text-[#0A2540] transition mono" style="${c.liked ? 'color:var(--accent-ink); font-weight:600;' : ''}">👍 ${c.likes}</button>
-                    <button onclick="replyToComment('${escapeHtml(c.author)}')" class="hover:text-[#0A2540] transition">回复</button>
+                    <button onclick="replyToComment('${threadKey}', '${escapeHtml(c.author)}')" class="hover:text-[#0A2540] transition">回复</button>
                   </div>
                 </div>
               </div>
@@ -1610,7 +1720,8 @@ Model   ：claude-sonnet-4
     }
 
     function submitDiscussionComment(threadKey) {
-      const input = document.getElementById('detailCommentInput');
+      const inputId = 'commentInput-' + threadKey.replace(/[^a-z0-9_-]/gi, '-');
+      const input = document.getElementById(inputId);
       if (!input) return;
       const body = input.value.trim();
       if (!body) { showToast('请先输入评论内容'); return; }
@@ -1623,7 +1734,7 @@ Model   ：claude-sonnet-4
         liked: false,
         body
       });
-      refreshCurrentStudioDetail();
+      refreshDiscussionMount(threadKey);
       showToast('评论已发布');
     }
 
@@ -1632,25 +1743,28 @@ Model   ：claude-sonnet-4
       if (!list || !list[idx]) return;
       list[idx].liked = !list[idx].liked;
       list[idx].likes += list[idx].liked ? 1 : -1;
-      refreshCurrentStudioDetail();
+      refreshDiscussionMount(threadKey);
     }
 
-    function replyToComment(author) {
-      const input = document.getElementById('detailCommentInput');
+    function replyToComment(threadKey, author) {
+      const inputId = 'commentInput-' + threadKey.replace(/[^a-z0-9_-]/gi, '-');
+      const input = document.getElementById(inputId);
       if (!input) return;
       input.value = `@${author} ` + input.value.replace(new RegExp(`^@${author}\\s*`), '');
       input.focus();
     }
 
-    function refreshCurrentStudioDetail() {
-      if (!activeStudioDetail) return;
+    function refreshDiscussionMount(threadKey) {
+      if (threadKey.startsWith('work:')) {
+        const mount = document.getElementById('squareDiscussionMount');
+        if (mount) mount.innerHTML = renderDiscussionHtml(threadKey, '写下你的使用体验、改进建议或向作者提问...');
+        return;
+      }
       const mount = document.getElementById('studioDiscussionMount');
       if (!mount) return;
-      const isLesson = activeStudioDetail.type === 'lesson';
-      const threadKey = (isLesson ? 'lesson:' : 'challenge:') + activeStudioDetail.id;
-      const placeholder = isLesson
-        ? '写下你的实操问题、调试心得，或贴出你的练习成果一起交流...'
-        : '聊聊你的参赛想法、找队友组队，或向校内运营提问...';
+      const placeholder = threadKey.startsWith('lesson:')
+        ? '写下你的学习问题、实操心得或讨论内容...'
+        : '聊聊你的参赛想法、找队友或向组织者提问...';
       mount.innerHTML = renderDiscussionHtml(threadKey, placeholder);
     }
 
@@ -1671,7 +1785,7 @@ Model   ：claude-sonnet-4
       container.innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2.5 text-xs">
-            <button onclick="closeStudioDetail()" class="cpa-ghost-pill px-3.5 py-1.5 font-medium bg-white">← 返回创作中心</button>
+            <button onclick="closeStudioDetail()" class="cpa-ghost-pill px-3.5 py-1.5 font-medium bg-white">← 返回学习与挑战</button>
             <span style="color:var(--muted);">/</span>
             <span class="font-medium truncate max-w-[260px]">${l.title}</span>
           </div>
@@ -1743,7 +1857,7 @@ Model   ：claude-sonnet-4
       container.innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2.5 text-xs">
-            <button onclick="closeStudioDetail()" class="cpa-ghost-pill px-3.5 py-1.5 font-medium bg-white">← 返回创作中心</button>
+            <button onclick="closeStudioDetail()" class="cpa-ghost-pill px-3.5 py-1.5 font-medium bg-white">← 返回学习与挑战</button>
             <span style="color:var(--muted);">/</span>
             <span class="font-medium truncate max-w-[260px]">${ch.title}</span>
           </div>
@@ -1824,8 +1938,10 @@ Model   ：claude-sonnet-4
 
     function renderMyWorks() {
       const publishedCnt = myWorks.filter(w => w.status === 'published').length;
+      const rejectedCnt = myWorks.filter(w => w.status === 'rejected').length;
       const totalLikes = myWorks.reduce((s, w) => s + w.likes, 0);
-      document.getElementById('myWorksSummary').textContent = `共提交 ${myWorks.length} 件 · 已上架 ${publishedCnt} 件 · 累计获赞 ${totalLikes} · 当期最高第 #1 名`;
+      document.getElementById('myWorksSummary').textContent = `共提交 ${myWorks.length} 件 · 已上架 ${publishedCnt} 件${rejectedCnt ? ` · ${rejectedCnt} 件待修改` : ''} · 累计获赞 ${totalLikes}`;
+      syncMyWorksBadges();
 
       const statusBadge = {
         published: `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:var(--accent-soft); color:var(--accent-ink);">已上架</span>`,
@@ -1833,8 +1949,8 @@ Model   ：claude-sonnet-4
         rejected: `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:var(--coral-soft); color:var(--coral);">需修改</span>`
       };
 
-      document.getElementById('myWorksList').innerHTML = myWorks.map(w => `
-        <div class="cpa-card p-4 sm:p-5 space-y-3">
+      document.getElementById('myWorksList').innerHTML = myWorks.length ? myWorks.map(w => `
+        <div class="cpa-card p-4 sm:p-5 space-y-3 bg-white">
           <div class="flex flex-wrap sm:flex-nowrap items-start justify-between gap-4">
             <div class="flex items-start gap-3.5 min-w-0">
               <img src="${w.cover || './media/demo_cms_web.jpg'}" alt="${w.title}" class="w-24 h-16 rounded-xl object-cover border border-slate-200 shrink-0 hidden sm:block" loading="lazy" />
@@ -1852,12 +1968,12 @@ Model   ：claude-sonnet-4
             <div class="flex items-center gap-2 text-xs shrink-0">
               ${w.status === 'published' ? `
                 <span class="px-3 py-1 rounded-full mono font-medium" style="background:var(--bg-subtle);">▲ ${w.likes} · 第 #${w.rank} 名</span>
-                <button onclick="showToast('演示原型：正在打开 ${w.url}')" class="cpa-ghost-pill px-3 py-1 text-xs">体验</button>
+                <button onclick="openWorkDetail('w-1')" class="cpa-ghost-pill px-3 py-1 text-xs">查看详情</button>
                 <button onclick="withdrawWork('${w.id}')" class="cpa-ghost-pill px-3 py-1 text-xs">撤回</button>
               ` : w.status === 'reviewing' ? `
                 <button onclick="withdrawWork('${w.id}')" class="cpa-ghost-pill px-3 py-1 text-xs">撤回申请</button>
               ` : `
-                <button onclick="openPublishModal('${w.tag}', '${w.title}')" class="cpa-pill-btn px-4 py-1.5 text-xs font-medium">修改重提</button>
+                <button onclick="openPublishModal('${w.tag}', '${w.title}', '${w.id}')" class="cpa-pill-btn px-4 py-1.5 text-xs font-medium">修改重提</button>
               `}
             </div>
           </div>
@@ -1867,7 +1983,7 @@ Model   ：claude-sonnet-4
             </div>
           ` : ''}
         </div>
-      `).join('');
+      `).join('') : `<div class="cpa-card p-10 text-center space-y-2 bg-white"><div class="text-sm font-semibold">还没有提交过作品</div><div class="text-xs" style="color:var(--muted);">去「学习与挑战」完成你的第一个校园 AI 项目并发布冲榜吧。</div></div>`;
     }
     function withdrawWork(id) {
       myWorks = myWorks.filter(w => w.id !== id);
@@ -1875,7 +1991,26 @@ Model   ：claude-sonnet-4
       showToast('作品已撤回');
     }
 
-    // ===== SQUARE =====
+    // ===== SQUARE (ALL WORKS / MY WORKS + STANDALONE WORK DETAIL PAGE) =====
+    function setSquareMode(mode) {
+      squareMode = mode === 'mine' ? 'mine' : 'all';
+      activeWorkDetailId = null;
+      document.getElementById('squareDetailView').classList.add('hidden');
+      document.getElementById('squareDetailView').innerHTML = '';
+      document.getElementById('squareHomeView').classList.remove('hidden');
+
+      document.querySelectorAll('.sq-mode-btn').forEach(b => {
+        const a = b.dataset.sqMode === squareMode;
+        b.style.background = a ? '#0A2540' : 'transparent';
+        b.style.color = a ? '#FFFFFF' : '#64748B';
+      });
+      document.getElementById('squareAllPane').classList.toggle('hidden', squareMode !== 'all');
+      document.getElementById('squareMinePane').classList.toggle('hidden', squareMode !== 'mine');
+      if (squareMode === 'all') renderSquare();
+      else renderMyWorks();
+      syncMyWorksBadges();
+    }
+
     function renderSquare() {
       const tags = [
         { k: 'all', label: '全部作品' },
@@ -1902,8 +2037,9 @@ Model   ：claude-sonnet-4
 
       document.getElementById('squareGrid').innerHTML = list.map(w => {
         const r = rankOf(w.id);
+        const cmtCount = (DISCUSSIONS['work:' + w.id] || []).length;
         return `
-          <div class="cpa-card lesson-card group overflow-hidden flex flex-col justify-between cursor-pointer" onclick="openDetailDrawer('${w.id}')">
+          <div class="cpa-card lesson-card group overflow-hidden flex flex-col justify-between cursor-pointer" onclick="openWorkDetail('${w.id}')">
             <div>
               <div class="aspect-video w-full overflow-hidden relative bg-slate-100 border-b border-slate-100">
                 <img src="${w.cover}" alt="${w.title}" class="w-full h-full object-cover group-hover:scale-[1.03] transition duration-300" loading="lazy" />
@@ -1917,14 +2053,14 @@ Model   ：claude-sonnet-4
                 </div>
               </div>
               <div class="p-4 space-y-1.5">
-                <h3 class="text-sm font-bold truncate">${w.title}</h3>
+                <h3 class="text-sm font-bold truncate group-hover:text-[#0F4C81] transition">${w.title}</h3>
                 <p class="text-xs leading-relaxed line-clamp-2" style="color:var(--muted);">${w.desc}</p>
                 ${w.tag ? `<div class="pt-0.5"><span class="mono text-[11px]" style="color:var(--accent-ink);">${w.tag}</span></div>` : ''}
               </div>
             </div>
             <div class="px-4 py-3 border-t border-slate-100 flex items-center justify-between text-xs">
-              <div style="color:var(--muted);"><strong style="color:var(--ink);">${w.author}</strong> · ${w.degree}</div>
-              <button onclick="event.stopPropagation(); toggleVote('${w.id}')" class="px-3 py-1 rounded-full mono text-xs font-medium border transition" style="${w.voted ? 'background:var(--accent-soft); color:var(--accent-ink); border-color:#5EEAD4;' : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);'}">▲ ${w.likes}</button>
+              <div class="truncate" style="color:var(--muted);"><strong style="color:var(--ink);">${w.author}</strong> · 💬 ${cmtCount}</div>
+              <button onclick="event.stopPropagation(); toggleVote('${w.id}')" class="px-3 py-1 rounded-full mono text-xs font-medium border transition shrink-0" style="${w.voted ? 'background:var(--accent-soft); color:var(--accent-ink); border-color:#5EEAD4;' : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);'}">▲ ${w.likes}</button>
             </div>
           </div>
         `;
@@ -1939,47 +2075,110 @@ Model   ：claude-sonnet-4
       w.likes += w.voted ? 1 : -1;
       showToast(w.voted ? `已为「${w.title}」投出实名赞（每人限 1 票）` : '已取消点赞');
       renderSquare();
-      if (!document.getElementById('detailDrawer').classList.contains('hidden')) openDetailDrawer(id);
+      if (activeWorkDetailId === id) {
+        const voteBtn = document.getElementById('workDetailVoteBtn');
+        if (voteBtn) {
+          voteBtn.textContent = `${w.voted ? '✓ 已点赞' : '▲ 点赞支持'}（${w.likes}）`;
+          voteBtn.style.cssText = w.voted
+            ? 'background:var(--accent-soft); color:var(--accent-ink); border-color:#5EEAD4;'
+            : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);';
+        }
+      }
     }
 
-    function openDetailDrawer(id) {
+    function openWorkDetail(id, scrollTop = true) {
       const w = squareWorks.find(x => x.id === id);
       if (!w) return;
-      document.getElementById('drawerBody').innerHTML = `
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="px-2.5 py-0.5 rounded-full text-[11px]" style="background:var(--bg-subtle);">${w.type}</span>
-              ${w.featured ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-medium" style="background:#EFF6FF; color:var(--primary);">★ 精选应用</span>` : ''}
-              ${w.tag ? `<span class="mono text-[11px]" style="color:var(--accent-ink);">${w.tag}</span>` : ''}
-            </div>
-            <h2 class="text-lg font-bold mt-2">${w.title}</h2>
-            <div class="text-xs mt-1" style="color:var(--muted);">作者：${w.author}（${w.degree}） · ${w.createdAt}</div>
-          </div>
-          <button onclick="closeDetailDrawer()" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">×</button>
-        </div>
-        <div class="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
-          <img src="${w.cover}" alt="${w.title}" class="w-full aspect-video object-cover" />
-          <div class="px-4 py-3 flex items-center justify-between gap-2 text-[11px]" style="background:var(--bg-page);">
-            <span class="mono truncate" style="color:var(--muted);">${w.url}</span>
-            <span class="shrink-0 font-medium" style="color:var(--accent-ink);">${w.type === 'Web' ? '在线托管' : '安装包下载'}</span>
-          </div>
-        </div>
-        <div class="space-y-1.5">
-          <div class="text-xs font-bold">作品介绍与卖点</div>
-          <p class="text-xs leading-relaxed" style="color:var(--muted);">${w.desc}</p>
-        </div>
-      `;
-      document.getElementById('drawerFooter').innerHTML = `
-        <button onclick="toggleVote('${w.id}')" class="px-4 py-2 rounded-full text-xs font-semibold border" style="${w.voted ? 'background:var(--accent-soft); color:var(--accent-ink); border-color:#5EEAD4;' : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);'}">${w.voted ? '✓ 已点赞' : '▲ 点赞支持'}（${w.likes}）</button>
-        <button onclick="showToast('演示原型：正在${w.type === 'Web' ? '打开在线试用' : '下载安装包'} ${w.url}')" class="cpa-pill-btn px-5 py-2 text-xs font-semibold">${w.type === 'Web' ? '在线试用 →' : '下载安装包 ↓'}</button>
-      `;
-      document.getElementById('detailDrawer').classList.remove('hidden');
-    }
-    function closeDetailDrawer() { document.getElementById('detailDrawer').classList.add('hidden'); }
+      activeWorkDetailId = id;
+      if (activeTab !== 'square') switchTab('square');
+      activeWorkDetailId = id;
+      document.getElementById('squareHomeView').classList.add('hidden');
+      const container = document.getElementById('squareDetailView');
+      container.classList.remove('hidden');
 
-    function openPublishModal(presetTag = '', presetTitle = '') {
+      const rankOrder = [...squareWorks].sort((a, b) => b.likes - a.likes);
+      const r = rankOrder.findIndex(x => x.id === w.id) + 1;
+      const threadKey = 'work:' + w.id;
+      const others = rankOrder.filter(x => x.id !== w.id);
+
+      container.innerHTML = `
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5 text-xs">
+            <button onclick="closeWorkDetail()" class="cpa-ghost-pill px-3.5 py-1.5 font-medium bg-white">← 返回作品广场</button>
+            <span style="color:var(--muted);">/</span>
+            <span class="font-medium truncate max-w-[260px]">${w.title}</span>
+          </div>
+          <button onclick="showToast('演示原型：正在${w.type === 'Web' ? '打开在线试用' : '下载安装包'} ${w.url}')" class="cpa-pill-btn px-4 py-1.5 text-xs font-medium">${w.type === 'Web' ? '在线试用 →' : '下载安装包 ↓'}</button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <!-- Left (8): 封面与体验入口 + 标题简介与点赞 + 互动评论 -->
+          <div class="lg:col-span-8 space-y-6">
+            <div class="cpa-card overflow-hidden bg-white">
+              <div class="aspect-video w-full relative bg-slate-100">
+                <img src="${w.cover}" alt="${w.title}" class="w-full h-full object-cover" />
+                <div class="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between gap-2">
+                  <span class="px-3 py-1 rounded-full text-xs font-medium bg-white/95 shadow-sm">${w.type === 'Web' ? 'Web · 在线体验' : w.type + ' · 安装包'}</span>
+                  <span class="mono text-xs font-bold px-2.5 py-1 rounded-full bg-black/65 text-white backdrop-blur-sm">当期第 #${r} 名</span>
+                </div>
+              </div>
+              <div class="p-5 sm:p-6 space-y-3">
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                  <span class="font-medium" style="color:var(--ink);">${w.author}</span>
+                  <span style="color:var(--muted);">· ${w.degree} · ${w.createdAt}</span>
+                  ${w.featured ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-medium" style="background:#EFF6FF; color:var(--primary);">★ 精选应用</span>` : ''}
+                  ${w.tag ? `<span class="mono" style="color:var(--accent-ink);">${w.tag}</span>` : ''}
+                </div>
+                <h1 class="text-xl font-bold tracking-tight">${w.title}</h1>
+                <p class="text-xs leading-relaxed" style="color:var(--muted);">${w.desc}</p>
+                <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100">
+                  <div class="flex flex-wrap items-center gap-2.5">
+                    <button id="workDetailVoteBtn" onclick="toggleVote('${w.id}')" class="px-4 py-2 rounded-full text-xs font-semibold border transition" style="${w.voted ? 'background:var(--accent-soft); color:var(--accent-ink); border-color:#5EEAD4;' : 'background:#FFFFFF; color:var(--ink); border-color:var(--border);'}">${w.voted ? '✓ 已点赞' : '▲ 点赞支持'}（${w.likes}）</button>
+                    <button onclick="showToast('演示原型：正在${w.type === 'Web' ? '打开在线试用' : '下载安装包'} ${w.url}')" class="cpa-pill-btn px-5 py-2 text-xs font-semibold">${w.type === 'Web' ? '在线试用 →' : '下载安装包 ↓'}</button>
+                  </div>
+                  <span class="mono text-[11px] truncate max-w-[240px]" style="color:var(--muted);">${w.url}</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="squareDiscussionMount">${renderDiscussionHtml(threadKey, '写下你的使用体验、改进建议或向作者提问...')}</div>
+          </div>
+
+          <!-- Right (4): 其他热门作品 -->
+          <div class="lg:col-span-4">
+            <div class="cpa-card p-5 space-y-3.5 bg-white">
+              <div class="text-xs font-bold">其他热门作品</div>
+              <div class="space-y-3">
+                ${others.map(o => `
+                  <div onclick="openWorkDetail('${o.id}')" class="flex items-center gap-3 cursor-pointer group">
+                    <img src="${o.cover}" alt="${o.title}" class="w-24 h-14 rounded-lg object-cover border border-slate-200 shrink-0" />
+                    <div class="min-w-0">
+                      <div class="text-xs font-semibold leading-snug line-clamp-2 group-hover:text-[#0F4C81] transition">${o.title}</div>
+                      <div class="text-[11px] mono mt-1" style="color:var(--muted);">${o.author} · ▲ ${o.likes}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      if (scrollTop) window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function closeWorkDetail(scrollTop = true) {
+      activeWorkDetailId = null;
+      document.getElementById('squareDetailView').classList.add('hidden');
+      document.getElementById('squareDetailView').innerHTML = '';
+      document.getElementById('squareHomeView').classList.remove('hidden');
+      if (squareMode === 'all') renderSquare();
+      else renderMyWorks();
+      if (scrollTop) window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openPublishModal(presetTag = '', presetTitle = '', editId = null) {
       if (appState === 'pending') { showToast('教育邮箱核验通过后即可发布作品并参与激励榜单'); return; }
+      editingWorkId = editId || null;
       document.getElementById('promptTagSelect').value = presetTag || '';
       document.getElementById('pubTag').value = presetTag || '';
       if (presetTitle) {
@@ -1991,7 +2190,7 @@ Model   ：claude-sonnet-4
       updatePublishPrompt();
       document.getElementById('publishModal').classList.remove('hidden');
     }
-    function closePublishModal() { document.getElementById('publishModal').classList.add('hidden'); }
+    function closePublishModal() { editingWorkId = null; document.getElementById('publishModal').classList.add('hidden'); }
     function setPublishMode(mode) {
       publishMode = mode;
       document.querySelectorAll('.pub-mode-btn').forEach(b => {
@@ -2006,7 +2205,7 @@ Model   ：claude-sonnet-4
       const tag = document.getElementById('promptTagSelect').value;
       const tagText = tag ? `并关联活动专题标签「${tag}」` : '作为普通校园作品';
       document.getElementById('publishPromptText').textContent =
-        `请将当前项目打包为静态 Web 产物（或生成安装包摘要），附上一句话卖点与 2 张预览图，发布到「浣溪AI Lab」我的作品${tagText}，归属账号 linzhixing@hust.edu.cn。`;
+        `请将当前项目打包为静态 Web 产物（或生成安装包摘要），附上一句话卖点与 2 张预览图，发布到「浣溪AI Lab」作品广场 · 我的作品${tagText}，归属账号 linzhixing@hust.edu.cn。`;
     }
     function copyPublishPrompt() { copyText(document.getElementById('publishPromptText').textContent, '一键发布 Prompt 已复制'); }
     function simulatePromptPublish() {
@@ -2015,13 +2214,13 @@ Model   ：claude-sonnet-4
         id: 'mw-' + Date.now(),
         title: tag ? `AI 智能校园工具（${tag.replace('#','')}）` : 'AI 辅助生成 Web 作品',
         type: 'Web', tag, status: 'reviewing', featured: false, likes: 0, rank: null,
+        cover: './media/demo_cms_web.jpg',
         desc: '通过 Prompt 一键打包静态文件并提交审核的演示作品。',
         url: 'https://apps.huanxi-lab.cn/demo-new-web', updatedAt: '2026-11-26'
       });
       closePublishModal();
-      switchTab('studio');
-      scrollToStudioSection('studioWorksSection');
-      showToast('已通过 Prompt 提交审核，已定位至「我的作品」');
+      openMyWorks();
+      showToast('已通过 Prompt 提交审核，已切至「作品广场 · 我的作品」');
     }
     function updateTypeHint() {
       const t = document.getElementById('pubType').value;
@@ -2035,13 +2234,20 @@ Model   ：claude-sonnet-4
       const tag = document.getElementById('pubTag').value;
       const link = document.getElementById('pubLink').value.trim() || 'https://apps.huanxi-lab.cn/custom-work';
       if (!title || !desc) { showToast('请填写作品名称和一句话卖点'); return; }
-      myWorks.unshift({ id: 'mw-' + Date.now(), title, type, tag, desc, url: link, status: 'reviewing', featured: false, likes: 0, rank: null, updatedAt: '2026-11-26' });
+      if (editingWorkId) {
+        const target = myWorks.find(w => w.id === editingWorkId);
+        if (target) {
+          target.title = title; target.desc = desc; target.type = type; target.tag = tag; target.url = link;
+          target.status = 'reviewing'; target.rejectReason = ''; target.updatedAt = '2026-11-26';
+        }
+      } else {
+        myWorks.unshift({ id: 'mw-' + Date.now(), title, type, tag, desc, url: link, cover: './media/demo_cms_web.jpg', status: 'reviewing', featured: false, likes: 0, rank: null, updatedAt: '2026-11-26' });
+      }
       document.getElementById('pubTitle').value = '';
       document.getElementById('pubDesc').value = '';
       document.getElementById('pubLink').value = '';
       closePublishModal();
-      switchTab('studio');
-      scrollToStudioSection('studioWorksSection');
+      openMyWorks();
       showToast(`「${title}」已提交校内运营审核`);
     }
     function openAppealModal() { document.getElementById('appealModal').classList.remove('hidden'); }
@@ -2054,14 +2260,20 @@ Model   ：claude-sonnet-4
     const urlTab = qs.get('tab');
     const urlLesson = qs.get('lesson');
     const urlChallenge = qs.get('challenge');
+    const urlWork = qs.get('work');
+    const urlSub = qs.get('sub');
     if (['token', 'studio', 'square'].includes(urlTab)) activeTab = urlTab;
+    if (urlSub === 'mine') squareMode = 'mine';
     setAppState(['auth', 'pending', 'frozen', 'normal'].includes(urlView) ? urlView : 'normal');
+    syncMyWorksBadges();
     if (urlLesson && CMS_LESSONS.some(x => x.id === urlLesson)) {
       if (activeTab !== 'studio') switchTab('studio');
       openLessonDetail(urlLesson, false);
     } else if (urlChallenge && CHALLENGES.some(x => x.id === urlChallenge)) {
       if (activeTab !== 'studio') switchTab('studio');
       openChallengeDetail(urlChallenge, false);
+    } else if (urlWork && squareWorks.some(x => x.id === urlWork)) {
+      openWorkDetail(urlWork, false);
     }
   </script>
 </body>
