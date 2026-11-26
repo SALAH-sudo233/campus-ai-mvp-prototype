@@ -185,7 +185,7 @@
         <a href="./overview.html" class="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white font-medium">✦ 浣溪AI Lab · 总览</a>
         <a href="./index.html" class="px-2.5 py-1 rounded-full text-white font-semibold" style="background:#624AFF;">① 学生端</a>
         <a href="./college-dashboard.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">② 学院端</a>
-        <a href="./school-ops.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">③ 运营端(校)</a>
+        <a href="./school-ops.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">③ 运营端</a>
         <a href="./platform-admin.html" class="px-2.5 py-1 rounded-full hover:bg-white/10 text-slate-300">④ 平台端(浣溪)</a>
       </div>
       <div class="flex items-center gap-1 flex-wrap">
@@ -372,7 +372,7 @@
                     <div class="text-xs flex flex-wrap items-center gap-1.5" style="color:var(--muted);">
                       <span>初始 1.0M</span>
                       <span>+</span>
-                      <span style="color:var(--accent-ink);" class="font-medium">挑战赛奖励 1.0M</span>
+                      <span style="color:var(--accent-ink);" class="font-medium">激励增额 1.0M</span>
                       <span>· 余量 74.1%</span>
                     </div>
                   </div>
@@ -459,7 +459,7 @@
               <div class="w-6 h-[3px] rounded-full" style="background:var(--primary);"></div>
               <div class="flex items-center gap-1 text-xs" style="color:var(--muted);">
                 <span>额度余量占比</span>
-                <span title="初始 1.0M + 挑战赛奖励 1.0M - 已消耗 517.5K" class="cursor-help opacity-70">ⓘ</span>
+                <span title="总额度 2.0M（初始 1.0M + 激励增额 1.0M）- 已消耗 517.5K" class="cursor-help opacity-70">ⓘ</span>
               </div>
               <div class="text-2xl font-bold mono">74.1%</div>
               <div class="h-[3px] rounded-full overflow-hidden" style="background:#F1F1FD;">
@@ -477,11 +477,14 @@
               <div class="text-[11px]" style="color:var(--muted);">含代码 / 推理 / 多模态</div>
             </div>
 
-            <div class="cpa-card p-5 space-y-3 cursor-pointer hover:border-slate-300 transition" onclick="jumpToChallengeDetail('ch-hackathon')">
-              <div class="w-6 h-[3px] rounded-full" style="background:var(--accent);"></div>
-              <div class="text-xs" style="color:var(--muted);">参赛挑战排名</div>
-              <div id="kpiChallengeRank" class="text-2xl font-bold mono" style="color:var(--primary);">#1</div>
-              <div id="kpiChallengeHint" class="text-[11px]" style="color:var(--accent-ink);">第1期黑客松暂列榜首 →</div>
+            <div class="cpa-card p-5 space-y-3">
+              <div class="w-6 h-[3px] rounded-full" style="background:linear-gradient(90deg, #624AFF 0%, #36CFD1 100%);"></div>
+              <div class="flex items-center gap-1 text-xs" style="color:var(--muted);">
+                <span>今日已消耗</span>
+                <span title="今日累计 133 次调用，平均每次约 1,963 Tokens" class="cursor-help opacity-70">ⓘ</span>
+              </div>
+              <div class="text-2xl font-bold mono">261.1K</div>
+              <div class="text-[11px]" style="color:var(--muted);">今日 133 次请求 · 峰值 14:00</div>
             </div>
           </div>
 
