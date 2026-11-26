@@ -169,7 +169,7 @@ function applyAdmission() {
 }
 
 function redirectIfTeacher(account) {
-  if (account && account.role === 'org_admin') {
+  if (account && (account.role === 'org_admin' || account.role === 'org_operator')) {
     window.location.replace('teacher.html');
     return true;
   }

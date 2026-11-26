@@ -5,6 +5,7 @@ import secrets
 import sqlite3
 import time
 
+import authz
 import config
 import roster
 from identity import normalize_identity, owner_ref_of
@@ -187,7 +188,7 @@ def _seed_roster(conn, org_id):
             (org_id, user_id, "roster:" + student_id, student_id, name, now))
 
 
-def _seed_works(conn, org_id):
+def _seed_works(conn, org_id, work_id_prefix=""):
     now = time.time()
     for item in config.SEED_WORKS:
         conn.execute(
@@ -196,7 +197,7 @@ def _seed_works(conn, org_id):
             "published_version, created_at, updated_at, published_at) "
             "VALUES (?, ?, NULL, ?, ?, '平台演示', ?, NULL, 'seed_demo', 'published', 'organization', NULL, ?, "
             "'demo-v1', ?, ?, ?)",
-            (item["work_id"], org_id, item["title"], item["summary"], item["category"],
+            (work_id_prefix + item["work_id"], org_id, item["title"], item["summary"], item["category"],
              '{"kind":"local_preview","preview_id":"%s"}' % item["preview_id"], now, now, now))
 
 
@@ -396,6 +397,33 @@ def _migration_11(conn):
                  "ON work_rewards(owner_user_id, created_at DESC)")
 
 
+def _migration_12(conn):
+    conn.execute("ALTER TABLE pat_tokens ADD COLUMN owner_ref TEXT")
+    conn.execute("UPDATE pat_tokens SET owner_ref = (SELECT s.owner_ref FROM students s "
+                 "WHERE pat_tokens.org_snapshot IS NOT NULL "
+                 "AND s.user_id = pat_tokens.user_id AND s.org_id = pat_tokens.org_snapshot "
+                 "GROUP BY s.user_id, s.org_id HAVING COUNT(*) = 1)")
+    org_id = ensure_org(conn, "four-end-demo", "四端演示学院", "校内运营", "学生",
+                        quota_limit=config.DEFAULT_MEMBER_QUOTA * 3)
+    _seed_works(conn, org_id, work_id_prefix=org_id + ":")
+    now = time.time()
+    names = {authz.ORG_MEMBER: "演示学生", authz.ORG_OPERATOR: "演示校内运营",
+             authz.COLLEGE_VIEWER: "演示学院观察员", authz.PLATFORM_ADMIN: "演示平台管理员"}
+    for role, name in names.items():
+        user_id = _new_user(conn, name, prefix="u_four_end_demo")
+        _add_identity(conn, user_id, "demo", role, source="four-end-demo")
+        if role == authz.PLATFORM_ADMIN:
+            conn.execute("INSERT INTO platform_admins (user_id, created_at) VALUES (?, ?)", (user_id, now))
+        else:
+            conn.execute("INSERT INTO org_memberships (org_id, user_id, role, admission_status, external_ref, "
+                         "name, joined_at) VALUES (?, ?, ?, 'active', ?, ?, ?)",
+                         (org_id, user_id, role, "four-end-demo:" + role, name, now))
+        conn.execute("INSERT INTO students (owner_ref, mode, identity, pw_salt, pw_hash, balance, spent, "
+                     "created_at, user_id, org_id) VALUES (?, 'demo', ?, ?, ?, 0, 0, ?, ?, ?)",
+                     (owner_ref_of("demo", role), role, secrets.token_hex(16), secrets.token_hex(32),
+                      now, user_id, org_id if role != authz.PLATFORM_ADMIN else None))
+
+
 MIGRATIONS = [
     (1, "legacy-schema", _migration_1),
     (2, "org-schema", _migration_2),
@@ -411,6 +439,7 @@ MIGRATIONS = [
     (9, "demo-login-and-pilot-quota", _migration_9),
     (10, "personal-access-tokens", _migration_10),
     (11, "work-rewards", _migration_11),
+    (12, "four-end-roles-and-identities", _migration_12),
 ]
 
 

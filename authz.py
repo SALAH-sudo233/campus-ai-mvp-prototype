@@ -2,8 +2,11 @@
 
 PLATFORM_ADMIN = "platform_admin"
 ORG_ADMIN = "org_admin"
+ORG_OPERATOR = "org_operator"
+COLLEGE_VIEWER = "college_viewer"
 ORG_MEMBER = "org_member"
-ROLES = (PLATFORM_ADMIN, ORG_ADMIN, ORG_MEMBER)
+ORG_ROLES = (ORG_ADMIN, ORG_OPERATOR, COLLEGE_VIEWER, ORG_MEMBER)
+ROLES = (PLATFORM_ADMIN,) + ORG_ROLES
 
 # 准入状态闸：disabled 视同未认证；pending_review 只保留登录、个人信息（含余额流水）、
 # 引导和登出，其余动作一律 403。准入判断和角色判断在同一个矩阵模块内完成。
@@ -27,6 +30,8 @@ class AuthzError(Exception):
 
 _RULES = {
     PLATFORM_ADMIN: {
+        ("console", "read"): "all",
+        ("system", "reset"): "all",
         ("organizations", "list"): "all",
         ("organizations", "create"): "all",
         ("organizations", "read"): "all",
@@ -56,17 +61,29 @@ _RULES = {
         ("accounts", "revoke_key"): "all",
         ("accounts", "reissue_key"): "all",
         ("works", "read_any"): "all",
+        ("works", "read_review"): "all",
+        ("works", "upvote"): "all",
+        ("works", "comment"): "all",
+        ("tokens", "create_self"): "self",
+        ("tokens", "revoke_self"): "self",
+        ("keys", "read_self"): "self",
         ("rewards", "read"): "all",
         ("rewards", "settle"): "all",
     },
-    ORG_ADMIN: {
+    ORG_OPERATOR: {
+        ("console", "read"): "org",
         ("organizations", "read"): "org",
         ("members", "list"): "org",
         ("members", "read"): "org",
+        ("members", "update_status"): "org",
+        ("members", "import"): "org",
         ("usage", "read_org"): "org",
         ("usage", "read_self"): "self",
         ("works", "read_gallery"): "org",
         ("works", "read_own"): "self",
+        ("works", "read_review"): "org",
+        ("works", "upvote"): "org",
+        ("works", "comment"): "org",
         ("works", "review"): "org",
         ("works", "feature"): "org",
         ("works", "unpublish"): "org",
@@ -74,13 +91,12 @@ _RULES = {
         ("profile", "read_self"): "self",
         ("onboarding", "read"): "self",
         ("keys", "rotate_self"): "self",
+        ("keys", "read_self"): "self",
+        ("tokens", "create_self"): "self",
+        ("tokens", "revoke_self"): "self",
         ("usage", "consume_self"): "self",
         ("sessions", "revoke_self"): "self",
         ("accounts", "list"): "org",
-        ("accounts", "revoke_key"): "org",
-        ("accounts", "reissue_key"): "org",
-        ("members", "revoke_key"): "org",
-        ("members", "reissue_key"): "org",
         ("rewards", "read"): "org",
     },
     ORG_MEMBER: {
@@ -90,16 +106,31 @@ _RULES = {
         ("works", "read_own"): "self",
         ("works", "submit"): "self",
         ("works", "withdraw"): "self",
+        ("works", "upvote"): "org",
+        ("works", "comment"): "org",
         ("onboarding", "read"): "self",
         ("onboarding", "write"): "self",
         ("keys", "read_self"): "self",
         ("keys", "rotate_self"): "self",
+        ("tokens", "create_self"): "self",
+        ("tokens", "revoke_self"): "self",
         ("profile", "read_self"): "self",
         ("usage", "consume_self"): "self",
         ("sessions", "revoke_self"): "self",
         ("rewards", "read"): "org",
     },
+    COLLEGE_VIEWER: {
+        ("console", "read"): "org",
+        ("organizations", "read"): "org",
+        ("usage", "read_org"): "org",
+        ("usage", "read_self"): "self",
+        ("works", "read_gallery"): "org",
+        ("profile", "read_self"): "self",
+        ("onboarding", "read"): "self",
+        ("rewards", "read"): "org",
+    },
 }
+_RULES[ORG_ADMIN] = dict(_RULES[ORG_OPERATOR])
 
 
 def scope_for(role, resource, action):
