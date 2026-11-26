@@ -66,14 +66,13 @@
     /* ModelScope Six-Layer Pastel Aurora Mesh Hero */
     .hero-grid-glow {
       background:
-        linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 22%),
-        linear-gradient(180deg, rgba(242, 240, 255, 0) 34%, #F2F0FF 90%),
-        radial-gradient(ellipse 55% 55% at 0% -5%, rgba(203, 228, 255, 0.85), transparent 98%),
-        radial-gradient(ellipse 70% 60% at 100% 12%, rgba(211, 245, 254, 0.74), transparent 76%),
-        radial-gradient(ellipse 68% 48% at 0% 100%, rgba(242, 240, 255, 0.84), transparent 72%),
-        radial-gradient(ellipse 42% 36% at 8% 0%, rgba(251, 229, 255, 0.72), transparent 65%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.25) 38%, rgba(242, 240, 255, 0.72) 100%),
+        radial-gradient(ellipse 52% 65% at 0% 0%, rgba(203, 228, 255, 0.78), transparent 85%),
+        radial-gradient(ellipse 65% 70% at 100% 8%, rgba(211, 245, 254, 0.68), transparent 76%),
+        radial-gradient(ellipse 60% 55% at 88% 100%, rgba(226, 220, 255, 0.72), transparent 72%),
+        radial-gradient(ellipse 40% 45% at 8% 100%, rgba(246, 232, 255, 0.62), transparent 70%),
         #FFFFFF;
-      box-shadow: 0 12px 32px rgba(144, 156, 234, 0.14);
+      box-shadow: 0 10px 30px rgba(98, 74, 255, 0.07), 0 1px 2px rgba(39, 37, 76, 0.04);
     }
 
     /* Frosted Top Nav with ModelScope Elastic Pop */
@@ -356,80 +355,92 @@
         </div>
 
         <div id="tokenMainContent" class="space-y-8">
-          <!-- 1. Token Hero + Floating Live Telemetry Wave Card -->
-          <div class="hero-grid-glow rounded-3xl px-6 sm:px-8 pt-6 pb-6 border border-slate-200/70 space-y-6">
-            <div class="flex flex-wrap items-end justify-between gap-4">
-              <div class="space-y-2">
-                <div class="text-xs font-medium" style="color:var(--muted);">当前可用 Token 余额</div>
-                <div class="flex flex-wrap items-baseline gap-3">
-                  <div class="text-3xl sm:text-4xl font-bold mono tracking-tight" style="color:var(--ink);">1,482,500</div>
-                  <div class="text-xs flex items-center gap-1.5" style="color:var(--muted);">
-                    <span>初始 1.0M</span>
-                    <span>+</span>
-                    <span style="color:var(--accent-ink);" class="font-medium">挑战赛奖励 1.0M</span>
-                    <span>· 余量 74.1%</span>
+          <!-- 1. Unified Aurora Token Hero (No Nested Card, Integrated Telemetry & Full-Bleed Wave) -->
+          <div class="hero-grid-glow relative overflow-hidden rounded-3xl border border-[#E5E8F5] px-6 sm:px-8 pt-6 pb-11">
+            <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
+              <!-- Left (7): Primary Token Balance & Quick Actions -->
+              <div class="lg:col-span-7 flex flex-col justify-between gap-5">
+                <div class="space-y-2.5">
+                  <div class="flex flex-wrap items-center gap-2.5 text-xs">
+                    <span class="font-medium" style="color:var(--muted);">当前可用 Token 余额</span>
+                    <span class="text-slate-300">·</span>
+                    <span id="heroConnStatus" class="font-medium" style="color:var(--accent-ink);">已连接中转网关</span>
                   </div>
-                </div>
-                <div class="mono text-xs flex flex-wrap items-center gap-2 pt-0.5" style="color:var(--muted);">
-                  <span>华科软件学院 · linzhixing@hust.edu.cn</span>
-                  <span>·</span>
-                  <span id="heroConnStatus" style="color:var(--accent-ink);">已连接中转网关</span>
-                  <span>·</span>
-                  <span>Base URL: https://api.huanxi-lab.cn/v1</span>
-                </div>
-              </div>
 
-              <div class="flex items-center gap-3">
-                <button id="heroCopyBtn" onclick="copyCurrentKey()" class="cpa-pill-btn px-5 py-2 text-xs font-medium">复制我的 API Key</button>
-                <button onclick="switchTab('studio')" class="cpa-ghost-pill px-4 py-2 text-xs font-medium">去接入工具并创作 →</button>
-              </div>
-            </div>
-
-            <!-- Signature CPA Floating Card with Integrated Bottom Spline Wave -->
-            <div class="relative">
-              <div class="cpa-card p-5 sm:p-6 relative z-10">
-                <div class="flex items-start justify-between gap-3">
-                  <div>
-                    <div class="text-xs" style="color:var(--muted);">已处理请求 · 个人调用总览</div>
-                    <div class="flex items-baseline gap-3 mt-1">
-                      <span class="text-4xl font-bold mono tracking-tight">312</span>
-                      <span class="text-xs mono" style="color:var(--muted);">累计消耗 517,500 Tokens · 最近 7 天</span>
+                  <div class="flex flex-wrap items-baseline gap-x-3.5 gap-y-1.5">
+                    <div class="text-4xl sm:text-[42px] leading-none font-bold mono tracking-tight" style="color:var(--ink);">1,482,500</div>
+                    <div class="text-xs flex flex-wrap items-center gap-1.5" style="color:var(--muted);">
+                      <span>初始 1.0M</span>
+                      <span>+</span>
+                      <span style="color:var(--accent-ink);" class="font-medium">挑战赛奖励 1.0M</span>
+                      <span>· 余量 74.1%</span>
                     </div>
                   </div>
-                  <span id="liveBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border" style="background:var(--accent-soft); color:var(--accent-ink); border-color:#A7F3D0;">
+
+                  <div class="mono text-xs flex flex-wrap items-center gap-x-2 gap-y-1 pt-0.5" style="color:var(--muted);">
+                    <span>华科软件学院 · linzhixing@hust.edu.cn</span>
+                    <span class="hidden sm:inline opacity-50">|</span>
+                    <span class="px-2 py-0.5 rounded-md bg-white/70 border border-[#E5E8F5]/90 text-[11px]" style="color:var(--ink);">Base URL: https://api.huanxi-lab.cn/v1</span>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                  <button id="heroCopyBtn" onclick="copyCurrentKey()" class="cpa-pill-btn px-5 py-2 text-xs font-medium">复制我的 API Key</button>
+                  <button onclick="switchTab('studio')" class="cpa-ghost-pill px-4 py-2 text-xs font-medium">去接入工具并创作 →</button>
+                </div>
+              </div>
+
+              <!-- Right (5): Seamless Inline Call Telemetry (Hairline Separated, No Inner Box) -->
+              <div class="lg:col-span-5 lg:border-l lg:border-[#27254C]/[0.08] lg:pl-8 pt-5 lg:pt-0 border-t lg:border-t-0 border-[#27254C]/[0.08] flex flex-col justify-between gap-4">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="space-y-1">
+                    <div class="text-xs font-medium" style="color:var(--muted);">已处理请求 · 个人调用总览</div>
+                    <div class="flex flex-wrap items-baseline gap-2.5 pt-0.5">
+                      <span class="text-3xl font-bold mono tracking-tight leading-none" style="color:var(--ink);">312</span>
+                      <span class="text-xs mono" style="color:var(--muted);">累计消耗 517,500 Tokens · 近 7 天</span>
+                    </div>
+                  </div>
+                  <span id="liveBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border shrink-0" style="background:var(--accent-soft); color:var(--accent-ink); border-color:#A7F3D0;">
                     <span class="w-1.5 h-1.5 rounded-full" style="background:var(--accent);"></span> 实时
                   </span>
                 </div>
 
-                <!-- Segmented Ratio Bar (Success Emerald / Failed Coral) -->
-                <div class="mt-4 flex items-center gap-1.5 h-2">
-                  <div class="h-full rounded-full" style="width:99.0%; background:var(--accent);"></div>
-                  <div class="h-full rounded-full" style="width:1.0%; min-width:14px; background:var(--coral);"></div>
-                </div>
-                <div class="mt-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <div class="flex items-center gap-4">
-                    <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-[3px]" style="background:var(--accent);"></span> 成功 <strong class="mono">310</strong></span>
-                    <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-[3px]" style="background:var(--coral);"></span> 失败 <strong class="mono">2</strong></span>
+                <!-- Clean Proportional Success / Failure Ratio Bar -->
+                <div class="space-y-2.5">
+                  <div class="flex items-center gap-1.5 h-2">
+                    <div class="h-full rounded-full" style="width:98.5%; background:linear-gradient(90deg, #13C2C2 0%, #36CFD1 100%);"></div>
+                    <div class="h-full rounded-full" style="width:1.5%; min-width:8px; background:var(--coral);"></div>
                   </div>
-                  <span class="text-[11px]" style="color:var(--muted);">配额已用 25.9% · 余量充足</span>
+                  <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-3.5">
+                      <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full" style="background:var(--accent);"></span> 成功 <strong class="mono">310</strong></span>
+                      <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full" style="background:var(--coral);"></span> 失败 <strong class="mono">2</strong></span>
+                    </div>
+                    <span class="text-[11px]" style="color:var(--muted);">配额已用 25.9% · 余量充足</span>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <!-- Signature Flowing Spline Wave beneath the Hero Card -->
-              <div class="-mt-3 px-2 overflow-hidden">
-                <svg viewBox="0 0 900 84" class="w-full h-20" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="cpaWaveGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#624AFF" stop-opacity="0.20"/>
-                      <stop offset="100%" stop-color="#624AFF" stop-opacity="0"/>
-                    </linearGradient>
-                  </defs>
-                  <path d="M0 64 C55 64, 70 18, 120 18 C170 18, 190 74, 240 74 C290 74, 315 36, 365 36 C415 36, 445 78, 505 78 C555 78, 585 24, 635 24 C685 24, 715 72, 775 72 C825 72, 855 44, 900 44 L900 84 L0 84 Z" fill="url(#cpaWaveGrad)"/>
-                  <path d="M0 64 C55 64, 70 18, 120 18 C170 18, 190 74, 240 74 C290 74, 315 36, 365 36 C415 36, 445 78, 505 78 C555 78, 585 24, 635 24 C685 24, 715 72, 775 72 C825 72, 855 44, 900 44" fill="none" stroke="#624AFF" stroke-width="2" stroke-linecap="round"/>
-                  <circle cx="848" cy="54" r="4" fill="#624AFF"/>
-                  <circle cx="848" cy="54" r="9" fill="#624AFF" fill-opacity="0.18"/>
-                </svg>
-              </div>
+            <!-- Full-Bleed Ambient Telemetry Spline Wave (Edge-to-Edge, No Clipped Box) -->
+            <div class="pointer-events-none absolute inset-x-0 bottom-0 h-11 overflow-hidden">
+              <svg viewBox="0 0 1200 48" class="w-full h-full block" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="cpaWaveStroke" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#624AFF" stop-opacity="0.18"/>
+                    <stop offset="55%" stop-color="#624AFF" stop-opacity="0.48"/>
+                    <stop offset="100%" stop-color="#36CFD1" stop-opacity="0.65"/>
+                  </linearGradient>
+                  <linearGradient id="cpaWaveGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#624AFF" stop-opacity="0.13"/>
+                    <stop offset="100%" stop-color="#624AFF" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <path d="M0 36 C120 36, 175 18, 280 22 C385 26, 445 38, 560 32 C675 26, 745 14, 860 20 C975 26, 1055 34, 1130 22 C1165 16, 1185 18, 1200 18 L1200 48 L0 48 Z" fill="url(#cpaWaveGrad)"/>
+                <path d="M0 36 C120 36, 175 18, 280 22 C385 26, 445 38, 560 32 C675 26, 745 14, 860 20 C975 26, 1055 34, 1130 22 C1165 16, 1185 18, 1200 18" fill="none" stroke="url(#cpaWaveStroke)" stroke-width="1.75" stroke-linecap="round"/>
+                <circle cx="1130" cy="22" r="3.5" fill="#624AFF"/>
+                <circle cx="1130" cy="22" r="8" fill="#624AFF" fill-opacity="0.16"/>
+              </svg>
             </div>
           </div>
 
